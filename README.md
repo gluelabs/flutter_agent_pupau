@@ -13,13 +13,11 @@ A Flutter plugin that integrates a Pupau agent in your application.
 
 ## Installation
 
-Add this to your package's `pubspec.yaml` file:
+Add the package name and version in your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_agent_pupau:
-    git:
-      url: https://github.com/gluelabs/flutter_agent_pupau.git
+  flutter_agent_pupau: ^1.0.0
 ```
 
 Then run:
@@ -132,7 +130,7 @@ PupauAgentAvatar(
 )
 ```
 
-### Initially Expanded Chat**
+### Initially Expanded Chat
 
 **If you want the chat to be already expanded when the widget first loads**, use the sized mode with `initiallyExpanded: true`:
 
