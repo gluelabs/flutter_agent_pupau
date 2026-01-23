@@ -1,0 +1,72 @@
+name: flutter_agent_pupau
+description: A Flutter plugin that integrates Pupau AI agents into your application.
+repository: https://github.com/gluelabs/flutter_agent_pupau
+issue_tracker: https://github.com/gluelabs/flutter_agent_pupau/issues
+version: 1.0.0
+
+topics:
+  - ai
+  - agent
+  - assistant
+  - pupau
+  - chat
+
+environment:
+  sdk: ^3.10.3
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  get: ^4.7.3
+  dio: ^5.9.0
+  flutter_client_sse: ^2.0.3
+  url_launcher: ^6.3.2
+  material_symbols_icons: ^4.2892.0
+  http: ^1.6.0
+  downloadsfolder: ^1.2.0
+  share_plus: ^12.0.1
+  pro_image_editor: ^11.15.4
+  saf_stream: ^0.12.3
+  saf_util: ^0.11.0
+  permission_handler: ^12.0.1
+  file_picker: ^10.3.8
+  image_picker: ^1.2.1
+  saver_gallery: ^4.1.0
+  path_provider: ^2.1.5
+  intl: ^0.20.2
+  wolt_modal_sheet: ^0.11.0
+  skeletonizer: ^2.1.2
+  flutter_markdown_plus: ^1.0.7
+  google_sign_in: ^7.2.0
+  cached_network_image: ^3.4.1
+  cached_network_svg_image: ^2.0.0
+  flutter_expanded_tile: ^0.4.0
+  mention_tag_text_field: ^0.0.9
+  flutter_svg: ^2.2.3
+  date_format: ^2.0.9
+  jumping_dot: ^0.0.7
+  bubble: ^1.2.1
+  shared_preferences: ^2.5.4
+  flutter_context_menu: ^0.4.1
+  markdown: ^7.3.0
+  flutter_code_editor: ^0.3.5
+  flutter_inappwebview: ^6.1.5
+  flutter_tts: ^4.2.5
+  photo_view: ^0.15.0
+  uuid: ^4.5.2
+  highlight: ^0.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  assets:
+    - assets/avatars/
+    - assets/images/
+    - assets/gif/
+    
+
+

@@ -1,0 +1,44 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:material_symbols_icons/symbols.dart';
+import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
+import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
+import 'package:flutter_agent_pupau/services/device_service.dart';
+import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
+import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
+
+class ForkConversationIcon extends GetView<ChatController> {
+  const ForkConversationIcon(
+      {super.key, required this.message, this.isAnonymous = false});
+
+  final PupauMessage message;
+  final bool isAnonymous;
+
+  @override
+  Widget build(BuildContext context) {
+    bool isTablet = DeviceService.isTablet;
+    return RotatedBox(
+      quarterTurns: 2,
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Tooltip(
+          message: Strings.fork.tr,
+          child: InkWell(
+            onTap: () => controller.openForkConversationModal(message.id),
+            borderRadius: BorderRadius.circular(100),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Icon(
+                  color: isAnonymous
+                      ? Colors.white
+                      : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                  Symbols.fork_left,
+                  size: isTablet ? 24 : 20,
+                ),
+              ),
+            ),
+        )
+      ),
+    );
+  }
+}
