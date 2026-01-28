@@ -81,6 +81,7 @@ class MessageBubble extends GetView<ChatController> {
                           : MessageContent(
                               messageId: message.id,
                               message: isAssistant ? message.answer : message.query,
+                              status: message.status,
                               createdAt: message.createdAt,
                               isAssistant: isAssistant,
                               isAnonymous: isAnonymous,

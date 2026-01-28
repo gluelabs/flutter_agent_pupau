@@ -74,7 +74,6 @@ class PupauConfig {
 
   /// Factory constructor for creating config with API key
   ///
-  /// The assistantId is automatically extracted from the API key.
   /// Get the API key from Pupau web or mobile app, navigate to your agent configuration page and then under the "Integrations - API Key" you will find your agent's API keys.
   ///
   /// Example:

@@ -25,7 +25,6 @@ class PupauAgentChat extends StatefulWidget {
 }
 
 class _PupauAgentChatState extends State<PupauAgentChat> {
-
   @override
   void initState() {
     super.initState();
@@ -88,67 +87,73 @@ class _PupauAgentChatView extends GetView<ChatController> {
           bool scrollButtonVisible =
               hasUserMessage && !controller.isAtBottom.value;
           bool isAdvanced = controller.isAdvanced();
-          bool isFullMode = controller.widgetMode == WidgetMode.full;
           return Theme(
             data: ThemeData(
               brightness: isAnonymous || Get.isDarkMode
                   ? Brightness.dark
                   : Brightness.light,
             ),
-            child: Scaffold(
-              backgroundColor: isAnonymous
-                  ? AnonymousThemeColors.background
-                  : MyStyles.pupauTheme(!Get.isDarkMode).white,
-              appBar: ChatAppBar(
-                isAnonymous: isAnonymous,
-                onBackPressed: onCollapse,
-                widgetMode: controller.widgetMode,
+            child: MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                padding: MediaQuery.of(context).padding.copyWith(top: controller.widgetMode == WidgetMode.full ? 48 : 20),
               ),
-              body: SafeArea(
-                top: false,
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: !isFullMode ? 16 : 0),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Column(
-                        children: [
-                          Expanded(
-                            child: hasApiError
-                                ? ApiErrorWidget(
-                                    message: Strings.apiErrorGeneric.tr,
-                                    retryAction: () =>
-                                        controller.initChatController(),
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 60,
-                                    ),
-                                  )
-                                : const MessagesList(),
+              child: Scaffold(
+                backgroundColor: isAnonymous
+                    ? AnonymousThemeColors.background
+                    : MyStyles.pupauTheme(!Get.isDarkMode).white,
+              
+                appBar: ChatAppBar(
+                  isAnonymous: isAnonymous,
+                  onBackPressed: onCollapse,
+                  widgetMode: controller.widgetMode,
+                ),
+                body: Padding(
+                  padding: EdgeInsets.only(bottom: controller.widgetMode == WidgetMode.full ? 24 : 15),
+                  child: SafeArea(
+                    top: false,
+                    bottom: false,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Column(
+                          children: [
+                            Expanded(
+                              child: hasApiError
+                                  ? ApiErrorWidget(
+                                      message: Strings.apiErrorGeneric.tr,
+                                      retryAction: () =>
+                                          controller.initChatController(),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 60,
+                                      ),
+                                    )
+                                  : const MessagesList(),
+                            ),
+                            const ChatInputField(),
+                          ],
+                        ),
+                        Transform.translate(
+                          offset: Offset(
+                            -12,
+                            -controller.messageInputFieldHeight.value,
                           ),
-                          const ChatInputField(),
-                        ],
-                      ),
-                      Transform.translate(
-                        offset: Offset(
-                          -12,
-                          -controller.messageInputFieldHeight.value,
-                        ),
-                        child: ScrollButton(
-                          toBottom: true,
-                          isVisible: scrollButtonVisible,
-                          onTap: () => controller.scrollToBottomChat(
-                            withAnimation: true,
+                          child: ScrollButton(
+                            toBottom: true,
+                            isVisible: scrollButtonVisible,
+                            onTap: () => controller.scrollToBottomChat(
+                              withAnimation: true,
+                            ),
+                            isAnonymous: isAnonymous,
                           ),
-                          isAnonymous: isAnonymous,
                         ),
-                      ),
-                      if (isAdvanced)
-                        Positioned(
-                          left: 12.5,
-                          bottom: isTablet ? 12 : 4,
-                          child: ChatToolsFAB(),
-                        ),
-                    ],
+                        if (isAdvanced)
+                          Positioned(
+                            left: 12.5,
+                            bottom: isTablet ? 12 : 4,
+                            child: ChatToolsFAB(),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),

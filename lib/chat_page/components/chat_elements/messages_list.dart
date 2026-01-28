@@ -30,10 +30,7 @@ class MessagesList extends GetView<ChatController> {
               onTap: () => controller.keyboardFocusNode.unfocus(),
               child: Transform.translate(
                 offset: const Offset(0, -42),
-                child: const Padding(
-                  padding: EdgeInsets.only(bottom: 35),
-                  child: InitialMessage(),
-                ),
+                child: InitialMessage(),
               ),
             ),
           ),

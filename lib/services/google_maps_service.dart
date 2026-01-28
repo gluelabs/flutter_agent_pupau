@@ -1,10 +1,12 @@
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 class GoogleMapsService {
   static void openGoogleMaps(GoogleMapData googleMapData) {
     String url;
     if (googleMapData.address != null && googleMapData.address!.isNotEmpty) {
-      if (Platform.isAndroid) {
+      if (!kIsWeb && Platform.isAndroid) {
         url =
             'https://maps.google.com/?q=${Uri.encodeFull(googleMapData.address!)}';
       } else {
@@ -12,7 +14,7 @@ class GoogleMapsService {
             'https://www.google.com/maps/search/?q=${Uri.encodeFull(googleMapData.address!)}';
       }
     } else if (googleMapData.position != null) {
-      if (Platform.isAndroid) {
+      if (!kIsWeb && Platform.isAndroid) {
         url =
             'https://maps.google.com/?q=${googleMapData.position?.latitude},${googleMapData.position?.longitude}';
       } else {

@@ -46,6 +46,8 @@ PODS:
     - DKImagePickerController/PhotoGallery
     - Flutter
   - Flutter (1.0.0)
+  - flutter_agent_pupau (1.0.0):
+    - Flutter
   - flutter_inappwebview_ios (0.0.1):
     - Flutter
     - flutter_inappwebview_ios/Core (= 0.0.1)
@@ -112,6 +114,7 @@ DEPENDENCIES:
   - downloadsfolder (from `.symlinks/plugins/downloadsfolder/ios`)
   - file_picker (from `.symlinks/plugins/file_picker/ios`)
   - Flutter (from `Flutter`)
+  - flutter_agent_pupau (from `.symlinks/plugins/flutter_agent_pupau/ios`)
   - flutter_inappwebview_ios (from `.symlinks/plugins/flutter_inappwebview_ios/ios`)
   - flutter_tts (from `.symlinks/plugins/flutter_tts/ios`)
   - google_sign_in_ios (from `.symlinks/plugins/google_sign_in_ios/darwin`)
@@ -146,6 +149,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/file_picker/ios"
   Flutter:
     :path: Flutter
+  flutter_agent_pupau:
+    :path: ".symlinks/plugins/flutter_agent_pupau/ios"
   flutter_inappwebview_ios:
     :path: ".symlinks/plugins/flutter_inappwebview_ios/ios"
   flutter_tts:
@@ -177,6 +182,7 @@ SPEC CHECKSUMS:
   downloadsfolder: 7d5c7b5d23e3c4dded522ff2a2ef14a56846378a
   file_picker: a0560bc09d61de87f12d246fc47d2119e6ef37be
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_agent_pupau: 6a94184000897e52cf9002588083832e6c558350
   flutter_inappwebview_ios: b89ba3482b96fb25e00c967aae065701b66e9b99
   flutter_tts: 35ac3c7d42412733e795ea96ad2d7e05d0a75113
   google_sign_in_ios: 00dfa94252eb10278b64828c81bcb7158a81a53a

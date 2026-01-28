@@ -186,7 +186,7 @@ class ChatController extends GetxController {
   onInit() {
     setDefautMessageInputFieldHeight();
     openChatWithConfig(pupauConfig);
-    ttsService.initTextToSpeach();
+    ttsService.initTextToSpeach(config: pupauConfig);
     PupauSharedPreferences.init();
     super.onInit();
   }

@@ -18,10 +18,7 @@ import 'package:flutter_agent_pupau/chat_page/components/web_elements/web_search
 import 'package:flutter_agent_pupau/chat_page/components/web_elements/web_search_news_modal.dart';
 
 class ToolUseBubble extends GetView<ChatController> {
-  const ToolUseBubble({
-    super.key,
-    required this.message,
-  });
+  const ToolUseBubble({super.key, required this.message});
 
   final ToolUseMessage message;
 
@@ -55,48 +52,53 @@ class ToolUseBubble extends GetView<ChatController> {
   @override
   Widget build(BuildContext context) {
     bool isTablet = DeviceService.isTablet;
-    bool isInitiallyExpanded =
-        ToolUseService.isInitiallyExpandedTool(message.type);
-    return Obx(() {
-      bool isAnonymous = controller.isAnonymous;
-      bool isExpanded = isInitiallyExpanded
-          ? !controller.isToolUseExpanded(message.id)
-          : controller.isToolUseExpanded(message.id);
-      IconData? toolUseIcon =
-          ToolUseService.getToolUseIcon(message.type);
-      bool showTool = message.showTool;
-      IconData? toolSuffixIcon =
-          ToolUseMessage.getToolUseSuffixIcon(message.type);
-      bool isChevronIcon = toolSuffixIcon == Symbols.chevron_forward;
-      bool isUserToggled =
-          // ignore: invalid_use_of_protected_member
-          controller.userToggledToolUseMessages.value.contains(message.id);
-      return Visibility(
-        visible: showTool,
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-          child: Padding(
-            padding: const EdgeInsets.all(6),
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                  splashFactory: NoSplash.splashFactory,
-                  focusColor: Colors.transparent),
-              child: InkWell(
-                onTap: tapToolUse,
-                borderRadius: BorderRadius.circular(6),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: isAnonymous
-                          ? Colors.white70
-                          : MyStyles.pupauTheme(!Get.isDarkMode).lilacPressed,
-                    ),
+    bool isInitiallyExpanded = ToolUseService.isInitiallyExpandedTool(
+      message.type,
+    );
+    bool isAnonymous = controller.isAnonymous;
+    bool showTool = message.showTool;
+    return Visibility(
+      visible: showTool,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(6),
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              splashFactory: NoSplash.splashFactory,
+              focusColor: Colors.transparent,
+            ),
+            child: InkWell(
+              onTap: tapToolUse,
+              borderRadius: BorderRadius.circular(6),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: isAnonymous
+                        ? Colors.white70
+                        : MyStyles.pupauTheme(!Get.isDarkMode).lilacPressed,
                   ),
-                  child: Column(
+                ),
+                child: Obx(() {
+                  bool isExpanded = isInitiallyExpanded
+                      ? !controller.isToolUseExpanded(message.id)
+                      : controller.isToolUseExpanded(message.id);
+                  IconData? toolSuffixIcon =
+                      ToolUseMessage.getToolUseSuffixIcon(message.type);
+                  bool isChevronIcon =
+                      toolSuffixIcon == Symbols.chevron_forward;
+                  bool isUserToggled = controller.userToggledToolUseMessages
+                      .contains(message.id);
+                  IconData? toolUseIcon = ToolUseService.getToolUseIcon(
+                    message.type,
+                  );
+                  return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
@@ -123,12 +125,13 @@ class ToolUseBubble extends GetView<ChatController> {
                                         color: Get.isDarkMode || isAnonymous
                                             ? Colors.white
                                             : MyStyles.pupauTheme(
-                                                    !Get.isDarkMode)
-                                                .accent,
+                                                !Get.isDarkMode,
+                                              ).accent,
                                       ),
                                     ),
                                   ),
-                                  if (message.browserUseData
+                                  if (message
+                                          .browserUseData
                                           ?.isLoadingPlaceholder ??
                                       false)
                                     Padding(
@@ -141,8 +144,8 @@ class ToolUseBubble extends GetView<ChatController> {
                                           color: Get.isDarkMode || isAnonymous
                                               ? Colors.white
                                               : MyStyles.pupauTheme(
-                                                      !Get.isDarkMode)
-                                                  .accent,
+                                                  !Get.isDarkMode,
+                                                ).accent,
                                         ),
                                       ),
                                     ),
@@ -151,55 +154,56 @@ class ToolUseBubble extends GetView<ChatController> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                           Padding(
-                             padding: const EdgeInsets.only(top: 2),
-                             child: AnimatedRotation(
-                               key: ValueKey('${message.id}_rotation'),
-                               turns: isChevronIcon
-                                   ? (isExpanded ? 0.75 : 0.25)
-                                   : 0,
-                               duration: isUserToggled 
-                                   ? const Duration(milliseconds: 200) 
-                                   : Duration.zero,
-                               curve: Curves.easeInOut,
-                               child: Icon(
-                                 ToolUseMessage.getToolUseSuffixIcon(
-                                     message.type),
-                                 color: Get.isDarkMode || isAnonymous
-                                     ? Colors.white.withValues(alpha: 0.7)
-                                     : MyStyles.pupauTheme(!Get.isDarkMode)
-                                         .accent
-                                         .withValues(alpha: 0.7),
-                                 size: 24,
-                               ),
-                             ),
-                           ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: AnimatedRotation(
+                              key: ValueKey('${message.id}_rotation'),
+                              turns: isChevronIcon
+                                  ? (isExpanded ? 0.75 : 0.25)
+                                  : 0,
+                              duration: isUserToggled
+                                  ? const Duration(milliseconds: 200)
+                                  : Duration.zero,
+                              curve: Curves.easeInOut,
+                              child: Icon(
+                                ToolUseMessage.getToolUseSuffixIcon(
+                                  message.type,
+                                ),
+                                color: Get.isDarkMode || isAnonymous
+                                    ? Colors.white.withValues(alpha: 0.7)
+                                    : MyStyles.pupauTheme(
+                                        !Get.isDarkMode,
+                                      ).accent.withValues(alpha: 0.7),
+                                size: 24,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                       AnimatedSize(
-                         key: ValueKey('${message.id}_size'),
-                         duration: isUserToggled 
-                             ? const Duration(milliseconds: 200) 
-                             : Duration.zero,
-                         curve: Curves.easeInOut,
-                         child: isExpanded
-                             ? Padding(
-                                 padding: const EdgeInsets.only(top: 8),
-                                 child: ToolUseMessageContent(
-                                   toolUseMessage: message,
-                                   isAnonymous: isAnonymous,
-                                 ),
-                               )
-                             : const SizedBox.shrink(),
-                       ),
+                      AnimatedSize(
+                        key: ValueKey('${message.id}_size'),
+                        duration: isUserToggled
+                            ? const Duration(milliseconds: 200)
+                            : Duration.zero,
+                        curve: Curves.easeInOut,
+                        child: isExpanded
+                            ? Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: ToolUseMessageContent(
+                                  toolUseMessage: message,
+                                  isAnonymous: isAnonymous,
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
                     ],
-                  ),
-                ),
+                  );
+                }),
               ),
             ),
           ),
         ),
-      );
-    });
+      ),
+    );
   }
 }

@@ -17,12 +17,8 @@ class MessageThinking extends GetView<ChatController> {
 
   @override
   Widget build(BuildContext context) {
-    String? thinking =
-        toolUseMessage?.nativeToolData?.values.firstOrNull?.toString();
-
-    return CustomSelectableText(
-        text: thinking ?? Strings.thinking.tr,
-        isAnonymous: isAnonymous,
-      );
+    String thought =
+        toolUseMessage?.thinkingData?.thought ?? Strings.thinking.tr;
+    return CustomSelectableText(text: thought, isAnonymous: isAnonymous);
   }
 }

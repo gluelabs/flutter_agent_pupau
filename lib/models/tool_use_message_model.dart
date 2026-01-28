@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_thinking_data.dart';
 import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_ask_user_data.dart';
@@ -13,7 +14,6 @@ import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_to_do_list_d
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_web_reader_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_web_search_data.dart';
 import 'package:flutter_agent_pupau/services/tool_use_service.dart';
-
 class ToolUseMessage {
   String id;
   String? messageId;
@@ -29,6 +29,7 @@ class ToolUseMessage {
   Map<String, dynamic>? nativeToolData;
   ToolUsePipelineData? pipelineData;
   Map<String, dynamic>? remoteCallData;
+  ToolUseThinkingData? thinkingData;
   ToolUseToDoListData? toDoListData;
   ToolUseWebSearchData? webSearchData;
   ToolUseKnowledgeBaseData? knowledgeBaseData;
@@ -54,6 +55,7 @@ class ToolUseMessage {
     this.nativeToolData,
     this.pipelineData,
     this.remoteCallData,
+    this.thinkingData,
     this.toDoListData,
     this.webSearchData,
     this.knowledgeBaseData,
@@ -70,6 +72,7 @@ class ToolUseMessage {
         nativeToolType: json["typeDetails"]?["nativeTool"]?["id"]);
     bool isPipeline = type == ToolUseType.pipeline;
     bool isRemoteCall = type == ToolUseType.remoteCall;
+    bool isThinking = type == ToolUseType.nativeToolsThinking;
     bool isTodoList = type == ToolUseType.nativeToolsToDoList;
     bool isWebSearch = type == ToolUseType.nativeToolsWebSearch;
     bool isKnowledgeBase = type == ToolUseType.nativeToolsKnowledgeBase;
@@ -97,6 +100,7 @@ class ToolUseMessage {
           : null,
       pipelineData: isPipeline ? ToolUsePipelineData.fromJson(data) : null,
       remoteCallData: isRemoteCall ? data : null,
+      thinkingData: isThinking ? ToolUseThinkingData.fromJson(json["typeDetails"]) : null,
       toDoListData: isTodoList ? ToolUseToDoListData.fromJson(data, json["typeDetails"]) : null,
       webSearchData: isWebSearch ? ToolUseWebSearchData.fromJson(data) : null,
       knowledgeBaseData:
@@ -123,6 +127,7 @@ class ToolUseMessage {
             ?["id"]);
     bool isPipeline = type == ToolUseType.pipeline;
     bool isRemoteCall = type == ToolUseType.remoteCall;
+    bool isThinking = type == ToolUseType.nativeToolsThinking;
     bool isTodoList = type == ToolUseType.nativeToolsToDoList;
     bool isWebSearch = type == ToolUseType.nativeToolsWebSearch;
     bool isKnowledgeBase = type == ToolUseType.nativeToolsKnowledgeBase;
@@ -150,6 +155,7 @@ class ToolUseMessage {
           : null,
       pipelineData: isPipeline ? ToolUsePipelineData.fromJson(answer) : null,
       remoteCallData: isRemoteCall ? answer : null,
+      thinkingData: isThinking ? ToolUseThinkingData.fromJson(json["extraInfo"]?["typeDetails"]) : null,
       toDoListData: isTodoList ? ToolUseToDoListData.fromJson(answer, json["extraInfo"]?["typeDetails"]) : null,
       webSearchData: isWebSearch ? ToolUseWebSearchData.fromJson(answer) : null,
       knowledgeBaseData:
@@ -174,6 +180,9 @@ class ToolUseMessage {
   }
 
   String getName() {
+    if (thinkingData != null && thinkingData!.subject.trim() != "") {
+      return thinkingData!.subject;
+    }
     if (documentData?.action != null) {
       return toolName.replaceAll("_", " ").capitalize! +
           (" (${documentData!.action!.replaceAll("_", " ").capitalize})");

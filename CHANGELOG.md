@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1] - 28/01/2026
+
+### Changes
+- Improved UI spacing for all widgetMode settings
+- Improved support for web
+- Improved README
+
 ## [1.0.0] - 23/01/2026
 
 ### Added

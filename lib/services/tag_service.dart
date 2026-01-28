@@ -267,7 +267,7 @@ class TagService {
   // Thinking Tag
 
   static bool hasLoadingThinkingTag(String message) =>
-      message.contains(thinkingOpeningTag) &&
+      message.startsWith(thinkingOpeningTag) &&
       !message.contains(thinkingClosingTag);
 
   static String thinkingTagNewLinesRemover(String message) {

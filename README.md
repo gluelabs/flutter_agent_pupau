@@ -1,6 +1,6 @@
 # Flutter Agent Pupau
 
-A Flutter plugin that integrates a Pupau agent in your application. 
+A Flutter plugin that integrates Pupau AI agents in your application.
 
 ## Features
 
@@ -11,13 +11,18 @@ A Flutter plugin that integrates a Pupau agent in your application.
 - **Multi-language Support** - Built-in support for 14 languages
 - **Programmatic Control** - Open, reset, and load conversations via code
 
+## Documentation
+
+For full documentation on Pupau and more information on this plugin, visit
+[Pupau AI Docs](https://docs.pupau.ai/docs/guides/integrations/flutter_plugin)
+
 ## Installation
 
 Add the package name and version in your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_agent_pupau: ^1.0.0
+  flutter_agent_pupau: ^1.0.1
 ```
 
 Then run:
@@ -28,19 +33,17 @@ flutter pub get
 
 ## Usage
 
-### 1. Import the Package
+### 1. Import the plugin
 
 ```dart
 import 'package:flutter_agent_pupau/flutter_agent_pupau.dart';
 ```
 
-## Configuration
+### 2. Configure PupauConfig
 
-Create a configuration using one of two authentication methods:
+Create a PupauConfig using one of two authentication methods:
 
-### Option A: API Key Authentication
-
-The assistant ID is automatically extracted from the API key.
+#### Option A: API Key Authentication
 
 ```dart
 final config = PupauConfig.createWithApiKey(
@@ -64,7 +67,7 @@ final config = PupauConfig.createWithApiKey(
 );
 ```
 
-### Option B: Bearer Token Authentication
+#### Option B: Bearer Token Authentication
 
 Requires explicit assistant ID.
 
@@ -94,6 +97,8 @@ PupauAgentAvatar(
 )
 ```
 
+<img src="assets/examples/example_full_mode.png" alt="Full Mode" width="30%" />
+
 ### Sized Mode
 
 The avatar expands in-place to a specified width and height.
@@ -111,6 +116,27 @@ PupauAgentAvatar(
   ),
 )
 ```
+
+### Initially Expanded Chat
+
+**If you want the chat to be already expanded when the widget first loads**, use the sized mode with `initiallyExpanded: true`. You can also specify to not show the close button, so that the chat will always stay open.
+
+```dart
+PupauAgentAvatar(
+  config: PupauConfig.createWithApiKey(
+    apiKey: 'your-api-key',
+    widgetMode: WidgetMode.sized,
+    sizedConfig: SizedConfig(
+      width: 400,
+      height: 600,
+      initiallyExpanded: true, //Chat starts expanded!
+      hasCloseButton: false //Hide close button so that expanded chat cannot be closed
+    ),
+  ),
+)
+```
+
+<img src="assets/examples/example_sized_mode.png" alt="Sized Mode" width="30%" />
 
 ### Floating Overlay Mode
 
@@ -130,23 +156,8 @@ PupauAgentAvatar(
 )
 ```
 
-### Initially Expanded Chat
+<img src="assets/examples/example_floating_mode.png" alt="Floating Mode" width="30%" />
 
-**If you want the chat to be already expanded when the widget first loads**, use the sized mode with `initiallyExpanded: true`:
-
-```dart
-PupauAgentAvatar(
-  config: PupauConfig.createWithApiKey(
-    apiKey: 'your-api-key',
-    widgetMode: WidgetMode.sized,
-    sizedConfig: SizedConfig(
-      width: 400,
-      height: 600,
-      initiallyExpanded: true, //Chat starts expanded!
-    ),
-  ),
-)
-```
 
 ## Programmatic Control with PupauChatUtils
 
@@ -240,7 +251,6 @@ PupauEventService.pupauStream.listen((event) {
 | `timeToComplete` | `int` (milliseconds) | Time to complete response |
 | `timeToFirstToken` | `int` (milliseconds) | Time to first token received |
 
-```
 
 ## Supported Languages
 

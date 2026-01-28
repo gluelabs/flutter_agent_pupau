@@ -32,6 +32,7 @@ class MessageStreamBuilder extends GetView<ChatController> {
             : MessageContent(
                 messageId: message.id,
                 message: notifierMessage.message,
+                status: message.status,
                 createdAt: message.createdAt,
                 isAssistant: true,
                 isAnonymous: isAnonymous,

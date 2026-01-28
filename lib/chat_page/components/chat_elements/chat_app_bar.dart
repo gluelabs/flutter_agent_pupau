@@ -40,8 +40,8 @@ class ChatAppBar extends GetView<ChatController>
       automaticallyImplyLeading: false,
       centerTitle: false,
       elevation: 1,
-      titleSpacing: isTablet ? 20 : 0,
-      leadingWidth: hasCloseButton ? 12 : 45,
+      titleSpacing: 0,
+      leadingWidth: widgetMode == WidgetMode.full ? 48 : 24,
       actionsIconTheme: IconThemeData(
         color: isAnonymous
             ? Colors.white
@@ -54,8 +54,8 @@ class ChatAppBar extends GetView<ChatController>
       surfaceTintColor: isAnonymous
           ? Colors.black
           : MyStyles.pupauTheme(!Get.isDarkMode).white,
-      leading: hasCloseButton
-          ? const SizedBox(width: 16)
+      leading: widgetMode != WidgetMode.full
+          ? const SizedBox()
           : Padding(
               padding: const EdgeInsets.only(left: 6),
               child: IconButton(
@@ -68,91 +68,88 @@ class ChatAppBar extends GetView<ChatController>
                 ),
               ),
             ),
-      title: Padding(
-        padding: EdgeInsets.only(top: widgetMode != WidgetMode.full ? 16 : 0),
-        child: Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: Skeletonizer(
-                enabled: assistant == null,
-                effect: StyleService.skeletonEffect(Get.isDarkMode),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(100),
-                  onTap: assistant == null
-                      ? null
-                      : () {
-                          controller.keyboardFocusNode.unfocus();
-                          showAssistantInfoModal(assistant);
-                        },
-                  child: Container(
-                    height: isTablet ? 48 : 40,
-                    width: isTablet ? 48 : 40,
-                    decoration: BoxDecoration(
+      title: Row(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Skeletonizer(
+              enabled: assistant == null,
+              effect: StyleService.skeletonEffect(Get.isDarkMode),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(100),
+                onTap: assistant == null
+                    ? null
+                    : () {
+                        controller.keyboardFocusNode.unfocus();
+                        showAssistantInfoModal(assistant);
+                      },
+                child: Container(
+                  height: isTablet ? 48 : 40,
+                  width: isTablet ? 48 : 40,
+                  decoration: BoxDecoration(
+                    color: isAnonymous
+                        ? Colors.white
+                        : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                    shape: BoxShape.circle,
+                    border: Border.all(
                       color: isAnonymous
                           ? Colors.white
                           : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isAnonymous
-                            ? Colors.white
-                            : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
-                        width: 1.5,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: assistant == null
+                      ? SizedBox(
+                          height: isTablet ? 48 : 40,
+                          width: isTablet ? 48 : 40,
+                        )
+                      : AssistantAvatar(
+                          assistantId: assistant.id,
+                          imageUuid: assistant.imageUuid,
+                          radius: isTablet ? 24 : 20,
+                          isMarketplaceUrl: isMarketplace,
+                          format: ImageFormat.low,
+                        ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Skeletonizer(
+              enabled: assistant == null,
+              child: InkWell(
+                onTap: assistant == null
+                    ? null
+                    : () => showAssistantInfoModal(assistant),
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        assistant?.name ?? "Assistant Name ",
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: isTablet ? 18 : 15,
+                          color: isAnonymous
+                              ? Colors.white
+                              : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                        ),
                       ),
                     ),
-                    child: assistant == null
-                        ? SizedBox(
-                            height: isTablet ? 48 : 40,
-                            width: isTablet ? 48 : 40,
-                          )
-                        : AssistantAvatar(
-                            assistantId: assistant.id,
-                            imageUuid: assistant.imageUuid,
-                            radius: isTablet ? 24 : 20,
-                            isMarketplaceUrl: isMarketplace,
-                            format: ImageFormat.low,
-                          ),
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Skeletonizer(
-                enabled: assistant == null,
-                child: InkWell(
-                  onTap: assistant == null
-                      ? null
-                      : () => showAssistantInfoModal(assistant),
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          assistant?.name ?? "Assistant Name ",
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: isTablet ? 18 : 15,
-                            color: isAnonymous
-                                ? Colors.white
-                                : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
-                          ),
+                    if (isMarketplace)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 6),
+                        child: MarketplaceIcon(
+                          color: MyStyles.pupauTheme(
+                            !Get.isDarkMode,
+                          ).darkBlue,
                         ),
                       ),
-                      if (isMarketplace)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 6),
-                          child: MarketplaceIcon(
-                            color: MyStyles.pupauTheme(
-                              !Get.isDarkMode,
-                            ).darkBlue,
-                          ),
-                        ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       actions: hasCloseButton
           ? [

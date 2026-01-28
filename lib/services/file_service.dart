@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:downloadsfolder/downloadsfolder.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/chat_page/utils/modal_utils.dart';
 import 'package:get/get.dart';
@@ -16,6 +17,8 @@ import 'package:pro_image_editor/core/models/editor_configs/pro_image_editor_con
 import 'package:pro_image_editor/features/main_editor/main_editor.dart';
 import 'package:flutter_agent_pupau/services/api_service.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
+import 'package:flutter_agent_pupau/services/file_service_stub.dart'
+    if (dart.library.html) 'package:flutter_agent_pupau/services/file_service_web.dart';
 import 'package:flutter_agent_pupau/utils/api_urls.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/error_snackbar.dart';
@@ -254,9 +257,22 @@ class FileService {
     String extension, // e.g., 'md', 'pdf', 'docx'
   ) async {
     try {
-      Platform.isAndroid
-          ? await saveToDownloadsAndroid(content, fileName, extension)
-          : await saveToDownloadsIos(content, fileName, extension);
+      if (kIsWeb) {
+        // On web, trigger a download using browser APIs
+        final success = await FileServiceWeb.saveToDownloadsWeb(
+          content,
+          fileName,
+          extension,
+        );
+        if (!success) {
+          showErrorSnackbar(Strings.fileDownloadFail.tr);
+          return false;
+        }
+      } else if (Platform.isAndroid) {
+        await saveToDownloadsAndroid(content, fileName, extension);
+      } else if (Platform.isIOS) {
+        await saveToDownloadsIos(content, fileName, extension);
+      }
       showFeedbackSnackbar(Strings.fileDownloadSuccess.tr, Symbols.download);
       return true;
     } catch (e) {

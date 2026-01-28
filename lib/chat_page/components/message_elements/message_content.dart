@@ -16,6 +16,7 @@ class MessageContent extends StatelessWidget {
       {super.key,
       required this.messageId,
       required this.message,
+      required this.status,
       required this.createdAt,
       required this.isAssistant,
       required this.isAnonymous,
@@ -24,6 +25,7 @@ class MessageContent extends StatelessWidget {
 
   final String messageId;
   final String message;
+  final MessageStatus status;
   final DateTime? createdAt;
   final bool isAssistant;
   final bool isAnonymous;
@@ -42,8 +44,8 @@ class MessageContent extends StatelessWidget {
     PromptReflection? reflection = hasReflectionTag
         ? TagService.extractReflection(message, messageId)
         : null;
-    bool isLoading = message.trim() == "" ||
-        TagService.hasLoadingThinkingTag(message);
+    bool isLoading = status == MessageStatus.loading && (message.trim() == "" ||
+        TagService.hasLoadingThinkingTag(message));
     return isLoading
         ? const SizedBox()
         : Column(

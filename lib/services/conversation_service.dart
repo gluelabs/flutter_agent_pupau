@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/error_snackbar.dart';
 import 'package:flutter_agent_pupau/services/pupau_event_service.dart';
@@ -37,7 +36,7 @@ class ConversationService {
         RequestType.post,
         data: {
           "title": "New Conversation",
-          "source": Platform.isIOS ? "IOS" : "ANDROID",
+          "source": "INTEGRATION",
           "data": "",
           if (isAnonymous)
             "encryptionPass":

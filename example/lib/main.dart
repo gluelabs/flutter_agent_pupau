@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/flutter_agent_pupau.dart';
 
+// Replace with your assistant API key
+const String assistantApiKey = 'your-api-key-here';
+
+// Create the configuration for the assistant
+final PupauConfig pupauConfig = PupauConfig.createWithApiKey(
+  apiKey: assistantApiKey,
+);
+
 void main() {
   runApp(const MyApp());
 }
@@ -39,10 +47,9 @@ class HomePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+            // Add the PupauAgentAvatar widget with the configuration
             PupauAgentAvatar(
-              config: PupauConfig.createWithApiKey(
-                apiKey: 'your-api-key-here',
-              ),
+              config: pupauConfig,
             ),
           ],
         ),
