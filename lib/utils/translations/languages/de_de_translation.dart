@@ -174,4 +174,10 @@ const Map<String, String> deDe = {
       'Google Maps API-Schlüssel funktioniert nicht. Bitte überprüfen Sie Ihre API-Schlüssel-Konfiguration in PupauConfig.',
   Strings.conversationForbidden: 'Zugriff auf dieses Gespräch verweigert',
   Strings.conversationLoadFailed: 'Gespräch konnte nicht geladen werden',
+  Strings.convertingAudio: 'Warten auf Transkription',
+  Strings.audioMessage: 'Sprachnachricht',
+  Strings.recordAudio: 'Sprachnachricht aufnehmen',
+  Strings.sendVoiceMessage: 'Sprachnachricht senden',
+  Strings.microphoneAccessDenied:
+      'Mikrofonzugriff verweigert, bitte gewähren Sie der App die Mikrofonberechtigung in den Geräteeinstellungen',
 };

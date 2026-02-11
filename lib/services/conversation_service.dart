@@ -256,6 +256,8 @@ class ConversationService {
         return MessageType.retry;
       case "conversation_title_generated":
         return MessageType.conversationTitleGenerated;
+      case "audio_input_transcription":
+        return MessageType.audioInputTranscription;
       default:
         return null;
     }

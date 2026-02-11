@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_agent_pupau/chat_page/components/message_elements/audio_converting_info.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/context_info_container.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/message_body.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/message_sender_info.dart';
@@ -21,7 +22,8 @@ class MessageContent extends StatelessWidget {
       required this.isAssistant,
       required this.isAnonymous,
       this.assistant,
-      this.contextInfo});
+      this.contextInfo,
+      this.isAudioInput = false});
 
   final String messageId;
   final String message;
@@ -31,6 +33,7 @@ class MessageContent extends StatelessWidget {
   final bool isAnonymous;
   final Assistant? assistant;
   final ContextInfo? contextInfo;
+  final bool isAudioInput;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +49,14 @@ class MessageContent extends StatelessWidget {
         : null;
     bool isLoading = status == MessageStatus.loading && (message.trim() == "" ||
         TagService.hasLoadingThinkingTag(message));
+    bool isAudioTranscribing = !isAssistant &&
+        isAudioInput &&
+        message.trim().isEmpty &&
+        status == MessageStatus.sent;
+    if (isAudioTranscribing) {
+      return AudioConvertingInfo(
+          isAnonymous: isAnonymous, createdAt: createdAt);
+    }
     return isLoading
         ? const SizedBox()
         : Column(

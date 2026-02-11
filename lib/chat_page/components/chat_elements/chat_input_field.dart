@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/conversation_starters_list.dart';
+import 'package:flutter_agent_pupau/chat_page/components/chat_elements/recording_bar.dart';
+import 'package:flutter_agent_pupau/chat_page/components/chat_elements/voice_recording_button.dart';
 import 'package:get/get.dart';
 import 'package:mention_tag_text_field/mention_tag_text_field.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/my_mention_tag_text_field.dart';
@@ -19,6 +21,7 @@ class ChatInputField extends GetView<ChatController> {
   Widget build(BuildContext context) {
     bool isTablet = DeviceService.isTablet;
     bool isAnonymous = controller.isAnonymous;
+    bool hideAudioRecordingButton = controller.hideAudioRecordingButton;
     bool hideInputBox = controller.hideInputBox;
     if (hideInputBox) return const SizedBox();
     return Column(
@@ -38,6 +41,7 @@ class ChatInputField extends GetView<ChatController> {
               bool isEnabled = !controller.hasApiError.value;
               bool sendIsActive = controller.sendIsActive();
               bool isFocused = controller.isMessageInputFieldFocused.value;
+              bool isRecording = controller.isRecording.value;
               bool isAdvanced = controller.isAdvanced();
               bool isMultiline =
                   controller.messageInputFieldHeight.value >
@@ -80,95 +84,113 @@ class ChatInputField extends GetView<ChatController> {
                                   ).lilacHover,
                           ),
                         ),
-                        child: FocusScope(
-                          child: Focus(
-                            onFocusChange: (value) =>
-                                controller.setMessageInputFieldFocused(value),
-                            child: Stack(
-                              children: [
-                                MyMentionTagTextFormField(
-                                  textCapitalization:
-                                      TextCapitalization.sentences,
-                                  cursorColor: isAnonymous
-                                      ? Colors.black
-                                      : null,
-                                  focusNode: controller.keyboardFocusNode,
-                                  controller: controller.inputMessageController,
-                                  keyboardType: TextInputType.multiline,
-                                  textInputAction: TextInputAction.newline,
-                                  minLines: 1,
-                                  maxLines: 12,
-                                  style: TextStyle(
-                                    fontSize: isTablet ? 16 : 14,
-                                    color: isAnonymous
-                                        ? AnonymousThemeColors.userText
-                                        : null,
-                                  ),
-                                  decoration: InputDecoration(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 15,
-                                      vertical: 6,
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    hintText: "${Strings.message.tr}...",
-                                    hintStyle: TextStyle(
-                                      fontSize: isTablet ? 16 : 14,
-                                      color: isAnonymous
-                                          ? AnonymousThemeColors.userText
-                                          : null,
-                                    ),
-                                    suffixIcon: const SizedBox(),
-                                  ),
-                                  onFieldSubmitted: sendIsActive
-                                      ? (_) {
-                                          controller.sendMessage(
-                                            controller
-                                                .inputMessageController
-                                                .getText,
-                                            false,
-                                          );
+                        child: isRecording
+                            ? RecordingBar(
+                                duration: controller.recordingDuration.value,
+                                onCancel: () => controller.cancelRecording(),
+                                onSend: () => controller.stopAndSendRecording(),
+                                isAnonymous: isAnonymous,
+                              )
+                            : FocusScope(
+                                child: Focus(
+                                  onFocusChange: (value) => controller
+                                      .setMessageInputFieldFocused(value),
+                                  child: Stack(
+                                    children: [
+                                      MyMentionTagTextFormField(
+                                        textCapitalization:
+                                            TextCapitalization.sentences,
+                                        cursorColor: isAnonymous
+                                            ? Colors.black
+                                            : null,
+                                        focusNode: controller.keyboardFocusNode,
+                                        controller:
+                                            controller.inputMessageController,
+                                        keyboardType: TextInputType.multiline,
+                                        textInputAction:
+                                            TextInputAction.newline,
+                                        minLines: 1,
+                                        maxLines: 12,
+                                        style: TextStyle(
+                                          fontSize: isTablet ? 16 : 14,
+                                          color: isAnonymous
+                                              ? AnonymousThemeColors.userText
+                                              : null,
+                                        ),
+                                        decoration: InputDecoration(
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 15,
+                                                vertical: 6,
+                                              ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderSide: BorderSide.none,
+                                          ),
+                                          border: OutlineInputBorder(
+                                            borderSide: BorderSide.none,
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderSide: BorderSide.none,
+                                          ),
+                                          hintText: "${Strings.message.tr}...",
+                                          hintStyle: TextStyle(
+                                            fontSize: isTablet ? 16 : 14,
+                                            color: isAnonymous
+                                                ? AnonymousThemeColors.userText
+                                                : null,
+                                          ),
+                                          suffixIcon: const SizedBox(),
+                                        ),
+                                        onFieldSubmitted: sendIsActive
+                                            ? (_) {
+                                                controller.sendMessage(
+                                                  controller
+                                                      .inputMessageController
+                                                      .getText,
+                                                  false,
+                                                );
+                                                controller
+                                                    .getMessageInputFieldHeight(
+                                                      context,
+                                                    );
+                                              }
+                                            : null,
+                                        onChanged: (value) {
                                           controller.getMessageInputFieldHeight(
                                             context,
                                           );
-                                        }
-                                      : null,
-                                  onChanged: (value) {
-                                    controller.getMessageInputFieldHeight(
-                                      context,
-                                    );
-                                    controller.messages.refresh();
-                                    controller.inputMessage.value = value;
-                                    controller.update();
-                                  },
-                                  mentionTagDecoration: MentionTagDecoration(
-                                    mentionStart: ["@"],
-                                    mentionTextStyle: TextStyle(
-                                      color: MyStyles.pupauTheme(
-                                        !Get.isDarkMode,
-                                      ).accent,
-                                      fontSize: isTablet ? 16 : 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                          controller.messages.refresh();
+                                          controller.inputMessage.value = value;
+                                          controller.update();
+                                        },
+                                        mentionTagDecoration:
+                                            MentionTagDecoration(
+                                              mentionStart: ["@"],
+                                              mentionTextStyle: TextStyle(
+                                                color: MyStyles.pupauTheme(
+                                                  !Get.isDarkMode,
+                                                ).accent,
+                                                fontSize: isTablet ? 16 : 14,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                        onMention: controller.onMention,
+                                      ),
+                                      if (!hideAudioRecordingButton)
+                                        Positioned(
+                                          right: 42,
+                                          bottom: 0,
+                                          child: VoiceRecordingButton(),
+                                        ),
+                                      Positioned(
+                                        right: 0,
+                                        bottom: 0,
+                                        child: const SendMessageButton(),
+                                      ),
+                                    ],
                                   ),
-                                  onMention: controller.onMention,
                                 ),
-                                Positioned(
-                                  right: 0,
-                                  bottom: 0,
-                                  child: const SendMessageButton(),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                              ),
                       ),
                     ),
                   ),

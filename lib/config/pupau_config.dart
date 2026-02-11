@@ -50,6 +50,9 @@ class PupauConfig {
   /// Whether to show stats regarding tokens, credits and context size. Defaults to false.
   final bool showNerdStats;
 
+  /// Whether the audio recording button is hidden. See README for details on permissions setup.
+  final bool hideAudioRecordingButton;
+
   /// Custom properties, useful to pass custom data to the agent.
   final dynamic customProperties;
 
@@ -68,6 +71,7 @@ class PupauConfig {
     this.sizedConfig,
     this.floatingConfig,
     this.showNerdStats = false,
+    this.hideAudioRecordingButton = false,
     this.customProperties,
     this.conversationStarters = const [],
   });
@@ -93,6 +97,7 @@ class PupauConfig {
     SizedConfig? sizedConfig,
     FloatingConfig? floatingConfig,
     bool showNerdStats = false,
+    bool hideAudioRecordingButton = false,
     dynamic customProperties,
     List<String> conversationStarters = const [],
   }) {
@@ -108,6 +113,7 @@ class PupauConfig {
       sizedConfig: sizedConfig,
       floatingConfig: floatingConfig,
       showNerdStats: showNerdStats,
+      hideAudioRecordingButton: hideAudioRecordingButton,
       customProperties: customProperties,
       conversationStarters: conversationStarters,
     );
@@ -136,6 +142,7 @@ class PupauConfig {
     SizedConfig? sizedConfig,
     FloatingConfig? floatingConfig,
     bool showNerdStats = false,
+    bool hideAudioRecordingButton = false,
     dynamic customProperties,
     List<String> conversationStarters = const [],
   }) {
@@ -152,6 +159,7 @@ class PupauConfig {
       sizedConfig: sizedConfig,
       floatingConfig: floatingConfig,
       showNerdStats: showNerdStats,
+      hideAudioRecordingButton: hideAudioRecordingButton,
       customProperties: customProperties,
       conversationStarters: conversationStarters,
     );
@@ -195,7 +203,7 @@ class SizedConfig {
     required this.width,
     required this.height,
     this.initiallyExpanded = false,
-    this.hasCloseButton = true,
+    this.hasCloseButton = true
   });
 }
 

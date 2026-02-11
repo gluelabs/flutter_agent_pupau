@@ -38,6 +38,7 @@ class MessageStreamBuilder extends GetView<ChatController> {
                 isAnonymous: isAnonymous,
                 assistant: assistant,
                 contextInfo: message.contextInfo,
+                isAudioInput: message.isAudioInput,
               );
       },
     );

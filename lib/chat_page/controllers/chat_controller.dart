@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/chat_image_full.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_agent_pupau/chat_page/components/chat_elements/custom_ac
 import 'package:flutter_agent_pupau/chat_page/utils/modal_utils.dart';
 import 'package:flutter_agent_pupau/config/pupau_config.dart';
 import 'package:flutter_agent_pupau/services/api_service.dart';
+import 'package:flutter_agent_pupau/services/audio_recording_service.dart';
 import 'package:flutter_agent_pupau/services/message_service.dart';
 import 'package:flutter_agent_pupau/services/sse_service.dart';
 import 'package:flutter_agent_pupau/utils/api_urls.dart';
@@ -49,6 +51,7 @@ class ChatController extends GetxController {
   bool get isMarketplace => pupauConfig?.isMarketplace ?? false;
   bool get isAnonymous => pupauConfig?.isAnonymous ?? false;
   bool get hideInputBox => pupauConfig?.hideInputBox ?? false;
+  bool get hideAudioRecordingButton => pupauConfig?.hideAudioRecordingButton ?? false;
   WidgetMode get widgetMode => pupauConfig?.widgetMode ?? WidgetMode.full;
   RxList<String> conversationStarters = <String>[].obs;
 
@@ -161,6 +164,11 @@ class ChatController extends GetxController {
   // Image Full Screen
   Rxn<ChatImage> selectedImage = Rxn<ChatImage>();
   Map<String, Uint8List> cachedToolUseImages = {};
+
+  // Audio recording
+  RxBool isRecording = false.obs;
+  Rx<Duration> recordingDuration = Duration.zero.obs;
+  Timer? _recordingTimer;
 
   // KB References
   List<KbReference> kbReferencesBackup =
@@ -524,7 +532,7 @@ class ChatController extends GetxController {
         },
       ),
     );
-    Stream<SSEModel>? sseStream = await SSEService.createSSEStrean(
+    Stream<SSEModel>? sseStream = await SSEService.createSSEStream(
       assistantId,
       conversation.value?.id ?? "",
       conversation.value?.token ?? "",
@@ -640,6 +648,10 @@ class ChatController extends GetxController {
       handleWebSearchQueryMessage(newMessage);
       return;
     }
+     if (newMessage.type == MessageType.audioInputTranscription) {
+      handleAudioInputTranscription(newMessage);
+      return;
+    }
     if (newMessage.type == MessageType.layerResponse ||
         newMessage.type == MessageType.webSearch ||
         newMessage.type == MessageType.retry) {
@@ -696,6 +708,20 @@ class ChatController extends GetxController {
       );
       update();
       return;
+    }
+  }
+
+  void handleAudioInputTranscription(PupauMessage newSseMessage) {
+    PupauMessage? sentAudioMessage = messages.firstWhereOrNull((message) =>
+        message.status == MessageStatus.sent && message.isAudioInput);
+    if (sentAudioMessage != null &&
+        (newSseMessage.transcription ?? newSseMessage.query)
+            .trim()
+            .isNotEmpty) {
+      sentAudioMessage.query =
+          newSseMessage.transcription ?? newSseMessage.query;
+      messages.refresh();
+      update();
     }
   }
 
@@ -1833,5 +1859,100 @@ class ChatController extends GetxController {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       if (locale != null) Get.updateLocale(locale);
     });
+  }
+
+  // Audio recording
+
+  Future<void> startRecording() async {
+    if (isRecording.value || hasApiError.value) return;
+    final String? path = await AudioRecordingService.startRecording();
+    if (path == null) return;
+    isRecording.value = true;
+    recordingDuration.value = Duration.zero;
+    _recordingTimer?.cancel();
+    _recordingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      recordingDuration.value += const Duration(seconds: 1);
+    });
+    update();
+  }
+
+  Future<void> stopAndSendRecording() async {
+    if (!isRecording.value) return;
+    _recordingTimer?.cancel();
+    _recordingTimer = null;
+    isRecording.value = false;
+    final File? file = await AudioRecordingService.stopRecording();
+    recordingDuration.value = Duration.zero;
+    update();
+    if (file != null) await sendAudioMessage(file);
+  }
+
+  Future<void> cancelRecording() async {
+    if (!isRecording.value) return;
+    _recordingTimer?.cancel();
+    _recordingTimer = null;
+    isRecording.value = false;
+    recordingDuration.value = Duration.zero;
+    await AudioRecordingService.cancelRecording();
+    update();
+  }
+
+  Future<void> sendAudioMessage(File audioFile) async {
+    keyboardFocusNode.unfocus();
+    resetLoadingMessage();
+    currentWebSearchType.value = null;
+    scrollToBottomChat();
+    setExternalSearchButton(false);
+    messageNotifier = MessageNotifier();
+    messageNotifier.setAssistantId(assistant.value?.id ?? "");
+    incomingMessages = [];
+    kbReferencesBackup = [];
+    isStreaming.value = true;
+    assistantsReplying.value = 1;
+    final PupauMessage senderMessage = PupauMessage(
+      id: "",
+      attachments: const [],
+      answer: "",
+      status: MessageStatus.sent,
+      createdAt: DateTime.now(),
+      isAudioInput: true,
+      assistantId: assistantId,
+      assistantType: assistant.value?.type ?? AssistantType.assistant,
+    );
+    addMessage(senderMessage, bypassCheck: true);
+    addTaggedAssistants();
+    if (conversation.value == null) await createNewConversation();
+    if (conversation.value == null) return;
+    bool isFirstSSEData = true;
+    listHeight =
+        chatScrollController.positions.lastOrNull?.maxScrollExtent ?? 0;
+    messageNotifier.setConversationId(conversation.value?.id ?? "");
+    Stream<SSEModel>? sseStream = await SSEService.createSSEStreamAudio(
+      assistantId,
+      conversation.value?.id ?? "",
+      conversation.value?.token ?? "",
+      audioFile,
+      isWebSearch: isWebSearchActive.value,
+      chatController: this,
+    );
+    messageSendStream = sseStream?.listen(
+      (event) {
+        if (event.data == null || event.data!.trim().isEmpty) return;
+        try {
+          final Map<String, dynamic> data = jsonDecode(event.data!);
+          manageSSEData(data, false);
+          if (isFirstSSEData) {
+            isFirstSSEData = false;
+            autoScrollEnabled = true;
+          }
+        } catch (_) {}
+      },
+      onError: (e) {
+        showErrorSnackbar(
+          "${Strings.apiErrorGeneric.tr} ${Strings.apiErrorSendMessage.tr}",
+        );
+        manageCancelAndErrorMessage();
+      },
+    );
   }
 }

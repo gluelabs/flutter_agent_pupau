@@ -172,4 +172,10 @@ const Map<String, String> plPl = {
       'Klucz API Google Maps nie działa. Sprawdź konfigurację klucza API w PupauConfig.',
   Strings.conversationForbidden: 'Dostęp do tej rozmowy zabroniony',
   Strings.conversationLoadFailed: 'Nie udało się załadować rozmowy',
+  Strings.convertingAudio: 'Oczekiwanie na transkrypcję',
+  Strings.audioMessage: 'Wiadomość głosowa',
+  Strings.recordAudio: 'Nagraj wiadomość głosową',
+  Strings.sendVoiceMessage: 'Wyślij wiadomość głosową',
+  Strings.microphoneAccessDenied:
+      'Dostęp do mikrofonu został odmówiony, proszę przyznać uprawnienie mikrofonu aplikacji w ustawieniach urządzenia',
 };

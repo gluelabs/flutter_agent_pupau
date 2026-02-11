@@ -176,4 +176,10 @@ const Map<String, String> frFr = {
       'La clé API Google Maps ne fonctionne pas. Veuillez vérifier la configuration de votre clé API dans PupauConfig.',
   Strings.conversationForbidden: 'Accès à cette conversation refusé',
   Strings.conversationLoadFailed: 'Échec du chargement de la conversation',
+  Strings.convertingAudio: 'En attente de transcription',
+  Strings.audioMessage: 'Message vocal',
+  Strings.recordAudio: 'Enregistrer un message vocal',
+  Strings.sendVoiceMessage: 'Envoyer le message vocal',
+  Strings.microphoneAccessDenied:
+      'Accès au microphone refusé, veuillez accorder l\'autorisation du microphone à l\'application dans les paramètres de votre appareil',
 };

@@ -18,6 +18,8 @@ class MessageService {
         createdAt: message.createdAt,
         assistantId: "",
         assistantType: message.assistantType,
+        isAudioInput: message.isAudioInput,
+        transcription: message.transcription,
       );
 
   static PupauMessage getAssistantLoadedMessage(PupauMessage message) =>

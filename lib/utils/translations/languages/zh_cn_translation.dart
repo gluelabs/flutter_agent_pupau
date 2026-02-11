@@ -163,4 +163,10 @@ const Map<String, String> zhCn = {
       'Google Maps API密钥无法正常工作。请检查PupauConfig中的API密钥配置。',
   Strings.conversationForbidden: '访问此对话被拒绝',
   Strings.conversationLoadFailed: '加载对话失败',
+  Strings.convertingAudio: '等待转录',
+  Strings.audioMessage: '语音消息',
+  Strings.recordAudio: '录制语音消息',
+  Strings.sendVoiceMessage: '发送语音消息',
+  Strings.microphoneAccessDenied:
+      '麦克风访问被拒绝，请在设备设置中授予应用麦克风权限',
 };

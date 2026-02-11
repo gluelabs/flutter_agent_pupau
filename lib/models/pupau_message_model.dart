@@ -43,6 +43,8 @@ class PupauMessage {
   bool isExternalSearch = false;
   bool isCancelled = false;
   bool isNarrating = false;
+  bool isAudioInput = false;
+  String? transcription;
   // SSE Stream only
   String? error;
   int? code;
@@ -98,6 +100,8 @@ class PupauMessage {
     this.toolMessage,
     this.title,
     this.attachments = const [],
+    this.isAudioInput = false,
+    this.transcription,
   });
 
   bool get isMessageFromAssistant => status != MessageStatus.sent;
@@ -180,6 +184,7 @@ class PupauMessage {
         title: json["title"],
         createdAt: DateTime.now(),
         status: MessageStatus.loading,
+        transcription: json["transcription"]
       );
     } catch (e) {
       return PupauMessage(
@@ -269,6 +274,7 @@ class PupauMessage {
                 SourceType.uiTool
             ? UiToolMessage.fromJson(json)
             : null,
+        isAudioInput: json["extraInfo"]?["inputType"] == "audio",
       );
     } catch (e) {
       return PupauMessage(
@@ -285,7 +291,6 @@ class PupauMessage {
       );
     }
   }
-
 
   /// Merges the current SSE message with a new SSE message.
   /// This method updates the current message with data from the new message,
@@ -322,21 +327,21 @@ class PupauMessage {
     if (messageFromSse.isBrowserTool == true) {
       isBrowserTool = messageFromSse.isBrowserTool;
     }
-    if(messageFromSse.kbReferences.isNotEmpty) {
+    if (messageFromSse.kbReferences.isNotEmpty) {
       List<KbReference> newKbReferences = List<KbReference>.from(kbReferences);
       newKbReferences.addAll(messageFromSse.kbReferences);
       kbReferences = newKbReferences;
     }
-    if(messageFromSse.forbidden != null) {
+    if (messageFromSse.forbidden != null) {
       forbidden = messageFromSse.forbidden;
     }
-    if(messageFromSse.websearchQuery != null) {
+    if (messageFromSse.websearchQuery != null) {
       websearchQuery = messageFromSse.websearchQuery;
     }
-    if(messageFromSse.webSearchType != null) {
+    if (messageFromSse.webSearchType != null) {
       webSearchType = messageFromSse.webSearchType;
     }
-    if(messageFromSse.toolName != null) {
+    if (messageFromSse.toolName != null) {
       toolName = messageFromSse.toolName;
     }
     sourceType = messageFromSse.sourceType;
@@ -554,6 +559,7 @@ enum MessageType {
   noVisionCapability,
   retry,
   conversationTitleGenerated,
+  audioInputTranscription,
   //message,
   //contextInfo,
   //contextExceeded,

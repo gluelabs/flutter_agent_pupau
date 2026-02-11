@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_agent_pupau/chat_page/components/message_elements/chat_audio_label.dart';
 import 'package:get/get.dart';
 import 'package:flutter_agent_pupau/chat_page/components/attachments_elements/attachments_box.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/message_action_bar.dart';
@@ -18,8 +19,12 @@ import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
 import 'package:flutter_agent_pupau/models/tool_use_message_model.dart';
 
 class MessageElements extends GetView<ChatController> {
-  const MessageElements(
-      {super.key, required this.message, this.urls = const [], this.isReadOnly = false});
+  const MessageElements({
+    super.key,
+    required this.message,
+    this.urls = const [],
+    this.isReadOnly = false,
+  });
 
   final PupauMessage message;
   final List<UrlInfo> urls;
@@ -28,11 +33,12 @@ class MessageElements extends GetView<ChatController> {
   @override
   Widget build(BuildContext context) {
     bool isAssistant = message.isMessageFromAssistant;
-    Assistant? taggedAssistant = Get.find<AssistantsController>()
-        .assistants
-        .firstWhereOrNull((Assistant assistant) =>
-            assistant.id == message.assistantId &&
-            assistant.type == message.assistantType);
+    Assistant? taggedAssistant = Get.find<AssistantsController>().assistants
+        .firstWhereOrNull(
+          (Assistant assistant) =>
+              assistant.id == message.assistantId &&
+              assistant.type == message.assistantType,
+        );
     Assistant? chatAssistant = controller.assistant.value;
     if (chatAssistant?.id == taggedAssistant?.id &&
         chatAssistant?.type == taggedAssistant?.type) {
@@ -45,26 +51,30 @@ class MessageElements extends GetView<ChatController> {
     List<WebSearchNews> news = message.news;
     GraphInfo? graphInfo = message.graphInfo;
     List<String> relatedSearches = message.relatedSearches;
-    bool showAttachmentBox = message.attachments
+    bool showAttachmentBox =
+        message.attachments
             .where((attachment) => attachment.link == "")
             .isNotEmpty &&
         !isAssistant;
     bool showBottomElements = isAssistant && !isUiTool && !isToolUse;
     ToolUseMessage? toolUseMessage = message.toolUseMessage;
     toolUseMessage?.messageId = message.id;
-    
+
     // Only wrap reactive parts in Obx to minimize rebuilds
     return Obx(() {
       bool isAnonymous = controller.isAnonymous;
-      bool isLastMessage = message ==
+      bool isLastMessage =
+          message ==
           controller.messages.firstOrNull; //messages list is reversed
-      bool isActionBarAlwaysVisible = controller.isActionBarAlwaysVisible.value && !isReadOnly;
-      
+      bool isActionBarAlwaysVisible =
+          controller.isActionBarAlwaysVisible.value && !isReadOnly;
+
       return Container(
         padding: EdgeInsets.only(top: 4),
         margin: EdgeInsets.only(
-            right: isAssistant ? 10 : 0,
-            left: isAssistant ? 10 : DeviceService.width * .15),
+          right: isAssistant ? 10 : 0,
+          left: isAssistant ? 10 : DeviceService.width * .15,
+        ),
         child: Column(
           crossAxisAlignment: isAssistant
               ? CrossAxisAlignment.start
@@ -79,16 +89,21 @@ class MessageElements extends GetView<ChatController> {
               isAnonymous: isAnonymous,
               isCanceled: message.isCancelled,
             ),
+            if (!isAssistant && message.isAudioInput)
+              ChatAudioLabel(isAnonymous: isAnonymous),
             isToolUse
                 ? ToolUseBubble(message: message.toolUseMessage!)
                 : isUiTool
-                    ? UiToolBubble(message: message.uiToolMessage!)
-                    : MessageBubble(
-                        assistant: taggedAssistant ?? chatAssistant,
-                        message: message,
-                        isReadOnly: isReadOnly,
-                      ),
-            if(showBottomElements && isActionBarAlwaysVisible && !message.isInitialMessage && message.status == MessageStatus.received)
+                ? UiToolBubble(message: message.uiToolMessage!)
+                : MessageBubble(
+                    assistant: taggedAssistant ?? chatAssistant,
+                    message: message,
+                    isReadOnly: isReadOnly,
+                  ),
+            if (showBottomElements &&
+                isActionBarAlwaysVisible &&
+                !message.isInitialMessage &&
+                message.status == MessageStatus.received)
               MessageActionBar(message: message),
             if (showBottomElements) MessageBottomElements(message: message),
             if (relatedSearches.isNotEmpty && isLastMessage)

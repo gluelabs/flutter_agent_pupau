@@ -172,4 +172,10 @@ const Map<String, String> nlNl = {
       'Google Maps API-sleutel werkt niet. Controleer uw API-sleutelconfiguratie in PupauConfig.',
   Strings.conversationForbidden: 'Toegang tot dit gesprek geweigerd',
   Strings.conversationLoadFailed: 'Gesprek laden mislukt',
+  Strings.convertingAudio: 'Wachten op transcriptie',
+  Strings.audioMessage: 'Spraakbericht',
+  Strings.recordAudio: 'Spraakbericht opnemen',
+  Strings.sendVoiceMessage: 'Spraakbericht verzenden',
+  Strings.microphoneAccessDenied:
+      'Microfoontoegang geweigerd, verleen alstublieft microfoonmachtiging aan de app in de instellingen van uw apparaat',
 };

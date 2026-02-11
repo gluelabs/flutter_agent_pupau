@@ -174,4 +174,10 @@ const Map<String, String> itIt = {
       'La chiave API di Google Maps non funziona. Controllare la configurazione della chiave API in PupauConfig.',
   Strings.conversationForbidden: 'Accesso a questa conversazione negato',
   Strings.conversationLoadFailed: 'Caricamento conversazione fallito',
+  Strings.convertingAudio: 'In attesa di trascrizione',
+  Strings.audioMessage: 'Messaggio vocale',
+  Strings.recordAudio: 'Registra messaggio vocale',
+  Strings.sendVoiceMessage: 'Invia messaggio vocale',
+    Strings.microphoneAccessDenied:
+      'Accesso al microfono negato, concedi il permesso del microfono all\'app nelle impostazioni del tuo dispositivo',
 };

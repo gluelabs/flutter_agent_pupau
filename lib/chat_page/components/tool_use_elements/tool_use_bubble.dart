@@ -18,7 +18,10 @@ import 'package:flutter_agent_pupau/chat_page/components/web_elements/web_search
 import 'package:flutter_agent_pupau/chat_page/components/web_elements/web_search_news_modal.dart';
 
 class ToolUseBubble extends GetView<ChatController> {
-  const ToolUseBubble({super.key, required this.message});
+  const ToolUseBubble({
+    super.key,
+    required this.message,
+  });
 
   final ToolUseMessage message;
 
@@ -180,22 +183,22 @@ class ToolUseBubble extends GetView<ChatController> {
                           ),
                         ],
                       ),
-                      AnimatedSize(
-                        key: ValueKey('${message.id}_size'),
-                        duration: isUserToggled
-                            ? const Duration(milliseconds: 200)
-                            : Duration.zero,
-                        curve: Curves.easeInOut,
-                        child: isExpanded
-                            ? Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: ToolUseMessageContent(
-                                  toolUseMessage: message,
-                                  isAnonymous: isAnonymous,
-                                ),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
+                       AnimatedSize(
+                         key: ValueKey('${message.id}_size'),
+                         duration: isUserToggled 
+                             ? const Duration(milliseconds: 200) 
+                             : Duration.zero,
+                         curve: Curves.easeInOut,
+                         child: isExpanded
+                             ? Padding(
+                                 padding: const EdgeInsets.only(top: 8),
+                                 child: ToolUseMessageContent(
+                                   toolUseMessage: message,
+                                   isAnonymous: isAnonymous,
+                                 ),
+                               )
+                             : const SizedBox.shrink(),
+                       ),
                     ],
                   );
                 }),

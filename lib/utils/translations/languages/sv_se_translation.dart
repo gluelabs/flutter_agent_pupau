@@ -173,4 +173,10 @@ const Map<String, String> svSe = {
       'Google Maps API-nyckel fungerar inte. Kontrollera din API-nyckelkonfiguration i PupauConfig.',
   Strings.conversationForbidden: 'Åtkomst till detta samtal nekad',
   Strings.conversationLoadFailed: 'Kunde inte ladda konversationen',
+  Strings.convertingAudio: 'Väntar på transkription',
+  Strings.audioMessage: 'Röstmeddelande',
+  Strings.recordAudio: 'Spela in röstmeddelande',
+  Strings.sendVoiceMessage: 'Skicka röstmeddelande',
+  Strings.microphoneAccessDenied:
+      'Mikrofonåtkomst nekad, vänligen bevilja mikrofonbehörighet till appen i dina enhetsinställningar',
 };

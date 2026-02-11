@@ -165,4 +165,10 @@ const Map<String, String> koKr = {
       'Google Maps API 키가 작동하지 않습니다. PupauConfig에서 API 키 구성을 확인하세요.',
   Strings.conversationForbidden: '이 대화에 대한 액세스가 거부되었습니다',
   Strings.conversationLoadFailed: '대화를 로드하지 못했습니다',
+  Strings.convertingAudio: '전사 대기 중',
+  Strings.audioMessage: '음성 메시지',
+  Strings.recordAudio: '음성 메시지 녹음',
+  Strings.sendVoiceMessage: '음성 메시지 보내기',
+  Strings.microphoneAccessDenied:
+      '마이크 액세스가 거부되었습니다. 기기 설정에서 앱에 마이크 권한을 부여해주세요',
 };

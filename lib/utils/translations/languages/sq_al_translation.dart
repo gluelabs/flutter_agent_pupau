@@ -174,4 +174,10 @@ const Map<String, String> sqAl = {
       'Çelësi i API-së së Google Maps nuk po funksionon. Ju lutemi kontrolloni konfigurimin e çelësit tuaj të API-së në PupauConfig.',
   Strings.conversationForbidden: 'Qasja në këtë bisedë është refuzuar',
   Strings.conversationLoadFailed: 'Dështoi ngarkimi i bisedës',
+  Strings.convertingAudio: 'Duke pritur për transkriptim',
+  Strings.audioMessage: 'Mesazh zanori',
+  Strings.recordAudio: 'Regjistro mesazh zanori',
+  Strings.sendVoiceMessage: 'Dërgo mesazh zanori',
+  Strings.microphoneAccessDenied:
+      'Qasja në mikrofon është refuzuar, ju lutemi jepni lejen e mikrofonit aplikacionit në cilësimet e pajisjes suaj',
 };

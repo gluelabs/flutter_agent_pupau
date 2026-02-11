@@ -234,4 +234,10 @@ class Strings {
       "Access to this conversation is denied";
   static const String conversationLoadFailed =
       "Failed to load conversation";
+  static const String convertingAudio = "Waiting for transcription";
+  static const String audioMessage = "Voice message";
+  static const String recordAudio = "Record voice message";
+  static const String sendVoiceMessage = "Send voice message";
+  static const String microphoneAccessDenied =
+      "Microphone access denied, please grant microphone permission to the app in your device settings";
 }

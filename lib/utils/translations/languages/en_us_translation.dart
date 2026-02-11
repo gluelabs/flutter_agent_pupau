@@ -172,4 +172,10 @@ const Map<String, String> enUs = {
       'Google Maps API key is not working. Please check your API key configuration in PupauConfig.',
   Strings.conversationForbidden: 'Access to this conversation is denied',
   Strings.conversationLoadFailed: 'Failed to load conversation',
+  Strings.convertingAudio: 'Waiting for transcription',
+  Strings.audioMessage: 'Voice message',
+  Strings.recordAudio: 'Record voice message',
+  Strings.sendVoiceMessage: 'Send voice message',
+  Strings.microphoneAccessDenied:
+      'Microphone access denied, please grant microphone permission to the app in your device settings',
 };

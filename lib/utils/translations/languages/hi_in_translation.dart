@@ -173,4 +173,10 @@ const Map<String, String> hiIn = {
       'Google Maps API कुंजी काम नहीं कर रही है। कृपया PupauConfig में अपनी API कुंजी कॉन्फ़िगरेशन जांचें।',
   Strings.conversationForbidden: 'इस बातचीत की पहुंच अस्वीकृत',
   Strings.conversationLoadFailed: 'बातचीत लोड विफल रही',
+  Strings.convertingAudio: 'ट्रांसक्रिप्शन की प्रतीक्षा कर रहे हैं',
+  Strings.audioMessage: 'वॉइस मैसेज',
+  Strings.recordAudio: 'वॉइस मैसेज रिकॉर्ड करें',
+  Strings.sendVoiceMessage: 'वॉइस मैसेज भेजें',
+  Strings.microphoneAccessDenied:
+      'माइक्रोफोन एक्सेस अस्वीकृत, कृपया अपने डिवाइस सेटिंग्स में ऐप को माइक्रोफोन अनुमति प्रदान करें',
 };

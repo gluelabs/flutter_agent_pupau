@@ -56,6 +56,7 @@ final config = PupauConfig.createWithApiKey(
   hideInputBox: false,                         // Hide the input field
   widgetMode: WidgetMode.full,                 // Display mode
   showNerdStats: false,                        // Show token/credit stats
+  hideAudioRecordingButton: false              // Hide Record Audio button
   conversationStarters: [                      // Predefined starter messages
     'Tell me about your features',
     'How can you help me?',
@@ -227,6 +228,45 @@ PupauEventService.pupauStream.listen((event) {
   }
 });
 ```
+
+## Audio Recording Feature
+
+To use the audio recording feature, follow these steps
+
+### Android Audio Setup
+
+In your `AndroidManifest.xml` file add:
+
+```xml
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+```
+
+### iOS Audio Setup
+
+In your `ios/Runner/Info.plist` file add:
+
+```xml
+<key>NSMicrophoneUsageDescription</key>
+<string>This app needs access to your microphone to record voice messages.</string>
+```
+
+Then in your `ios/Podfile`, in the `post_install` section, add the microphone permission configuration:
+
+```ruby
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
+        '$(inherited)',
+        'PERMISSION_MICROPHONE=1',
+      ]
+    end
+  end
+end
+```
+
+**Note:** After modifying the Podfile, run `flutter clean` and rebuild your app, as these changes require recompilation.
 
 ### Event Types
 

@@ -173,4 +173,10 @@ const Map<String, String> trTr = {
       'Google Maps API anahtarı çalışmıyor. Lütfen PupauConfig\'deki API anahtarı yapılandırmanızı kontrol edin.',
   Strings.conversationForbidden: 'Bu sohbete erişim reddedildi',
   Strings.conversationLoadFailed: 'Sohbet yüklenemedi',
+  Strings.convertingAudio: 'Transkripsiyon bekleniyor',
+  Strings.audioMessage: 'Sesli mesaj',
+  Strings.recordAudio: 'Sesli mesaj kaydet',
+  Strings.sendVoiceMessage: 'Sesli mesaj gönder',
+  Strings.microphoneAccessDenied:
+      'Mikrofon erişimi reddedildi, lütfen cihaz ayarlarınızdan uygulamaya mikrofon izni verin',
 };

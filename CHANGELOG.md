@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.2] - 11/02/2026
+
+### Changes
+- Added audio recording feature
+- Added hideAudioRecordingButton parameter in PupauConfig
+
 ## [1.0.1] - 28/01/2026
 
 ### Changes

@@ -12,11 +12,15 @@ class ApiUrls {
   static String get getAssistantsQuickUrl =>
       '$apiUrl/assistants/q?archive=false&showAll=true';
 
-  static String assistantUrl(String idAssistant, {bool isMarketplace = false}) =>
-      '$apiUrl/${assistantsBasePath(isMarketplace)}/$idAssistant';
+  static String assistantUrl(
+    String idAssistant, {
+    bool isMarketplace = false,
+  }) => '$apiUrl/${assistantsBasePath(isMarketplace)}/$idAssistant';
 
-  static String conversationsUrl(String idAssistant, {bool isMarketplace = false}) =>
-      '$apiUrl/${chatBotsBasePath(isMarketplace)}/$idAssistant/conversations';
+  static String conversationsUrl(
+    String idAssistant, {
+    bool isMarketplace = false,
+  }) => '$apiUrl/${chatBotsBasePath(isMarketplace)}/$idAssistant/conversations';
 
   static String sendQueryUrl(
     String idAssistant,
@@ -122,4 +126,11 @@ class ApiUrls {
     bool isMarketplace = false,
   }) =>
       "$apiUrl/${chatBotsBasePath(isMarketplace)}/$idAssistant/conversations/$idConversation/queries/$idQuery/user-question-response/?sse=true";
+
+  static String sendAudioQueryUrl(
+    String idAssistant,
+    String idConversation, {
+    bool isMarketplace = false,
+  }) =>
+      '$apiUrl/${chatBotsBasePath(isMarketplace)}/$idAssistant/conversations/$idConversation/queries/audio?sse=true';
 }

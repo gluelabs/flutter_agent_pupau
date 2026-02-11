@@ -42,6 +42,7 @@ class MessageBubble extends GetView<ChatController> {
           isLastMessage &&
           !controller.stopIsActive() &&
           !PupauSharedPreferences.getTutorialMessageMenuDone();
+      String messageText = isAssistant ? message.answer : message.query;
       return AbsorbPointer(
         absorbing: controller.stopIsActive() ||
             message.isInitialMessage ||
@@ -80,13 +81,14 @@ class MessageBubble extends GetView<ChatController> {
                               message: message, assistant: assistant)
                           : MessageContent(
                               messageId: message.id,
-                              message: isAssistant ? message.answer : message.query,
+                              message: messageText,
                               status: message.status,
                               createdAt: message.createdAt,
                               isAssistant: isAssistant,
                               isAnonymous: isAnonymous,
                               assistant: assistant,
-                              contextInfo: message.contextInfo),
+                              contextInfo: message.contextInfo,
+                              isAudioInput: message.isAudioInput),
                       if (showMenuTip) MessageMenuTip()
                     ],
                   ),
