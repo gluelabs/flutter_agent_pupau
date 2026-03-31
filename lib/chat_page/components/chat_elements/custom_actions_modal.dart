@@ -13,7 +13,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 void showCustomActionsModal(List<CustomAction> customActions) {
   WoltModalSheetPage page(BuildContext modalSheetContext) {
     bool isTablet = DeviceService.isTablet;
-    ChatController controller = Get.find();
+    PupauChatController controller = Get.find();
     return WoltModalSheetPage(
         surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
         backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
@@ -22,14 +22,18 @@ void showCustomActionsModal(List<CustomAction> customActions) {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const SizedBox(width: 48),
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                Strings.customActions.tr,
-                style: TextStyle(
-                    fontSize: isTablet ? 18 : 16,
-                    fontWeight: FontWeight.w600,
-                    color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  Strings.customActions.tr,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: isTablet ? 18 : 16,
+                      fontWeight: FontWeight.w600,
+                      color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue),
+                ),
               ),
             ),
             const Padding(

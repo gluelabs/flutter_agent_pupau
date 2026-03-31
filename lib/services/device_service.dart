@@ -37,6 +37,7 @@ class DeviceService {
     String link, {
     String? href,
     String title = "",
+    bool preferNonBrowserApp = false,
   }) async {
     try {
       String urlString = GetUtils.isURL(link) ? link : (href ?? "");
@@ -44,11 +45,28 @@ class DeviceService {
         urlString = "https://$urlString";
       }
       Uri url = Uri.parse(urlString);
-      return await launchUrl(url, mode: LaunchMode.externalApplication);
+      return await launchUrl(
+        url,
+        mode: preferNonBrowserApp
+            ? LaunchMode.externalNonBrowserApplication
+            : LaunchMode.externalApplication,
+      );
     } catch (e) {
       return false;
     }
   }
+
+  /// Opens a raw URI (e.g. comgooglemaps://, google.navigation:) without
+  /// rewriting. Use for app-specific schemes that start navigation etc.
+  static Future<bool> openLinkUri(
+    Uri uri, {
+    bool preferNonBrowserApp = false,
+  }) async => await launchUrl(
+    uri,
+    mode: preferNonBrowserApp
+        ? LaunchMode.externalNonBrowserApplication
+        : LaunchMode.externalApplication,
+  );
 
   static DateTime? getLocalDate(DateTime? date) {
     if (date == null) return null;

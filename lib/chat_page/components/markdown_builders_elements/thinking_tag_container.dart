@@ -7,7 +7,7 @@ import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class ThinkingTagContainer extends GetView<ChatController> {
+class ThinkingTagContainer extends GetView<PupauChatController> {
   const ThinkingTagContainer({super.key, required this.thinkingMessage});
 
   final String thinkingMessage;

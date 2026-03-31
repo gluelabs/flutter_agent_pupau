@@ -9,7 +9,7 @@ import 'package:flutter_agent_pupau/services/assistant_service.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class MessageSenderInfo extends GetView<ChatController> {
+class MessageSenderInfo extends GetView<PupauChatController> {
   const MessageSenderInfo({super.key, required this.assistant});
 
   final Assistant? assistant;

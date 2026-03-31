@@ -25,13 +25,17 @@ void showSMTPInfoModal(ToolUseMessage toolUseMessage) {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const SizedBox(width: 48),
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(toolUseName,
-                  style: TextStyle(
-                      fontSize: isTablet ? 18 : 16,
-                      fontWeight: FontWeight.w600,
-                      color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue)),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(toolUseName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: isTablet ? 18 : 16,
+                        fontWeight: FontWeight.w600,
+                        color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue)),
+              ),
             ),
             Padding(
               padding: EdgeInsets.only(top: 8),

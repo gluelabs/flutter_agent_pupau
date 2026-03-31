@@ -54,7 +54,7 @@ class AssistantAvatar extends StatelessWidget {
                           fit: BoxFit.cover,
                           width: radius * 2,
                           height: radius * 2),
-                      errorListener: (e) => print)
+                      errorListener: (e) {})
                   : Image.asset(
                       AssistantService.getAssistantFallbackImage(assistantId),
                       fit: BoxFit.cover,

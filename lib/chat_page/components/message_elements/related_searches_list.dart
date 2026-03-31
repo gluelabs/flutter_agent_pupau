@@ -8,7 +8,7 @@ import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class RelatedSearchesList extends GetView<ChatController> {
+class RelatedSearchesList extends GetView<PupauChatController> {
   const RelatedSearchesList({
     super.key,
     required this.relatedSearches,

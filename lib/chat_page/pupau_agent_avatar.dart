@@ -39,8 +39,8 @@ class _PupauAgentAvatarState extends State<PupauAgentAvatar> {
         sizedConfig != null &&
         sizedConfig.initiallyExpanded) {
       _isInitializingSized = true;
-      if (Get.isRegistered<ChatController>()) {
-        final controller = Get.find<ChatController>();
+      if (Get.isRegistered<PupauChatController>()) {
+        final controller = Get.find<PupauChatController>();
         // Set callback to expand when first init completes
         controller.setOnFirstInitCompleteCallback(() {
           if (mounted) {
@@ -70,9 +70,9 @@ class _PupauAgentAvatarState extends State<PupauAgentAvatar> {
       if (widgetMode == WidgetMode.sized &&
           sizedConfig != null &&
           sizedConfig.initiallyExpanded) {
-        // Try to set callback immediately if ChatController exists
+        // Try to set callback immediately if PupauChatController exists
         _setInitCompleteCallback();
-        // Also set it after first frame in case ChatController is created in build()
+        // Also set it after first frame in case PupauChatController is created in build()
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _setInitCompleteCallback();
         });
@@ -239,7 +239,7 @@ class _PupauAgentAvatarState extends State<PupauAgentAvatar> {
 
     WidgetMode widgetMode = config.widgetMode;
 
-    if (!Get.isRegistered<ChatController>()) {
+    if (!Get.isRegistered<PupauChatController>()) {
       ChatBinding(config: config).dependencies();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _setInitCompleteCallback();
@@ -264,11 +264,11 @@ class _PupauAgentAvatarState extends State<PupauAgentAvatar> {
     if (widgetMode == WidgetMode.full ||
         (widgetMode == WidgetMode.floating && !_isFloatingOpen) ||
         (widgetMode == WidgetMode.sized && !_isExpanded)) {
-      // Ensure AssistantsController exists
-      if (!Get.isRegistered<AssistantsController>()) {
+      // Ensure PupauAssistantsController exists
+      if (!Get.isRegistered<PupauAssistantsController>()) {
         ChatBinding().dependencies();
       }
-      final assistantsController = Get.find<AssistantsController>();
+      final assistantsController = Get.find<PupauAssistantsController>();
       if (assistantsController.assistants.isEmpty) {
         assistantsController.getAssistants();
       }
@@ -290,8 +290,8 @@ class _PupauAgentAvatarState extends State<PupauAgentAvatar> {
             // Initialize binding and reset state before navigation
             if (widget.config != null) {
               ChatBinding(config: widget.config).dependencies();
-              if (Get.isRegistered<ChatController>()) {
-                final controller = Get.find<ChatController>();
+              if (Get.isRegistered<PupauChatController>()) {
+                final controller = Get.find<PupauChatController>();
                 if (widgetMode == WidgetMode.full) {
                   controller.openChatWithConfig(widget.config);
                   Navigator.push(

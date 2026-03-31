@@ -9,7 +9,7 @@ import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class ReflectionTagContainer extends GetView<ChatController> {
+class ReflectionTagContainer extends GetView<PupauChatController> {
   const ReflectionTagContainer({super.key, required this.reflection});
 
   final PromptReflection reflection;

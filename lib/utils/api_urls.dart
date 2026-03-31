@@ -1,5 +1,15 @@
 class ApiUrls {
-  static const String apiUrl = "https://api.pupau.ai";
+  static const String defaultApiUrl = "https://api.pupau.ai";
+
+  /// Override set from [PupauConfig.apiUrl] when chat is opened. If null, [apiUrl] returns [_defaultApiUrl].
+  static String? _apiUrlOverride;
+
+  static void setApiUrlOverride(String? url) {
+    _apiUrlOverride = url;
+  }
+
+  /// Base API URL. Uses [PupauConfig.apiUrl] when set, otherwise defaults to https://api.pupau.ai.
+  static String get apiUrl => _apiUrlOverride ?? defaultApiUrl;
 
   /// Helper method to get the base path for assistants endpoints
   static String assistantsBasePath(bool isMarketplace) =>
@@ -28,6 +38,29 @@ class ApiUrls {
     bool isMarketplace = false,
   }) =>
       '$apiUrl/${chatBotsBasePath(isMarketplace)}/$idAssistant/conversations/$idConversation/queries?sse=true';
+
+  /// SSE URL for (GET) conversation queries history + catch-up.
+  ///
+  /// When [lastEventId] is provided, the server can send only events after it.
+  static String getQueryUrl(
+    String idAssistant,
+    String idConversation, {
+    String? lastEventId,
+    bool isMarketplace = false,
+  }) {
+    final String base =
+        '$apiUrl/${chatBotsBasePath(isMarketplace)}/$idAssistant/conversations/$idConversation/queries?sse=true';
+    if (lastEventId == null || lastEventId.trim().isEmpty) return base;
+    return '$base&lastEventId=$lastEventId';
+  }
+
+  /// Stop an active async agent run (if any) for this conversation.
+  static String stopConversationRunUrl(
+    String idAssistant,
+    String idConversation, {
+    bool isMarketplace = false,
+  }) =>
+      '$apiUrl/${chatBotsBasePath(isMarketplace)}/$idAssistant/conversations/$idConversation/stop';
 
   static String conversationUrl(
     String idAssistant,

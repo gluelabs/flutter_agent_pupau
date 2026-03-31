@@ -13,7 +13,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 void showForkConversationModal() {
   WoltModalSheetPage page(BuildContext modalSheetContext) {
     bool isTablet = DeviceService.isTablet;
-    ChatController chatController = Get.find();
+    PupauChatController chatController = Get.find();
     return WoltModalSheetPage(
         surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
         backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
@@ -44,6 +44,7 @@ void showForkConversationModal() {
           String forkConversationTitle =
               chatController.forkConversationTitle.value;
           bool canFork = forkConversationTitle.trim() != "";
+          bool isForking = chatController.isForking.value;
           return Column(
             children: [
               Padding(
@@ -79,16 +80,21 @@ void showForkConversationModal() {
                           child: CustomButton(
                             text: Strings.undo.tr,
                             isPrimary: false,
+                            isEnabled: !isForking,
                             onPressed: () => Navigator.pop(modalSheetContext),
                           ),
                         ),
                         Expanded(
                           child: CustomButton(
                             text: Strings.continue_.tr,
-                            isEnabled: canFork,
-                            onPressed: () {
-                              chatController.forkConversation();
-                              Navigator.pop(modalSheetContext);
+                            isEnabled: canFork && !isForking,
+                            isLoading: isForking,
+                            onPressed: () async {
+                              if (!canFork || isForking) return;
+                              await chatController.forkConversation();
+                              if (modalSheetContext.mounted) {
+                                Navigator.pop(modalSheetContext);
+                              }
                             },
                           ),
                         ),

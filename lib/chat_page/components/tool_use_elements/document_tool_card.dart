@@ -7,7 +7,7 @@ import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/attachments_controller.dart';
 
-class DocumentToolCard extends GetView<AttachmentsController> {
+class DocumentToolCard extends GetView<PupauAttachmentsController> {
   const DocumentToolCard({
     super.key,
     required this.document,
@@ -30,30 +30,48 @@ class DocumentToolCard extends GetView<AttachmentsController> {
               ),
             ),
           )
-        : InkWell(
-            onTap: () => controller.openAttachmentNoteModal(attachment,
-                isEditable: false),
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Icon(Symbols.edit_note, size: isTablet ? 26 : 24),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      "${attachment.fileName}.${attachment.extension}",
-                      style: TextStyle(
-                        fontSize: isTablet ? 16 : 14,
+        : Obx(() {
+            final bool isNoteModalLoading =
+                controller.isAttachmentNoteModalLoading(attachment.id) ||
+                    (attachment.isLoadingContent == true);
+            return InkWell(
+              onTap: isNoteModalLoading
+                  ? null
+                  : () => controller.openAttachmentNoteModal(
+                        attachment,
+                        isEditable: false,
+                      ),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Icon(Symbols.edit_note, size: isTablet ? 26 : 24),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        "${attachment.fileName}.${attachment.extension}",
+                        style: TextStyle(
+                          fontSize: isTablet ? 16 : 14,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    if (isNoteModalLoading)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 4),
+                        child: SizedBox(
+                          width: isTablet ? 14 : 12,
+                          height: isTablet ? 14 : 12,
+                          child: const CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-          );
+            );
+          });
   }
 }

@@ -11,7 +11,7 @@ import 'package:flutter_agent_pupau/chat_page/controllers/attachments_controller
 import 'package:flutter_agent_pupau/chat_page/components/shared/custom_delete_confirm_dialog.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/custom_switch.dart';
 
-class AttachmentCard extends GetView<AttachmentsController> {
+class AttachmentCard extends GetView<PupauAttachmentsController> {
   const AttachmentCard({super.key, required this.attachment});
 
   final Attachment attachment;
@@ -19,7 +19,7 @@ class AttachmentCard extends GetView<AttachmentsController> {
   @override
   Widget build(BuildContext context) {
     bool isTablet = DeviceService.isTablet;
-    bool isActive = attachment.active;
+    bool isActive = attachment.selected;
     bool isLink = attachment.link != "";
     bool isNote = attachment.type == "NOTE";
     bool isLoadingContent = attachment.isLoadingContent;

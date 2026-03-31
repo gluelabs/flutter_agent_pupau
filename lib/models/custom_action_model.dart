@@ -33,7 +33,7 @@ class CustomAction {
         userDescription: json["userDescription"] ?? "",
         setting: CustomActionSetting.fromJson(json["setting"] ?? {}),
         idTarget: json["idTarget"] ?? "",
-        id: json["id"] ?? "",
+        id: getString(json["id"]),
       );
 
   IconData? get icon {

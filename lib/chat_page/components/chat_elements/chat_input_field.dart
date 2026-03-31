@@ -14,16 +14,17 @@ import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class ChatInputField extends GetView<ChatController> {
+class ChatInputField extends GetView<PupauChatController> {
   const ChatInputField({super.key});
 
   @override
   Widget build(BuildContext context) {
-    bool isTablet = DeviceService.isTablet;
-    bool isAnonymous = controller.isAnonymous;
-    bool hideAudioRecordingButton = controller.hideAudioRecordingButton;
-    bool hideInputBox = controller.hideInputBox;
-    if (hideInputBox) return const SizedBox();
+    return Obx(() {
+      if (controller.hideInputBox.value) return const SizedBox();
+      
+      bool isTablet = DeviceService.isTablet;
+      bool isAnonymous = controller.isAnonymous;
+      bool hideAudioRecordingButton = controller.hideAudioRecordingButton;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -201,5 +202,6 @@ class ChatInputField extends GetView<ChatController> {
         ),
       ],
     );
+    });
   }
 }

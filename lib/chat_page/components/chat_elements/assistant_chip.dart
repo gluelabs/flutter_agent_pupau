@@ -7,7 +7,7 @@ import 'package:flutter_agent_pupau/services/assistant_service.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class AssistantChip extends GetView<ChatController> {
+class AssistantChip extends GetView<PupauChatController> {
   const AssistantChip(
       {super.key, required this.assistant, this.isAnonymous = false});
   final Assistant assistant;

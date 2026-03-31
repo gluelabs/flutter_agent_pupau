@@ -211,18 +211,23 @@ class SeparatedSelectionContainerDelegate
   void _updateLastEdgeEventsFromGeometries() {
     if (currentSelectionStartIndex != -1) {
       final Selectable start = selectables[currentSelectionStartIndex];
-      final Offset localStartEdge =
-          start.value.startSelectionPoint!.localPosition +
-              Offset(0, -start.value.startSelectionPoint!.lineHeight / 2);
-      _lastStartEdgeUpdateGlobalPosition = MatrixUtils.transformPoint(
-          start.getTransformTo(null), localStartEdge);
+      final SelectionPoint? startPoint = start.value.startSelectionPoint;
+      if (startPoint != null) {
+        final Offset localStartEdge = startPoint.localPosition +
+            Offset(0, -startPoint.lineHeight / 2);
+        _lastStartEdgeUpdateGlobalPosition =
+            MatrixUtils.transformPoint(start.getTransformTo(null), localStartEdge);
+      }
     }
     if (currentSelectionEndIndex != -1) {
       final Selectable end = selectables[currentSelectionEndIndex];
-      final Offset localEndEdge = end.value.endSelectionPoint!.localPosition +
-          Offset(0, -end.value.endSelectionPoint!.lineHeight / 2);
-      _lastEndEdgeUpdateGlobalPosition =
-          MatrixUtils.transformPoint(end.getTransformTo(null), localEndEdge);
+      final SelectionPoint? endPoint = end.value.endSelectionPoint;
+      if (endPoint != null) {
+        final Offset localEndEdge =
+            endPoint.localPosition + Offset(0, -endPoint.lineHeight / 2);
+        _lastEndEdgeUpdateGlobalPosition =
+            MatrixUtils.transformPoint(end.getTransformTo(null), localEndEdge);
+      }
     }
   }
 

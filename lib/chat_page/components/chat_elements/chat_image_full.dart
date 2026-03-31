@@ -7,7 +7,7 @@ import 'package:flutter_agent_pupau/services/file_service.dart';
 import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-class ChatImageFull extends GetView<ChatController> {
+class ChatImageFull extends GetView<PupauChatController> {
   const ChatImageFull({super.key});
 
   @override

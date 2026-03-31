@@ -5,7 +5,7 @@ import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class RelatedSearchButton extends GetView<ChatController> {
+class RelatedSearchButton extends GetView<PupauChatController> {
   const RelatedSearchButton({
     super.key,
     required this.prompt,

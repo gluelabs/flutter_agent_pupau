@@ -17,11 +17,8 @@ import 'package:flutter_agent_pupau/chat_page/components/web_elements/organic_in
 import 'package:flutter_agent_pupau/chat_page/components/web_elements/web_search_images_modal.dart';
 import 'package:flutter_agent_pupau/chat_page/components/web_elements/web_search_news_modal.dart';
 
-class ToolUseBubble extends GetView<ChatController> {
-  const ToolUseBubble({
-    super.key,
-    required this.message,
-  });
+class ToolUseBubble extends GetView<PupauChatController> {
+  const ToolUseBubble({super.key, required this.message});
 
   final ToolUseMessage message;
 
@@ -183,28 +180,101 @@ class ToolUseBubble extends GetView<ChatController> {
                           ),
                         ],
                       ),
-                       AnimatedSize(
-                         key: ValueKey('${message.id}_size'),
-                         duration: isUserToggled 
-                             ? const Duration(milliseconds: 200) 
-                             : Duration.zero,
-                         curve: Curves.easeInOut,
-                         child: isExpanded
-                             ? Padding(
-                                 padding: const EdgeInsets.only(top: 8),
-                                 child: ToolUseMessageContent(
-                                   toolUseMessage: message,
-                                   isAnonymous: isAnonymous,
-                                 ),
-                               )
-                             : const SizedBox.shrink(),
-                       ),
+                      _ToolUseExpandableContent(
+                        messageId: message.id,
+                        isExpanded: isExpanded,
+                        isUserToggled: isUserToggled,
+                        isAnonymous: isAnonymous,
+                        message: message,
+                      ),
                     ],
                   );
                 }),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Uses [SizeTransition] driven by a manually controlled [AnimationController]
+/// instead of [AnimatedSize]/[RenderAnimatedSize]. This avoids the
+/// "RenderAnimatedSize mutated in its own performLayout" error that occurs
+/// because [RenderAnimatedSize._layoutStable] calls [AnimationController.forward]
+/// synchronously during the layout pass, triggering [markNeedsLayout] on itself.
+class _ToolUseExpandableContent extends StatefulWidget {
+  const _ToolUseExpandableContent({
+    required this.messageId,
+    required this.isExpanded,
+    required this.isUserToggled,
+    required this.isAnonymous,
+    required this.message,
+  });
+
+  final String messageId;
+  final bool isExpanded;
+  final bool isUserToggled;
+  final bool isAnonymous;
+  final ToolUseMessage message;
+
+  @override
+  State<_ToolUseExpandableContent> createState() =>
+      _ToolUseExpandableContentState();
+}
+
+class _ToolUseExpandableContentState extends State<_ToolUseExpandableContent>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _sizeFactor;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      value: widget.isExpanded ? 1.0 : 0.0,
+    );
+    _sizeFactor = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _ToolUseExpandableContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isExpanded != oldWidget.isExpanded) {
+      final duration = widget.isUserToggled
+          ? const Duration(milliseconds: 200)
+          : Duration.zero;
+      _controller.duration = duration;
+      _controller.reverseDuration = duration;
+      if (widget.isExpanded) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizeTransition(
+      sizeFactor: _sizeFactor,
+      axisAlignment: -1.0,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: ToolUseMessageContent(
+          toolUseMessage: widget.message,
+          isAnonymous: widget.isAnonymous,
         ),
       ),
     );

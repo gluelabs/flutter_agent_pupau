@@ -8,7 +8,7 @@ import 'package:flutter_agent_pupau/services/file_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class AttachmentsBox extends GetView<ChatController> {
+class AttachmentsBox extends GetView<PupauChatController> {
   const AttachmentsBox({super.key, required this.attachments});
 
   final List<Attachment> attachments;

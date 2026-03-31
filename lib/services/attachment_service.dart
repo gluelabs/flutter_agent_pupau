@@ -17,7 +17,7 @@ class AttachmentService {
   static Future<Attachment?> postAttachment(File file,
       {bool isNote = false}) async {
     Attachment? attachment;
-    ChatController chatController = Get.find();
+    PupauChatController chatController = Get.find();
     String idConversation = chatController.conversation.value?.id ?? "";
     String idAssistant = chatController.assistant.value?.id ?? "";
     String conversationToken =
@@ -51,7 +51,7 @@ class AttachmentService {
       String idAttachment, String fileName, File file,
       {bool isNote = false}) async {
     Attachment? attachment;
-    ChatController chatController = Get.find();
+    PupauChatController chatController = Get.find();
     String idConversation = chatController.conversation.value?.id ?? "";
     String idAssistant = chatController.assistant.value?.id ?? "";
     String conversationToken =
@@ -85,7 +85,7 @@ class AttachmentService {
 
   static Future<List<Attachment>> getAttachments() async {
     List<Attachment> attachments = [];
-    ChatController chatController = Get.find();
+    PupauChatController chatController = Get.find();
     String idConversation = chatController.conversation.value?.id ?? "";
     String idAssistant = chatController.assistant.value?.id ?? "";
     String conversationToken =
@@ -107,7 +107,7 @@ class AttachmentService {
 
   static Future<bool> deleteAttachment(String idAttachment) async {
     bool success = false;
-    ChatController chatController = Get.find();
+    PupauChatController chatController = Get.find();
     String idConversation = chatController.conversation.value?.id ?? "";
     String idAssistant = chatController.assistant.value?.id ?? "";
     String conversationToken =
@@ -141,7 +141,7 @@ class AttachmentService {
   }
 
   static int getTokensUsed(List<Attachment> attachments) => attachments.fold(0,
-      (acc, attachment) => acc + (attachment.active ? attachment.tokens : 0));
+      (acc, attachment) => acc + (attachment.selected ? attachment.tokens : 0));
 
   static Future<Attachment?> postNoteAttachment(
       String title, String content) async {
@@ -157,10 +157,37 @@ class AttachmentService {
     return await patchAttachment(idAttachment, title, file, isNote: true);
   }
 
+  static Future<Attachment?> patchAttachmentSelected(
+      String idAttachment, bool selected) async {
+    Attachment? attachment;
+    PupauChatController chatController = Get.find();
+    String idConversation = chatController.conversation.value?.id ?? "";
+    String idAssistant = chatController.assistant.value?.id ?? "";
+    String conversationToken =
+        chatController.conversation.value?.token ?? "";
+
+    if (idAssistant != "" && idConversation != "" && conversationToken != "") {
+      await ApiService.call(
+        ApiUrls.conversationAttachmentUrl(
+            idAssistant, idConversation, idAttachment),
+        RequestType.patch,
+        data: {"selected": selected},
+        headers: {
+          "Conversation-Token": conversationToken,
+        },
+        onSuccess: (response) => attachment = Attachment.fromMap(response.data),
+        onError: (e) => showErrorSnackbar(
+            "${Strings.apiErrorGeneric.tr} ${Strings.attachmentUploadFailed.tr}"),
+      );
+      return attachment;
+    }
+    return null;
+  }
+
   static Future<String?> readAttachmentContent(String idAttachment) async {
     try {
       String content = "";
-      ChatController chatController = Get.find();
+      PupauChatController chatController = Get.find();
       String idConversation = chatController.conversation.value?.id ?? "";
       String idAssistant = chatController.assistant.value?.id ?? "";
       String conversationToken =

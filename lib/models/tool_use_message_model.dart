@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_task_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_thinking_data.dart';
+import 'package:flutter_agent_pupau/services/json_parse_service.dart';
 import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_ask_user_data.dart';
@@ -14,6 +16,7 @@ import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_to_do_list_d
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_web_reader_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_web_search_data.dart';
 import 'package:flutter_agent_pupau/services/tool_use_service.dart';
+
 class ToolUseMessage {
   String id;
   String? messageId;
@@ -39,6 +42,7 @@ class ToolUseMessage {
   ToolUseBrowserUseData? browserUseData;
   ToolUseAskUserData? askUserData;
   ToolUseWebReaderData? webReaderData;
+  ToolUseTaskData? taskToolData;
 
   ToolUseMessage({
     required this.id,
@@ -65,11 +69,14 @@ class ToolUseMessage {
     this.browserUseData,
     this.askUserData,
     this.webReaderData,
+    this.taskToolData,
   });
 
   factory ToolUseMessage.fromJsonSSE(Map<String, dynamic> json) {
-    ToolUseType type = ToolUseService.getToolUseTypeEnum(json["type"] ?? "",
-        nativeToolType: json["typeDetails"]?["nativeTool"]?["id"]);
+    ToolUseType type = ToolUseService.getToolUseTypeEnum(
+      json["type"] ?? "",
+      nativeToolType: json["typeDetails"]?["nativeTool"]?["id"],
+    );
     bool isPipeline = type == ToolUseType.pipeline;
     bool isRemoteCall = type == ToolUseType.remoteCall;
     bool isThinking = type == ToolUseType.nativeToolsThinking;
@@ -82,10 +89,11 @@ class ToolUseMessage {
     bool isBrowserUse = type == ToolUseType.nativeToolsBrowserUse;
     bool isAskUser = type == ToolUseType.nativeToolsAskUser;
     bool isWebReader = type == ToolUseType.nativeToolsWebReader;
+    bool isTaskTool = type == ToolUseType.nativeToolsTaskTool;
     Map<String, dynamic> data = ToolUseMessage.getMessage(json, true);
 
     return ToolUseMessage(
-      id: json["id"] ?? "",
+      id: getString(json["id"]),
       assistantName: json["assistantName"] ?? "",
       imageUuid: json["imageUuid"],
       chatBotId: json["chatBotId"],
@@ -100,31 +108,47 @@ class ToolUseMessage {
           : null,
       pipelineData: isPipeline ? ToolUsePipelineData.fromJson(data) : null,
       remoteCallData: isRemoteCall ? data : null,
-      thinkingData: isThinking ? ToolUseThinkingData.fromJson(json["typeDetails"]) : null,
-      toDoListData: isTodoList ? ToolUseToDoListData.fromJson(data, json["typeDetails"]) : null,
+      thinkingData: isThinking
+          ? ToolUseThinkingData.fromJson(json["typeDetails"])
+          : null,
+      toDoListData: isTodoList
+          ? ToolUseToDoListData.fromJson(data, json["typeDetails"])
+          : null,
       webSearchData: isWebSearch ? ToolUseWebSearchData.fromJson(data) : null,
-      knowledgeBaseData:
-          isKnowledgeBase ? ToolUseKnowledgeBaseData.fromJson(data) : null,
+      knowledgeBaseData: isKnowledgeBase
+          ? ToolUseKnowledgeBaseData.fromJson(data)
+          : null,
       documentData: isDocument
           ? ToolUseDocumentData.fromJson(data, json["typeDetails"])
           : null,
       smtpData: isSMTP ? ToolUseSMTPData.fromJson(data) : null,
-      imageGenerationData:
-          isImageGeneration ? ToolUseImageGenerationData.fromJson(data) : null,
+      imageGenerationData: isImageGeneration
+          ? ToolUseImageGenerationData.fromJson(data)
+          : null,
       browserUseData: isBrowserUse
           ? ToolUseBrowserUseData.fromJson(data, json["typeDetails"])
           : null,
-      askUserData:
-          isAskUser ? ToolUseAskUserData.fromJson(json["typeDetails"]) : null,
+      askUserData: isAskUser
+          ? ToolUseAskUserData.fromJson(json["typeDetails"])
+          : null,
       webReaderData: isWebReader ? ToolUseWebReaderData.fromJson(data) : null,
+      taskToolData: isTaskTool
+          ? ToolUseTaskData.fromJson(
+              _taskToolDataWithSubTool(
+                ToolUseMessage.getNativeToolData(json, true),
+                json,
+                true,
+              ),
+            )
+          : null,
     );
   }
 
   factory ToolUseMessage.fromJson(Map<String, dynamic> json) {
     ToolUseType type = ToolUseService.getToolUseTypeEnum(
-        json["extraInfo"]?["typeDetails"]?["toolType"] ?? "",
-        nativeToolType: json["extraInfo"]?["typeDetails"]?["nativeTool"]
-            ?["id"]);
+      json["extraInfo"]?["typeDetails"]?["toolType"] ?? "",
+      nativeToolType: json["extraInfo"]?["typeDetails"]?["nativeTool"]?["id"],
+    );
     bool isPipeline = type == ToolUseType.pipeline;
     bool isRemoteCall = type == ToolUseType.remoteCall;
     bool isThinking = type == ToolUseType.nativeToolsThinking;
@@ -137,17 +161,18 @@ class ToolUseMessage {
     bool isBrowserUse = type == ToolUseType.nativeToolsBrowserUse;
     bool isAskUser = type == ToolUseType.nativeToolsAskUser;
     bool isWebReader = type == ToolUseType.nativeToolsWebReader;
+    bool isTaskTool = type == ToolUseType.nativeToolsTaskTool;
     Map<String, dynamic> answer = getMessage(json, false);
 
     return ToolUseMessage(
-      id: json["id"] ?? "",
+      id: getString(json["id"]),
       assistantName: json["assistantName"] ?? "",
       imageUuid: json["imageUuid"],
-      chatBotId: json["chatBotId"],
-      marketPlaceId: json["marketPlaceId"],
+      chatBotId: getString(json["chatBotId"]),
+      marketPlaceId: getString(json["marketPlaceId"]),
       type: type,
       toolName: json["extraInfo"]?["typeDetails"]?["toolName"] ?? "tool",
-      queryGroupId: json["queryGroupId"] ?? "",
+      queryGroupId: getString(json["queryGroupId"]),
       showTool: json["extraInfo"]?["typeDetails"]?["showTool"] ?? true,
       toolMessage: json["extraInfo"]?["typeDetails"]?["toolMessage"] ?? "",
       nativeToolData: ToolUseService.isNativeTool(type)
@@ -155,14 +180,24 @@ class ToolUseMessage {
           : null,
       pipelineData: isPipeline ? ToolUsePipelineData.fromJson(answer) : null,
       remoteCallData: isRemoteCall ? answer : null,
-      thinkingData: isThinking ? ToolUseThinkingData.fromJson(json["extraInfo"]?["typeDetails"]) : null,
-      toDoListData: isTodoList ? ToolUseToDoListData.fromJson(answer, json["extraInfo"]?["typeDetails"]) : null,
+      thinkingData: isThinking
+          ? ToolUseThinkingData.fromJson(json["extraInfo"]?["typeDetails"])
+          : null,
+      toDoListData: isTodoList
+          ? ToolUseToDoListData.fromJson(
+              answer,
+              json["extraInfo"]?["typeDetails"],
+            )
+          : null,
       webSearchData: isWebSearch ? ToolUseWebSearchData.fromJson(answer) : null,
-      knowledgeBaseData:
-          isKnowledgeBase ? ToolUseKnowledgeBaseData.fromJson(answer) : null,
+      knowledgeBaseData: isKnowledgeBase
+          ? ToolUseKnowledgeBaseData.fromJson(answer)
+          : null,
       documentData: isDocument
           ? ToolUseDocumentData.fromJson(
-              answer, json["extraInfo"]?["typeDetails"])
+              answer,
+              json["extraInfo"]?["typeDetails"],
+            )
           : null,
       smtpData: isSMTP ? ToolUseSMTPData.fromJson(answer) : null,
       imageGenerationData: isImageGeneration
@@ -170,12 +205,23 @@ class ToolUseMessage {
           : null,
       browserUseData: isBrowserUse
           ? ToolUseBrowserUseData.fromJson(
-              answer, json["extraInfo"]?["typeDetails"])
+              answer,
+              json["extraInfo"]?["typeDetails"],
+            )
           : null,
       askUserData: isAskUser
           ? ToolUseAskUserData.fromJson(json["extraInfo"]?["typeDetails"])
           : null,
       webReaderData: isWebReader ? ToolUseWebReaderData.fromJson(answer) : null,
+      taskToolData: isTaskTool
+          ? ToolUseTaskData.fromJson(
+              _taskToolDataWithSubTool(
+                ToolUseMessage.getNativeToolData(json, false),
+                json,
+                false,
+              ),
+            )
+          : null,
     );
   }
 
@@ -188,7 +234,8 @@ class ToolUseMessage {
           (" (${documentData!.action!.replaceAll("_", " ").capitalize})");
     }
     if (toDoListData?.action != null) {
-      if (toDoListData?.actionParameter != null && toDoListData?.actionParameter != 0 &&
+      if (toDoListData?.actionParameter != null &&
+          toDoListData?.actionParameter != 0 &&
           toDoListData!.tasks.length >= toDoListData!.actionParameter!) {
         return "#${toDoListData!.actionParameter!} ${toDoListData!.tasks[toDoListData!.actionParameter! - 1].task}";
       }
@@ -203,11 +250,20 @@ class ToolUseMessage {
     if (webReaderData != null) {
       return "${toolName.replaceAll("_", " ").capitalize!}: ${webReaderData!.url}";
     }
+    if (taskToolData != null) {
+      if (taskToolData!.subToolName == 'task_create' &&
+          (taskToolData!.name ?? '').trim().isNotEmpty) {
+        return 'Create Task: ${taskToolData!.name!.trim()}';
+      }
+      return "${toolName.replaceAll("_", " ").capitalize!}: ${taskToolData!.displayMessage}";
+    }
     return toolName.replaceAll("_", " ").capitalize ?? toolName;
   }
 
   static Map<String, dynamic> getMessage(
-      Map<String, dynamic> json, bool isSSE) {
+    Map<String, dynamic> json,
+    bool isSSE,
+  ) {
     String field = isSSE ? "data" : "answer";
     try {
       if (json[field] != null) {
@@ -230,17 +286,37 @@ class ToolUseMessage {
     return {};
   }
 
+  static Map<String, dynamic> _taskToolDataWithSubTool(
+    Map<String, dynamic> nativeData,
+    Map<String, dynamic> json,
+    bool isSse,
+  ) {
+    final details = isSse
+        ? json["typeDetails"]
+        : json["extraInfo"]?["typeDetails"];
+    final toolName = details?["toolName"]?.toString();
+    if (toolName != null) {
+      nativeData = Map<String, dynamic>.from(nativeData);
+      nativeData["subToolName"] = toolName;
+    }
+    return nativeData;
+  }
+
   static Map<String, dynamic> getNativeToolData(
-      Map<String, dynamic> json, bool isSse) {
+    Map<String, dynamic> json,
+    bool isSse,
+  ) {
     Map<String, dynamic> message = getMessage(json, isSse);
     Map<String, dynamic> toolArgs = isSse
         ? (json["typeDetails"]?["toolArgs"] ?? {})
         : (json["extraInfo"]?["typeDetails"]?["toolArgs"] ?? {});
     message.addAll(toolArgs);
-    message.removeWhere((String key, dynamic value) =>
-        value == null ||
-        value.toString().trim() == "" ||
-        value.toString().trim() == "[]");
+    message.removeWhere(
+      (String key, dynamic value) =>
+          value == null ||
+          value.toString().trim() == "" ||
+          value.toString().trim() == "[]",
+    );
     return message;
   }
 

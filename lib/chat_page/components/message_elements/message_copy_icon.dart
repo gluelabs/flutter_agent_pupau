@@ -10,7 +10,7 @@ import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class MessageCopyIcon extends GetView<ChatController> {
+class MessageCopyIcon extends GetView<PupauChatController> {
   const MessageCopyIcon(
       {super.key, required this.message, this.isAnonymous = false});
 

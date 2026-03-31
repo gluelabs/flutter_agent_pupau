@@ -7,7 +7,7 @@ import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/brows
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/browser_use_datalayer_content.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/browser_use_network_content.dart';
 
-class BrowserInspectorController extends GetxController
+class PupauBrowserInspectorController extends GetxController
     with GetTickerProviderStateMixin {
   late TabController tabController;
   RxInt inspectorTabIndex = 0.obs;

@@ -9,7 +9,7 @@ import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/chat_page/components/web_elements/news_container.dart';
 
-class WebSearchNewsList extends GetView<ChatController> {
+class WebSearchNewsList extends GetView<PupauChatController> {
   const WebSearchNewsList({
     super.key,
     required this.news,

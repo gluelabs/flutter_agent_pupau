@@ -5,7 +5,7 @@ import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/models/assistant_model.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 
-class TaggedAssistantsList extends GetView<ChatController> {
+class TaggedAssistantsList extends GetView<PupauChatController> {
   const TaggedAssistantsList({
     super.key,
   });

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_task_tool.dart';
 import 'package:flutter_agent_pupau/models/tool_use_message_model.dart';
 import 'package:flutter_agent_pupau/services/tool_use_service.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_ask_user.dart';
@@ -52,6 +53,10 @@ class ToolUseMessageContent extends StatelessWidget {
         ToolUseType.nativeToolsAskUser => MessageAskUser(
             toolUseMessage: toolUseMessage,
             isAnonymous: isAnonymous
+          ),
+        ToolUseType.nativeToolsTaskTool => MessageTaskTool(
+            toolUseMessage: toolUseMessage,
+            isAnonymous: isAnonymous,
           ),
         ToolUseType.nativeToolsThinking => MessageThinking(
             toolUseMessage: toolUseMessage,

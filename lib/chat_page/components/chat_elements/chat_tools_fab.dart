@@ -11,18 +11,18 @@ import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class ChatToolsFAB extends GetView<ChatController> {
+class ChatToolsFAB extends GetView<PupauChatController> {
   const ChatToolsFAB({super.key});
 
   @override
   Widget build(BuildContext context) {
-    bool isAnonymous = controller.isAnonymous;
-    bool isTablet = DeviceService.isTablet;
-    AttachmentsController attachmentsController =
-        Get.find<AttachmentsController>();
-    bool hideInputBox = controller.hideInputBox;
-    if(hideInputBox) return const SizedBox();
     return Obx(() {
+      if(controller.hideInputBox.value) return const SizedBox();
+      
+      bool isAnonymous = controller.isAnonymous;
+      bool isTablet = DeviceService.isTablet;
+      PupauAttachmentsController attachmentsController =
+          Get.find<PupauAttachmentsController>();
       bool isEnabled = !controller.hasApiError.value;
       bool isExpanded = controller.toolsFabExpanded.value;
       bool isAttachmentAvailable = controller.isAttachmentAvailable();
@@ -30,7 +30,7 @@ class ChatToolsFAB extends GetView<ChatController> {
       bool isCustomActionsAvailable =
           controller.assistant.value?.customActions.isNotEmpty ?? false;
       int attachmentNumberEnabled = attachmentsController.attachments
-          .where((element) => element.active)
+          .where((element) => element.selected)
           .length;
       bool isSendingAttachment =
           attachmentsController.sendingAttachments.value > 0;
@@ -189,7 +189,7 @@ class ChatToolsFAB extends GetView<ChatController> {
   }
 }
 
-class ChatToolMiniFab extends GetView<ChatController> {
+class ChatToolMiniFab extends GetView<PupauChatController> {
   const ChatToolMiniFab({
     super.key,
     required this.iconPath,
@@ -269,7 +269,7 @@ class ChatToolMiniFab extends GetView<ChatController> {
   }
 }
 
-class ToolIcon extends GetView<ChatController> {
+class ToolIcon extends GetView<PupauChatController> {
   const ToolIcon({
     super.key,
     required this.isEnabled,
@@ -357,7 +357,7 @@ class ToolIcon extends GetView<ChatController> {
   }
 }
 
-class ToolLabel extends GetView<ChatController> {
+class ToolLabel extends GetView<PupauChatController> {
   const ToolLabel({super.key, required this.label});
 
   final String label;

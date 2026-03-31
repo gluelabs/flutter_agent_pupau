@@ -7,7 +7,7 @@ import 'package:flutter_agent_pupau/chat_page/components/shared/custom_switch.da
 
 import '../../../utils/translations/strings_enum.dart';
 
-class ToggleAttachmentsSwitch extends GetView<AttachmentsController> {
+class ToggleAttachmentsSwitch extends GetView<PupauAttachmentsController> {
   const ToggleAttachmentsSwitch({
     super.key,
   });

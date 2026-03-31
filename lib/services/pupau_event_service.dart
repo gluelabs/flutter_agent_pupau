@@ -27,7 +27,7 @@ class PupauEventService {
       _instance._pupauStreamController.stream;
 
   /// Emit a pupau event
-  /// Internal use only - called by ChatController
+  /// Internal use only - called by PupauChatController
   void emitPupauEvent(PupauEvent event) {
     if (!_pupauStreamController.isClosed) {
       _pupauStreamController.add(event);
@@ -65,6 +65,7 @@ enum UpdateConversationType {
   timeToComplete,
   timeToFirstToken,
   conversationTitleGenerated,
+  inputFieldFocusChanged,
 }
 
 enum BootState {

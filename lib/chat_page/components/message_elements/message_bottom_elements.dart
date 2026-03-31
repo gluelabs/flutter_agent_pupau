@@ -9,7 +9,7 @@ import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 
-class MessageBottomElements extends GetView<ChatController> {
+class MessageBottomElements extends GetView<PupauChatController> {
   const MessageBottomElements({super.key, required this.message});
 
   final PupauMessage message;
@@ -20,8 +20,7 @@ class MessageBottomElements extends GetView<ChatController> {
     bool isTablet = DeviceService.isTablet;
     return Obx(() {
       bool isAnonymous = controller.isAnonymous;
-      bool isActionBarAlwaysVisible =
-          controller.isActionBarAlwaysVisible.value;
+      bool isActionBarAlwaysVisible = controller.isActionBarAlwaysVisible.value;
       return Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
@@ -32,8 +31,11 @@ class MessageBottomElements extends GetView<ChatController> {
               showKBReferencesModal(message.kbReferences);
             },
           ),
-          MessageTimeInfo(
-              localDate: message.createdAt.toLocal(), isAssistant: true),
+          if (!message.isEmpty && message.sourceType == SourceType.llm)
+            MessageTimeInfo(
+              localDate: message.createdAt.toLocal(),
+              isAssistant: true,
+            ),
           if (reaction != Reaction.none && !isActionBarAlwaysVisible)
             ReactionIcon(
               isAnonymous: isAnonymous,
@@ -46,11 +48,8 @@ class MessageBottomElements extends GetView<ChatController> {
               },
             ),
           if (message.isNarrating && !isActionBarAlwaysVisible)
-            TextToSpeachIcon(
-              message: message,
-              isAnonymous: isAnonymous,
-            ),
-          SizedBox(height: isTablet ? 32 : 28)
+            TextToSpeachIcon(message: message, isAnonymous: isAnonymous),
+          SizedBox(height: isTablet ? 32 : 28),
         ],
       );
     });

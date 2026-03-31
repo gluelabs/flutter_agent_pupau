@@ -7,7 +7,7 @@ import 'package:flutter_agent_pupau/utils/translations/localization_service.dart
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class ChatDateContainer extends GetView<ChatController> {
+class ChatDateContainer extends GetView<PupauChatController> {
   const ChatDateContainer({super.key, required this.date});
 
   final DateTime date;

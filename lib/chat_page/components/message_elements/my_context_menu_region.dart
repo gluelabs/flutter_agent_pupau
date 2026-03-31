@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/pupau_shared_preferences.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
+import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 
 /// A widget that shows a context menu when the user long presses or right clicks on the widget.
 class MyContextMenuRegion extends StatelessWidget {
@@ -38,7 +39,13 @@ class MyContextMenuRegion extends StatelessWidget {
     bool isDone = PupauSharedPreferences.getTutorialMessageMenuDone();
     if (!isDone) {
       PupauSharedPreferences.setTutorialMessageMenuDone(true);
-      Get.forceAppUpdate();
+      // Avoid Get.forceAppUpdate(): it can cause visible UI glitches / rebuild
+      // cascades while messages are streaming. Just refresh chat UI.
+      if (Get.isRegistered<PupauChatController>()) {
+        final controller = Get.find<PupauChatController>();
+        controller.messages.refresh();
+        controller.update();
+      }
     }
     if (mousePosition == Offset.zero) {
       mousePosition = Offset(DeviceService.width / 1.5, DeviceService.height / 2.5);

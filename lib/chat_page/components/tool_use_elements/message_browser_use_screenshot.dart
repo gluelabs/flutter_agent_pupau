@@ -8,7 +8,7 @@ import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/brows
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/image_not_available_widget.dart';
 
-class MessageBrowserUseScreenshot extends GetView<ChatController> {
+class MessageBrowserUseScreenshot extends GetView<PupauChatController> {
   const MessageBrowserUseScreenshot({
     super.key,
     required this.toolUseMessage,

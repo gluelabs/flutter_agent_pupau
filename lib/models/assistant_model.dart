@@ -44,38 +44,61 @@ class Assistant {
     this.apiKeyConfig,
   });
 
-  factory Assistant.fromMap(Map<String, dynamic> json) => Assistant(
-    id: getString(json["id"]),
-    name: getString(json["name"]),
-    description: getString(json["description"]),
-    imageUuid: getString(json["imageUuid"]),
-    welcomeMessage: getString(json["welcomeMessage"]),
-    usageSettings: json["assistantSettings"]?["settings"] != null
-        ? UsageSettings.fromMap(json["assistantSettings"]?["settings"])
-        : null,
-    kbSettings: json["assistantSettings"]?["kbSettings"] != null
-        ? KBSettings.fromMap(json["assistantSettings"]?["kbSettings"])
-        : null,
-    customActions: json["assistantSettings"]?["customActions"] != null
-        ? (json["assistantSettings"]?["customActions"] as List<dynamic>)
-              .map((e) => CustomAction.fromJson(e))
-              .toList()
-        : [],
-    type: AssistantService.getAssistantTypeEnum(
-      json["type"] ?? json["assistantType"] ?? "",
-    ),
-    replyMode: AssistantService.getReplyModeEnum(json["replyMode"] ?? "open"),
-    model: json["aiModel"] != null ? AiModel.fromJson(json["aiModel"]) : null,
-    costMessage: json["costMessage"] ?? json["cost"]?["message"] ?? "",
-    capabilities: json["capabilities"] != null
-        ? (json["capabilities"] as List<dynamic>)
-              .map((e) => e.toString())
-              .toList()
-        : [],
-    apiKeyConfig: json["apiKeyConfiguration"] != null
-        ? AssistantApiKeyConfig.fromJson(json["apiKeyConfiguration"])
-        : null,
-  );
+  factory Assistant.fromMap(Map<String, dynamic> json) {
+    AssistantType type = json["type"] != null || json["assistantType"] != null
+        ? AssistantService.getAssistantTypeEnum(
+            json["type"] ?? json["assistantType"],
+          )
+        : json["using"] != null
+        ? AssistantType.marketplace
+        : AssistantType.assistant;
+    return Assistant(
+      id: getString(json["id"]),
+      name: getString(json["name"]),
+      description: getString(json["description"]),
+      imageUuid: getString(json["imageUuid"]),
+      welcomeMessage: type == AssistantType.assistant
+          ? getString(json["welcomeMessage"])
+          : getString(json["storeCard"]?["welcomeMessage"]),
+      usageSettings: json["assistantSettings"]?["settings"] != null
+          ? UsageSettings.fromMap(
+              json["assistantSettings"]?["settings"] is Map<String, dynamic>
+                  ? Map<String, dynamic>.from(
+                      json["assistantSettings"]?["settings"] as Map,
+                    )
+                  : json["assistantSettings"]?["settings"]
+                        as Map<String, dynamic>,
+            )
+          : null,
+      kbSettings: json["assistantSettings"]?["kbSettings"] != null
+          ? KBSettings.fromMap(
+              json["assistantSettings"]?["kbSettings"] is Map<String, dynamic>
+                  ? Map<String, dynamic>.from(
+                      json["assistantSettings"]?["kbSettings"] as Map,
+                    )
+                  : json["assistantSettings"]?["kbSettings"]
+                        as Map<String, dynamic>,
+            )
+          : null,
+      customActions: json["assistantSettings"]?["customActions"] != null
+          ? (json["assistantSettings"]?["customActions"] as List<dynamic>)
+                .map((e) => CustomAction.fromJson(e))
+                .toList()
+          : [],
+      type: type,
+      replyMode: AssistantService.getReplyModeEnum(json["replyMode"] ?? "open"),
+      model: json["aiModel"] != null ? AiModel.fromJson(json["aiModel"]) : null,
+      costMessage: json["costMessage"] ?? json["cost"]?["message"] ?? "",
+      capabilities: json["capabilities"] != null
+          ? (json["capabilities"] as List<dynamic>)
+                .map((e) => e.toString())
+                .toList()
+          : [],
+      apiKeyConfig: json["apiKeyConfiguration"] != null
+          ? AssistantApiKeyConfig.fromJson(json["apiKeyConfiguration"])
+          : null,
+    );
+  }
 }
 
 class UsageSettings {

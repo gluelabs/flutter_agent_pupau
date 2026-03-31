@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/chat_audio_label.dart';
+import 'package:flutter_agent_pupau/chat_page/components/message_elements/retry_send_audio_button.dart';
 import 'package:get/get.dart';
 import 'package:flutter_agent_pupau/chat_page/components/attachments_elements/attachments_box.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/message_action_bar.dart';
@@ -18,7 +19,7 @@ import 'package:flutter_agent_pupau/models/assistant_model.dart';
 import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
 import 'package:flutter_agent_pupau/models/tool_use_message_model.dart';
 
-class MessageElements extends GetView<ChatController> {
+class MessageElements extends GetView<PupauChatController> {
   const MessageElements({
     super.key,
     required this.message,
@@ -33,7 +34,8 @@ class MessageElements extends GetView<ChatController> {
   @override
   Widget build(BuildContext context) {
     bool isAssistant = message.isMessageFromAssistant;
-    Assistant? taggedAssistant = Get.find<AssistantsController>().assistants
+    Assistant? taggedAssistant = Get.find<PupauAssistantsController>()
+        .assistants
         .firstWhereOrNull(
           (Assistant assistant) =>
               assistant.id == message.assistantId &&
@@ -106,6 +108,11 @@ class MessageElements extends GetView<ChatController> {
                 message.status == MessageStatus.received)
               MessageActionBar(message: message),
             if (showBottomElements) MessageBottomElements(message: message),
+            if (!isAssistant &&
+                message.isAudioInput &&
+                message.isCancelled &&
+                controller.canRetryAudioMessage(message))
+              RetrySendAudioButton(),
             if (relatedSearches.isNotEmpty && isLastMessage)
               RelatedSearchesList(relatedSearches: relatedSearches),
             SearchExternalButton(message: message),

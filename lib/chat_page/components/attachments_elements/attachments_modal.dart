@@ -23,7 +23,7 @@ import '../shared/close_icon.dart';
 void showAttachmentsModal() {
   WoltModalSheetPage page(BuildContext modalSheetContext) {
     bool isTablet = DeviceService.isTablet;
-    AttachmentsController controller = Get.find();
+    PupauAttachmentsController controller = Get.find();
     return WoltModalSheetPage(
       surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
       backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
@@ -32,34 +32,40 @@ void showAttachmentsModal() {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const SizedBox(width: 48),
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 12),
-                  child: Text(
-                    Strings.contextResources.tr,
-                    style: TextStyle(
-                      fontSize: isTablet ? 18 : 16,
-                      fontWeight: FontWeight.w600,
-                      color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 12),
+                      child: Text(
+                        Strings.contextResources.tr,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: isTablet ? 18 : 16,
+                          fontWeight: FontWeight.w600,
+                          color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: Icon(
-                    Symbols.info,
-                    color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
-                    size: isTablet ? 22 : 20,
+                  IconButton(
+                    icon: Icon(
+                      Symbols.info,
+                      color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                      size: isTablet ? 22 : 20,
+                    ),
+                    tooltip: Strings.info.tr,
+                    onPressed: () => showInfoBox(
+                      Strings.contextResources.tr,
+                      Strings.contextResourcesInfo.tr,
+                    ),
                   ),
-                  tooltip: Strings.info.tr,
-                  onPressed: () => showInfoBox(
-                    Strings.contextResources.tr,
-                    Strings.contextResourcesInfo.tr,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           const Padding(padding: EdgeInsets.only(top: 8), child: CloseIcon()),

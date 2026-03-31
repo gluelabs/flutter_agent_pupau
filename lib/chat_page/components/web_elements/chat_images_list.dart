@@ -11,7 +11,7 @@ import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_col
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 
-class ChatImagesList extends GetView<ChatController> {
+class ChatImagesList extends GetView<PupauChatController> {
   const ChatImagesList({
     super.key,
     required this.imagesUrl,
@@ -88,7 +88,7 @@ class ChatImagesList extends GetView<ChatController> {
                                   width: isTablet ? 200 : 125,
                                   height: isTablet ? 200 : 125,
                                   fit: BoxFit.cover,
-                                  errorListener: (error) => print,
+                                  errorListener: (error) {},
                                   errorWidget: (context, url, error) =>
                                       Image.asset(
                                         Constants.missingImage,

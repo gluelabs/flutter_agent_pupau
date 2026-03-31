@@ -56,7 +56,7 @@ class GraphInfoContainer extends StatelessWidget {
                             imageUrl: graphInfo.imageUrl,
                             width: isTablet ? 150 : 95,
                             height: isTablet ? 150 : 95,
-                            errorListener: (error) => print,
+                            errorListener: (error) {},
                             fit: BoxFit.cover,
                             errorWidget: (context, url, error) => Image.asset(
                               Constants.missingImage,

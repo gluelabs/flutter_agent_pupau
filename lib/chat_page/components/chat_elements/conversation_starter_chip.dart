@@ -4,7 +4,7 @@ import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:get/get.dart';
 
-class ConversationStarterChip extends GetView<ChatController> {
+class ConversationStarterChip extends GetView<PupauChatController> {
   const ConversationStarterChip({super.key, required this.starter});
 
   final String starter;

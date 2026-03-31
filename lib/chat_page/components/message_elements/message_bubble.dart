@@ -13,7 +13,7 @@ import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
 import 'package:flutter_agent_pupau/services/style_service.dart';
 import 'package:flutter_agent_pupau/utils/pupau_shared_preferences.dart';
 
-class MessageBubble extends GetView<ChatController> {
+class MessageBubble extends GetView<PupauChatController> {
   const MessageBubble({
     super.key,
     required this.assistant,
@@ -49,7 +49,7 @@ class MessageBubble extends GetView<ChatController> {
             isReadOnly ||
             (isAssistant && message.status == MessageStatus.loading),
         child: MyContextMenuRegion(
-          contextMenu: getContextMenu(isAssistant, reaction, controller.hideInputBox),
+          contextMenu: getContextMenu(isAssistant, reaction, controller.hideInputBox.value, message: message),
           onItemSelected: isReadOnly
               ? null
               : (selectedOption) {

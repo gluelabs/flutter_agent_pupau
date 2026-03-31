@@ -18,8 +18,8 @@ class Attachment {
   String ragId;
   bool summary;
   int tokens;
+  bool selected;
   //Frontend
-  bool active = true;
   bool isShown = false;
   bool isLoadingContent = false;
 
@@ -36,6 +36,7 @@ class Attachment {
     required this.ragId,
     required this.summary,
     required this.tokens,
+    required this.selected,
   });
 
   factory Attachment.fromMap(Map<String, dynamic> json) => Attachment(
@@ -51,5 +52,6 @@ class Attachment {
         ragId: getString(json["ragId"]),
         summary: getBool(json["summary"]),
         tokens: getInt(json["tokenCount"]),
+        selected: getBool(json["selected"], defaultValue: true),
       );
 }

@@ -14,9 +14,9 @@ class ToolAskUserService {
     List<AskUserChoice> options,
     String? answer,
   ) async {
-    ChatController chatController = Get.find();
+    PupauChatController chatController = Get.find();
     String? assistantId = chatController.assistant.value?.id;
-    Conversation? conversation = chatController.conversation.value;
+    PupauConversation? conversation = chatController.conversation.value;
     if (assistantId == null || conversation == null) return null;
     PupauMessage message = chatController.messages.firstWhere(
       (element) => element.id == messageId,

@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 import 'package:flutter_agent_pupau/chat_page/components/shared/setting_denied_dialog.dart';
 import 'package:get/get.dart';
@@ -69,7 +68,6 @@ class AudioRecordingService {
       currentPath = null;
       if (path == null) return null;
       final File file = File(path);
-      inspect(file);
       return file.existsSync() ? file : null;
     } catch (_) {
       currentPath = null;

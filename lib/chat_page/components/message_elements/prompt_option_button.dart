@@ -6,7 +6,7 @@ import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class PromptOptionButton extends GetView<ChatController> {
+class PromptOptionButton extends GetView<PupauChatController> {
   const PromptOptionButton({
     super.key,
     required this.option,

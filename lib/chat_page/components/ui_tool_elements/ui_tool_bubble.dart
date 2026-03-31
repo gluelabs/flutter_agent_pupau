@@ -9,7 +9,7 @@ import 'package:flutter_agent_pupau/services/style_service.dart';
 import 'package:flutter_agent_pupau/services/ui_tool_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class UiToolBubble extends GetView<ChatController> {
+class UiToolBubble extends GetView<PupauChatController> {
   const UiToolBubble({
     super.key,
     required this.message,

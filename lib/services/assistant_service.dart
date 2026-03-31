@@ -11,10 +11,16 @@ import 'api_service.dart';
 
 class AssistantService {
   // Gets an assistant by its ID
-  static Future<Assistant?> getAssistant(String assistantId, bool isMarketplace) async {
+  static Future<Assistant?> getAssistant(
+    String assistantId,
+    bool isMarketplace,
+  ) async {
     try {
       Assistant? assistant;
-      String url = ApiUrls.assistantUrl(assistantId, isMarketplace: isMarketplace);
+      String url = ApiUrls.assistantUrl(
+        assistantId,
+        isMarketplace: isMarketplace,
+      );
       await ApiService.call(
         url,
         RequestType.get,
@@ -53,9 +59,19 @@ class AssistantService {
   ) {
     try {
       if (imageUuid.isEmpty) return getAssistantFallbackImage(assistantId);
-      String formatString = getImageFormatString(format);
-      String target = isMarketplace ? "/marketplace" : "";
-      return "https://cdn.pupau.ai$target/assistants/prod/$assistantId/$imageUuid-$formatString.jpg";
+      final String stagingUrl = "https://api-staging.pupau.ai";
+      final String formatString = getImageFormatString(format);
+      final String target = isMarketplace ? "/marketplace" : "";
+      final String env = ApiUrls.apiUrl == ApiUrls.defaultApiUrl
+          ? "prod"
+          : "dev";
+         final bool isOfficialOrStaging = ApiUrls.apiUrl == ApiUrls.defaultApiUrl ||
+        ApiUrls.apiUrl == stagingUrl;
+    if (isOfficialOrStaging) {
+      return "https://cdn.pupau.ai$target/assistants/$env/$assistantId/$imageUuid-$formatString.jpg";
+    }
+    String baseUrl = "${ApiUrls.apiUrl}/local/files/public";
+      return "$baseUrl/$target/assistants/$env/$assistantId/$imageUuid-$formatString.jpg";
     } catch (e) {
       return getAssistantFallbackImage(assistantId);
     }
@@ -174,11 +190,14 @@ class AssistantService {
     if (usageSettings != null) {
       capabilities.addIf(usageSettings.canAttach, "ATTACHMENT");
       capabilities.addIf(usageSettings.canTag, "TAG");
-      capabilities.addIf(usageSettings.chatVisibility == ChatVisibility.user,
-          "VISIBILITY_USER");
       capabilities.addIf(
-          usageSettings.chatVisibility == ChatVisibility.organization,
-          "VISIBILITY_ORGANIZATION");
+        usageSettings.chatVisibility == ChatVisibility.user,
+        "VISIBILITY_USER",
+      );
+      capabilities.addIf(
+        usageSettings.chatVisibility == ChatVisibility.organization,
+        "VISIBILITY_ORGANIZATION",
+      );
       capabilities.addIf(usageSettings.canAnonymous, "ANONYMOUS");
     }
     if (assistant.model?.canUseTools ?? false) capabilities.add("TOOL_USE");

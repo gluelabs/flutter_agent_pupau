@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter_agent_pupau/services/json_parse_service.dart';
+
 List<AiModel> aiModelsFromJson(String str) =>
     List<AiModel>.from(json.decode(str).map((x) => AiModel.fromJson(x)));
 
@@ -34,7 +36,7 @@ class AiModel {
   });
 
   factory AiModel.fromJson(Map<String, dynamic> json) => AiModel(
-        id: json["id"] ?? "",
+        id: getString(json["id"]),
         aiVendorId: json["aiVendorId"] ?? "",
         name: json["name"] ?? "",
         cost: json["cost"] ?? "",
@@ -72,7 +74,7 @@ class AiVendor {
   });
 
   factory AiVendor.fromJson(Map<String, dynamic> json) => AiVendor(
-        id: json["id"] ?? "",
+        id: getString(json["id"]),
         name: json["name"] ?? "",
         description: json["description"] ?? "",
         logo: json["logo"] ?? "",

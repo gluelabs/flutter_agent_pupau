@@ -1,3 +1,4 @@
+import 'package:flutter_agent_pupau/services/json_parse_service.dart';
 import 'package:flutter_agent_pupau/services/tool_use_service.dart';
 import 'package:flutter_agent_pupau/services/ui_tool_service.dart';
 
@@ -23,14 +24,14 @@ class UiToolMessage {
   });
 
   factory UiToolMessage.fromJson(Map<String, dynamic> json) => UiToolMessage(
-        id: json["id"] ?? "",
+        id: getString(json["id"]),
         type: UiToolService.getUiToolTypeEnum(json["type"] ?? ""),
         data: UiToolData.fromJson(json["data"] ?? {}),
         assistantName: json["assistantName"] ?? "",
         imageUuid: json["imageUuid"],
-        chatBotId: json["chatBotId"],
-        marketPlaceId: json["marketPlaceId"],
-        queryGroupId: json["queryGroupId"] ?? "",
+        chatBotId: getString(json["chatBotId"]),
+        marketPlaceId: getString(json["marketPlaceId"]),
+        queryGroupId: getString(json["queryGroupId"]),
       );
 }
 

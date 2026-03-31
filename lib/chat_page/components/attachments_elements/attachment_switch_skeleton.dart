@@ -6,7 +6,7 @@ import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/custom_switch.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-class AttachmentCardSkeleton extends GetView<ChatController> {
+class AttachmentCardSkeleton extends GetView<PupauChatController> {
   const AttachmentCardSkeleton({super.key});
 
   @override

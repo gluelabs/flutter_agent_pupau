@@ -5,7 +5,7 @@ import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-class VoiceRecordingButton extends GetView<ChatController> {
+class VoiceRecordingButton extends GetView<PupauChatController> {
   const VoiceRecordingButton({
     super.key,
   });

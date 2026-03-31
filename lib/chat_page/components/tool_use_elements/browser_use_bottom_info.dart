@@ -57,8 +57,8 @@ class BrowserUseBottomInfo extends StatelessWidget {
                     padding: const EdgeInsets.only(left: 8),
                     child: IconButton(
                         onPressed: () {
-                          BrowserInspectorController controller =
-                              Get.put(BrowserInspectorController());
+                          PupauBrowserInspectorController controller =
+                              Get.put(PupauBrowserInspectorController());
                           controller.openBrowserInspectorModal(browserUseData!);
                         },
                         iconSize: isTablet ? 30 : 28,

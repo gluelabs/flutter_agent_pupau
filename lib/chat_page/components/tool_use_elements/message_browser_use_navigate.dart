@@ -9,7 +9,7 @@ import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/brows
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/image_not_available_widget.dart';
 
-class MessageBrowserUseNavigate extends GetView<ChatController> {
+class MessageBrowserUseNavigate extends GetView<PupauChatController> {
   const MessageBrowserUseNavigate({
     super.key,
     required this.toolUseMessage,

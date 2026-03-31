@@ -8,7 +8,7 @@ import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class MessageRequestCredentials extends GetView<ChatController> {
+class MessageRequestCredentials extends GetView<PupauChatController> {
   const MessageRequestCredentials({
     super.key,
     required this.message,

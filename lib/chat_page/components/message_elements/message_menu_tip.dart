@@ -7,7 +7,7 @@ import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class MessageMenuTip extends GetView<ChatController> {
+class MessageMenuTip extends GetView<PupauChatController> {
   const MessageMenuTip({super.key});
 
   @override

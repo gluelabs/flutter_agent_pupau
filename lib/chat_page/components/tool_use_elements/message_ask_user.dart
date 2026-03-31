@@ -30,9 +30,9 @@ class MessageAskUser extends StatelessWidget {
     bool hasSubmit = choiceType == AskUserChoiceType.text ||
         (choiceType == AskUserChoiceType.choice &&
             (askUserData?.isMultiselect ?? false));
-    ToolAskUserController controller =
-        Get.put(ToolAskUserController(), tag: toolUseMessage?.id);
-    ChatController chatController = Get.find();
+    PupauToolAskUserController controller =
+        Get.put(PupauToolAskUserController(), tag: toolUseMessage?.id);
+    PupauChatController chatController = Get.find();
     controller.setAskUserData(toolUseMessage);
     return Obx(() {
       bool canSubmit = controller.canSubmit();

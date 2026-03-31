@@ -7,7 +7,7 @@ import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/messa
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_browser_use_navigate.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_browser_use_screenshot.dart';
 
-class MessageBrowserUse extends GetView<ChatController> {
+class MessageBrowserUse extends GetView<PupauChatController> {
   const MessageBrowserUse({
     super.key,
     required this.toolUseMessage,

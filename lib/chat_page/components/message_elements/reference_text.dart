@@ -9,7 +9,7 @@ import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/services/file_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 
-class ReferenceText extends GetView<ChatController> {
+class ReferenceText extends GetView<PupauChatController> {
   const ReferenceText({super.key, required this.ref});
 
   final KbReference ref;

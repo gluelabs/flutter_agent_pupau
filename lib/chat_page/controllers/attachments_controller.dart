@@ -15,7 +15,7 @@ import 'package:flutter_agent_pupau/chat_page/components/attachments_elements/at
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/feedback_snackbar.dart';
 
-class AttachmentsController extends GetxController {
+class PupauAttachmentsController extends GetxController {
   RxList<Attachment> attachments = <Attachment>[].obs;
   RxInt sendingAttachments = 0.obs;
   RxBool allAttachmentsDisabled = false.obs;
@@ -30,6 +30,12 @@ class AttachmentsController extends GetxController {
   Rxn<Attachment> openAttachmentNote = Rxn<Attachment>();
   RxBool isSavingAttachmentNote = false.obs;
   RxList<String> downloadingAttachments = <String>[].obs;
+  /// Attachment IDs that are currently loading note content for the note modal.
+  RxSet<String> attachmentIdsLoadingNoteModal = <String>{}.obs;
+  /// Monotonic request id used to ignore stale note-content loads.
+  int _noteModalLoadRequestId = 0;
+  bool isAttachmentNoteModalLoading(String attachmentId) =>
+      attachmentIdsLoadingNoteModal.contains(attachmentId);
 
   List<Attachment> get getAttachments => attachments;
 
@@ -135,17 +141,40 @@ class AttachmentsController extends GetxController {
     }
   }
 
-  void toggleAttachment(Attachment attachment, bool active) {
-    attachments[attachments.indexOf(attachment)].active = active;
+  Future<void> toggleAttachment(Attachment attachment, bool active) async {
+    final int index = attachments.indexOf(attachment);
+    if (index < 0) return;
+    final bool previousSelected = attachment.selected;
+    final bool previousAllDisabled = allAttachmentsDisabled.value;
+
+    attachments[index].selected = active;
     attachments.refresh();
     allAttachmentsDisabled.value = !attachments.any(
-      (Attachment attachment) => attachment.active,
+      (Attachment a) => a.selected,
     );
     update();
+
+    const int maxRetries = 3;
+    Attachment? updatedAttachment;
+    for (int attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        updatedAttachment = await AttachmentService.patchAttachmentSelected(
+          attachment.id,
+          active,
+        );
+        if (updatedAttachment != null) break;
+      } catch (_) {}
+    }
+    if (updatedAttachment == null && index < attachments.length) {
+      attachments[index].selected = previousSelected;
+      attachments.refresh();
+      allAttachmentsDisabled.value = previousAllDisabled;
+      update();
+    }
   }
 
   List<Attachment> getMessageAttachments(PupauMessage message) {
-    List<PupauMessage> messages = Get.find<ChatController>().messages;
+    List<PupauMessage> messages = Get.find<PupauChatController>().messages;
     List<Attachment> messageAttachments = [];
     List<PupauMessage> userMessages = messages
         .where((PupauMessage message) => message.status == MessageStatus.sent)
@@ -173,12 +202,46 @@ class AttachmentsController extends GetxController {
     return messageAttachments;
   }
 
-  void toggleAllAttachments() {
+  Future<void> toggleAllAttachments() async {
+    final List<bool> previousSelected =
+        attachments.map((Attachment a) => a.selected).toList();
+
     allAttachmentsDisabled.value = !allAttachmentsDisabled.value;
+    final bool newSelected = !allAttachmentsDisabled.value;
     for (Attachment attachment in attachments) {
-      attachment.active = !allAttachmentsDisabled.value;
+      attachment.selected = newSelected;
     }
     attachments.refresh();
+    update();
+
+    final List<Future<bool>> futures = <Future<bool>>[];
+    for (int i = 0; i < attachments.length; i++) {
+      final bool prevSelected = previousSelected[i];
+      if (prevSelected == newSelected) continue;
+
+      final Attachment attachment = attachments[i];
+      final int index = i;
+
+      futures.add(() async {
+        const int maxRetries = 3;
+        for (int attempt = 0; attempt < maxRetries; attempt++) {
+          try {
+            final Attachment? result = await AttachmentService
+                .patchAttachmentSelected(attachment.id, newSelected);
+            if (result != null) return true;
+          } catch (_) {}
+        }
+        if (index < attachments.length) {
+          attachments[index].selected = prevSelected;
+        }
+        return false;
+      }());
+    }
+
+    await Future.wait(futures);
+    attachments.refresh();
+    allAttachmentsDisabled.value =
+        !attachments.any((Attachment a) => a.selected);
     update();
   }
 
@@ -245,22 +308,57 @@ class AttachmentsController extends GetxController {
     Attachment? attachment, {
     bool isEditable = true,
   }) async {
+    final String? attachmentId = attachment?.id;
+    if (attachmentId != null &&
+        attachmentId.trim().isNotEmpty &&
+        isAttachmentNoteModalLoading(attachmentId)) {
+      return;
+    }
+
+    // Stop any other in-flight content loads (best-effort cancellation).
+    _noteModalLoadRequestId++;
+    final int loadRequestId = _noteModalLoadRequestId;
+
     noteName.value = attachment?.fileName ?? "";
     if (attachment != null) {
       try {
+        if (attachmentId != null && attachmentId.trim().isNotEmpty) {
+          attachmentIdsLoadingNoteModal.add(attachmentId);
+          attachmentIdsLoadingNoteModal.refresh();
+        }
+
+        // Clear any other loading flags so only one attachment shows loading state.
+        for (final Attachment a in attachments) {
+          if (a.id != attachment.id && a.isLoadingContent == true) {
+            a.isLoadingContent = false;
+          }
+        }
+
         attachment.isLoadingContent = true;
         attachments.refresh();
         update();
         String? content = await AttachmentService.readAttachmentContent(
           attachment.id,
         );
+        if (loadRequestId != _noteModalLoadRequestId) {
+          // A newer request started; ignore this result.
+          return;
+        }
         noteContent.value = content ?? "";
         attachment.isLoadingContent = false;
+        if (attachmentId != null && attachmentId.trim().isNotEmpty) {
+          attachmentIdsLoadingNoteModal.remove(attachmentId);
+          attachmentIdsLoadingNoteModal.refresh();
+        }
         update();
         attachments.refresh();
       } catch (e) {
         attachment.isLoadingContent = false;
         noteContent.value = "";
+        if (attachmentId != null && attachmentId.trim().isNotEmpty) {
+          attachmentIdsLoadingNoteModal.remove(attachmentId);
+          attachmentIdsLoadingNoteModal.refresh();
+        }
         attachments.refresh();
         update();
       }
@@ -317,7 +415,7 @@ class AttachmentsController extends GetxController {
 
   Future<bool> checkConversationExists(int attachmentsLength) async {
     try {
-      ChatController chatController = Get.find<ChatController>();
+      PupauChatController chatController = Get.find<PupauChatController>();
       if (chatController.conversation.value == null) {
         await chatController.createNewConversation();
         if (chatController.conversation.value == null) {

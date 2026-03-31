@@ -21,7 +21,7 @@ class GoogleMapContainer extends StatefulWidget {
 
 class _GoogleMapContainerState extends State<GoogleMapContainer> {
   bool _hasError = false;
-  final ChatController _controller = Get.find<ChatController>();
+  final PupauChatController _controller = Get.find<PupauChatController>();
 
   @override
   Widget build(BuildContext context) {
@@ -103,6 +103,59 @@ class _GoogleMapContainerState extends State<GoogleMapContainer> {
                             ),
                           ),
                         ),
+                        initialSettings: InAppWebViewSettings(
+                          useShouldOverrideUrlLoading: true,
+                        ),
+                        shouldOverrideUrlLoading:
+                            (controller, navigationAction) async {
+                              final WebUri? url = navigationAction.request.url;
+                              if (url == null) {
+                                return NavigationActionPolicy.ALLOW;
+                              }
+                              final String urlString = url.toString();
+                              if (GoogleMapsService.isExternalMapsUrl(
+                                urlString,
+                              )) {
+                                try {
+                                  if (GoogleMapsService.isMapsDirectionsUrl(
+                                    urlString,
+                                  )) {
+                                    GoogleMapsService.openGoogleMapsNavigation(
+                                      widget.googleMapData,
+                                    );
+                                  } else {
+                                    GoogleMapsService.openGoogleMaps(
+                                      widget.googleMapData,
+                                    );
+                                  }
+                                } catch (_) {}
+                                return NavigationActionPolicy.CANCEL;
+                              }
+                              return NavigationActionPolicy.ALLOW;
+                            },
+                        onCreateWindow: (controller, createWindowAction) async {
+                          final WebUri? url = createWindowAction.request.url;
+                          if (url != null &&
+                              GoogleMapsService.isExternalMapsUrl(
+                                url.toString(),
+                              )) {
+                            try {
+                              if (GoogleMapsService.isMapsDirectionsUrl(
+                                url.toString(),
+                              )) {
+                                GoogleMapsService.openGoogleMapsNavigation(
+                                  widget.googleMapData,
+                                );
+                              } else {
+                                GoogleMapsService.openGoogleMaps(
+                                  widget.googleMapData,
+                                );
+                              }
+                            } catch (_) {}
+                            return false;
+                          }
+                          return true;
+                        },
                         onWebViewCreated: (controller) {
                           controller.addJavaScriptHandler(
                             handlerName: 'onGoogleMapsError',

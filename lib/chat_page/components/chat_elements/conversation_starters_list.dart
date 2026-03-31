@@ -3,7 +3,7 @@ import 'package:flutter_agent_pupau/chat_page/components/chat_elements/conversat
 import 'package:get/get.dart';
 import '../../controllers/chat_controller.dart';
 
-class ConversationStartersList extends GetView<ChatController> {
+class ConversationStartersList extends GetView<PupauChatController> {
   const ConversationStartersList({super.key});
 
   @override

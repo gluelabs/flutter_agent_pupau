@@ -20,13 +20,17 @@ void showKBReferencesModal(List<KbReference> references) {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const SizedBox(width: 48),
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(Strings.references.tr,
-                  style: TextStyle(
-                      fontSize: isTablet ? 18 : 16,
-                      fontWeight: FontWeight.w600,
-                      color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue)),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(Strings.references.tr,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: isTablet ? 18 : 16,
+                        fontWeight: FontWeight.w600,
+                        color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue)),
+              ),
             ),
             const Padding(
               padding: EdgeInsets.only(top: 8),

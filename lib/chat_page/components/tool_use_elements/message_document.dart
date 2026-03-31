@@ -9,7 +9,7 @@ import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/document_tool_card.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/document_tool_download.dart';
 
-class MessageDocument extends GetView<ChatController> {
+class MessageDocument extends GetView<PupauChatController> {
   const MessageDocument({
     super.key,
     required this.toolUseMessage,

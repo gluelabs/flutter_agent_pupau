@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_agent_pupau/models/attachment_model.dart';
+import 'package:flutter_agent_pupau/services/json_parse_service.dart';
 
 class ToolUseDocumentData {
   List<DocumentData> documents;
@@ -38,7 +39,7 @@ class DocumentData {
           json.decode(str).map((x) => DocumentData.fromJson(x)));
 
   factory DocumentData.fromJson(Map<String, dynamic> json) => DocumentData(
-      id: json["id"] ?? "",
+      id: getString(json["id"]),
       fileName: json["fileName"] ?? "",
       exportUrl: json["exportUrl"]);
 }

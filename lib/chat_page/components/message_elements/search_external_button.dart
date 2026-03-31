@@ -8,7 +8,7 @@ import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class SearchExternalButton extends GetView<ChatController> {
+class SearchExternalButton extends GetView<PupauChatController> {
   const SearchExternalButton(
       {super.key, required this.message});
 

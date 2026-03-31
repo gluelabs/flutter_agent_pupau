@@ -4,7 +4,7 @@ import 'package:flutter_agent_pupau/models/tool_use_message_model.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_ask_user_data.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 
-class ToolAskUserController extends GetxController {
+class PupauToolAskUserController extends GetxController {
   ToolUseMessage? toolUseMessage;
   ToolUseAskUserData? askUserData;
   RxList<AskUserChoice> selectedOptions = <AskUserChoice>[].obs;
@@ -49,7 +49,7 @@ class ToolAskUserController extends GetxController {
 
   void submitAnswer() {
     if (canSubmit()) {
-      Get.find<ChatController>().sendToolAnswer(toolUseMessage?.messageId ?? "",
+      Get.find<PupauChatController>().sendToolAnswer(toolUseMessage?.messageId ?? "",
           selectedOptions, customOptionText.value);
     }
   }

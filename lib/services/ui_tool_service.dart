@@ -9,9 +9,9 @@ import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 
 class UiToolService {
   static Future<Stream<SSEModel>?> approveTool(String messageId) async {
-    ChatController chatController = Get.find();
+    PupauChatController chatController = Get.find();
     String? assistantId = chatController.assistant.value?.id;
-    Conversation? conversation = chatController.conversation.value;
+    PupauConversation? conversation = chatController.conversation.value;
     if (assistantId == null || conversation == null) return null;
 
     PupauMessage message = chatController.messages.firstWhere(
@@ -46,9 +46,9 @@ class UiToolService {
     String messageId,
     String toolId,
   ) async {
-    ChatController chatController = Get.find();
+    PupauChatController chatController = Get.find();
     String? assistantId = chatController.assistant.value?.id;
-    Conversation? conversation = chatController.conversation.value;
+    PupauConversation? conversation = chatController.conversation.value;
     if (assistantId == null || conversation == null) return null;
 
     PupauMessage message = chatController.messages.firstWhere(

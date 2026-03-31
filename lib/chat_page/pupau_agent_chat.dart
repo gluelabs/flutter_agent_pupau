@@ -34,16 +34,46 @@ class _PupauAgentChatState extends State<PupauAgentChat> {
     } else {
       ChatBinding().dependencies();
     }
-    if (Get.isRegistered<ChatController>()) {
-      try {
-        final controller = Get.find<ChatController>();
-        WidgetMode widgetMode = widget.config?.widgetMode ?? WidgetMode.full;
-        if (widgetMode == WidgetMode.sized ||
-            widgetMode == WidgetMode.floating) {
-          controller.setCollapseCallback(widget.onCollapse);
+    
+    // Ensure config is updated when switching agents
+    // This is critical for supporting multiple agents in the same app
+    // Use postFrameCallback to ensure controller is ready (either newly created or reused)
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (Get.isRegistered<PupauChatController>()) {
+        try {
+          final controller = Get.find<PupauChatController>();
+          // Always update config if provided - controller will wait for any ongoing initialization
+          // This ensures that when switching agents, the config is properly updated after previous init completes
+          if (widget.config != null) {
+            await controller.openChatWithConfig(widget.config);
+          }
+          
+          WidgetMode widgetMode = widget.config?.widgetMode ?? WidgetMode.full;
+          if (widgetMode == WidgetMode.sized ||
+              widgetMode == WidgetMode.floating) {
+            controller.setCollapseCallback(widget.onCollapse);
+          }
+        } catch (_) {
+          // Controller will be created on first access
         }
-      } catch (_) {
-        // Controller will be created on first access
+      }
+    });
+  }
+  
+  @override
+  void didUpdateWidget(PupauAgentChat oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update config if it changed when widget rebuilds (e.g., switching agents)
+    // This handles cases where the same widget instance is updated with a new config
+    if (widget.config != oldWidget.config && widget.config != null) {
+      if (Get.isRegistered<PupauChatController>()) {
+        try {
+          final controller = Get.find<PupauChatController>();
+          // Await to ensure previous initialization completes before starting new one
+          controller.openChatWithConfig(widget.config);
+        } catch (_) {
+          // Controller not available
+        }
       }
     }
   }
@@ -57,7 +87,7 @@ class _PupauAgentChatState extends State<PupauAgentChat> {
   }
 }
 
-class _PupauAgentChatView extends GetView<ChatController> {
+class _PupauAgentChatView extends GetView<PupauChatController> {
   final PupauConfig? config;
   final VoidCallback? onCollapse;
 
@@ -67,11 +97,16 @@ class _PupauAgentChatView extends GetView<ChatController> {
   Widget build(BuildContext context) {
     DeviceService.initializeTabletCheck(context);
     bool isTablet = DeviceService.isTablet;
+    DrawerConfig? drawerConfig = config?.drawerConfig;
     controller.setModalContext(context);
+    
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (didPop, result) =>
-          controller.ttsService.stopReading(),
+          () {
+        controller.stopActiveStreams();
+        controller.ttsService.stopReading();
+      },
       child: NotificationListener(
         onNotification: (notification) {
           if (notification is ScrollStartNotification &&
@@ -95,66 +130,78 @@ class _PupauAgentChatView extends GetView<ChatController> {
             ),
             child: MediaQuery(
               data: MediaQuery.of(context).copyWith(
-                padding: MediaQuery.of(context).padding.copyWith(top: controller.widgetMode == WidgetMode.full ? 48 : 20),
+                padding: MediaQuery.of(context).padding.copyWith(top: config?.widgetMode == WidgetMode.full ? 48 : 20),
               ),
               child: Scaffold(
+                key: drawerConfig?.scaffoldKey,
                 backgroundColor: isAnonymous
                     ? AnonymousThemeColors.background
                     : MyStyles.pupauTheme(!Get.isDarkMode).white,
-              
                 appBar: ChatAppBar(
                   isAnonymous: isAnonymous,
-                  onBackPressed: onCollapse,
-                  widgetMode: controller.widgetMode,
+                  onBackPressed: () {
+                    controller.stopActiveStreams();
+                    onCollapse?.call();
+                  },
+                  config: config,
                 ),
-                body: Padding(
-                  padding: EdgeInsets.only(bottom: controller.widgetMode == WidgetMode.full ? 24 : 15),
-                  child: SafeArea(
-                    top: false,
-                    bottom: false,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Column(
+                drawer: drawerConfig?.drawer,
+                endDrawer: drawerConfig?.endDrawer,
+                onDrawerChanged: drawerConfig?.onDrawerChanged,
+                onEndDrawerChanged: drawerConfig?.onEndDrawerChanged,
+                body: Builder(
+                  builder: (scaffoldBodyContext) {
+                    controller.setScaffoldContext(scaffoldBodyContext);                    
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: controller.widgetMode == WidgetMode.full ? 24 : 15),
+                      child: SafeArea(
+                        top: false,
+                        bottom: false,
+                        child: Stack(
+                          clipBehavior: Clip.none,
                           children: [
-                            Expanded(
-                              child: hasApiError
-                                  ? ApiErrorWidget(
-                                      message: Strings.apiErrorGeneric.tr,
-                                      retryAction: () =>
-                                          controller.initChatController(),
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 60,
-                                      ),
-                                    )
-                                  : const MessagesList(),
+                            Column(
+                              children: [
+                                Expanded(
+                                  child: hasApiError
+                                      ? ApiErrorWidget(
+                                          message: Strings.apiErrorGeneric.tr,
+                                          retryAction: () =>
+                                              controller.initChatController(),
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 60,
+                                          ),
+                                        )
+                                      : const MessagesList(),
+                                ),
+                                const ChatInputField(),
+                              ],
                             ),
-                            const ChatInputField(),
+                            Transform.translate(
+                              offset: Offset(
+                                -12,
+                                -controller.messageInputFieldHeight.value,
+                              ),
+                              child: ScrollButton(
+                                toBottom: true,
+                                isVisible: scrollButtonVisible,
+                                onTap: () => controller.scrollToBottomChat(
+                                  withAnimation: true,
+                                ),
+                                isAnonymous: isAnonymous,
+                              ),
+                            ),
+                            if (isAdvanced)
+                              Positioned(
+                                left: 12.5,
+                                bottom: isTablet ? 12 : 4,
+                                child: ChatToolsFAB(),
+                              ),
                           ],
                         ),
-                        Transform.translate(
-                          offset: Offset(
-                            -12,
-                            -controller.messageInputFieldHeight.value,
-                          ),
-                          child: ScrollButton(
-                            toBottom: true,
-                            isVisible: scrollButtonVisible,
-                            onTap: () => controller.scrollToBottomChat(
-                              withAnimation: true,
-                            ),
-                            isAnonymous: isAnonymous,
-                          ),
-                        ),
-                        if (isAdvanced)
-                          Positioned(
-                            left: 12.5,
-                            bottom: isTablet ? 12 : 4,
-                            child: ChatToolsFAB(),
-                          ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

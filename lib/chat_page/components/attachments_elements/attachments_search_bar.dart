@@ -8,7 +8,7 @@ import 'package:flutter_agent_pupau/chat_page/controllers/attachments_controller
 
 import '../../../utils/translations/strings_enum.dart';
 
-class AttachmentsSearchBar extends GetView<AttachmentsController> {
+class AttachmentsSearchBar extends GetView<PupauAttachmentsController> {
   const AttachmentsSearchBar({
     super.key,
   });

@@ -5,7 +5,7 @@ import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/brows
 import 'package:flutter_agent_pupau/chat_page/controllers/browser_inspector_controller.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/no_data_found_info.dart';
 
-class BrowserUseDatalayerContent extends GetView<BrowserInspectorController> {
+class BrowserUseDatalayerContent extends GetView<PupauBrowserInspectorController> {
   const BrowserUseDatalayerContent({
     super.key,
   });

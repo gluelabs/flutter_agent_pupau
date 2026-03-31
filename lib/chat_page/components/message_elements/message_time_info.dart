@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class MessageTimeInfo extends GetView<ChatController> {
+class MessageTimeInfo extends GetView<PupauChatController> {
   const MessageTimeInfo({
     super.key,
     required this.localDate,

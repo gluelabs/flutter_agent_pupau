@@ -8,13 +8,25 @@ import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 
 import 'my_menu_item.dart';
 
+bool _hasTrimmingContent(AttachmentTrimmingInfo? info) {
+  if (info == null || !info.applied) return false;
+  return info.truncatedCount > 0 ||
+      info.removedCount > 0 ||
+      info.items.isNotEmpty;
+}
+
 ContextMenu getContextMenu(
   bool isFromAssistant,
   Reaction currentReaction,
-  bool hideInputBox,
-) {
-  ChatController controller = Get.find();
+  bool hideInputBox, {
+  PupauMessage? message,
+}) {
+  PupauChatController controller = Get.find();
   bool showForkConversationIcon = controller.pupauConfig?.bearerToken != null;
+  final bool hasTrimmingContent = isFromAssistant &&
+      (_hasTrimmingContent(message?.attachmentTrimming) ||
+          _hasTrimmingContent(message?.emergencyTrimming));
+
   final List<ContextMenuEntry> messageMenuEntries = <ContextMenuEntry>[
     if (isFromAssistant)
       MyMenuItem(
@@ -46,10 +58,16 @@ ContextMenu getContextMenu(
         flipIcon: true,
         value: 5,
       ),
+    if (isFromAssistant && hasTrimmingContent)
+      MyMenuItem(
+        label: Strings.attachmentTrimmingTitle.tr,
+        icon: Symbols.warning,
+        value: 7,
+      ),
     if (isFromAssistant)
       MyMenuItem(
         label: Strings.report.tr,
-        icon: Symbols.report_problem,
+        icon: Symbols.error,
         value: 6,
       ),
   ];

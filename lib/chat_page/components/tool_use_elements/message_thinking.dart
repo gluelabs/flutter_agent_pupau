@@ -5,7 +5,7 @@ import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/custom_selectable_text.dart';
 
-class MessageThinking extends GetView<ChatController> {
+class MessageThinking extends GetView<PupauChatController> {
   const MessageThinking({
     super.key,
     required this.toolUseMessage,

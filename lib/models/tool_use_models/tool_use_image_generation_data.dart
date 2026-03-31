@@ -1,3 +1,5 @@
+import 'package:flutter_agent_pupau/services/json_parse_service.dart';
+
 class ToolUseImageGenerationData {
   List<GeneratedImageData> images;
 
@@ -30,7 +32,7 @@ class GeneratedImageData {
 
   factory GeneratedImageData.fromJson(Map<String, dynamic> json) {
     return GeneratedImageData(
-      id: json['id'].toString(),
+      id: getString(json['id']),
       path: json['path'] ?? "",
       imageUrlFormat: json['imageUrlFormat'] ?? "",
       generationOptions: json['imageGenerationOptions'] != null

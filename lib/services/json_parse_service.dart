@@ -60,9 +60,9 @@ String getString(dynamic value) {
   }
 }
 
-bool getBool(dynamic value) {
+bool getBool(dynamic value, {bool defaultValue = false}) {
   try {
-    if (value == null) return false;
+    if (value == null) return defaultValue;
     switch (value.runtimeType) {
       case bool:
         return value;
@@ -76,7 +76,7 @@ bool getBool(dynamic value) {
         return false;
     }
   } catch (e) {
-    return false;
+    return defaultValue;
   }
 }
 

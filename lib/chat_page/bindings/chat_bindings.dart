@@ -15,36 +15,36 @@ class ChatBinding extends Bindings {
   void dependencies() {
     // Simply ensure controllers exist - no deletion or reset here
     // Reset will happen when chat is actually opened (in PupauAgentChat or PupauChatUtils)
-    // IMPORTANT: Use Get.put instead of lazyPut for ChatController to prevent multiple creations
+    // IMPORTANT: Use Get.put instead of lazyPut for PupauChatController to prevent multiple creations
     // when GetView accesses it multiple times
-    if (!Get.isRegistered<ChatController>()) {
-      Get.put<ChatController>(
-        ChatController(config: config),
+    if (!Get.isRegistered<PupauChatController>()) {
+      Get.put<PupauChatController>(
+        PupauChatController(config: config),
         permanent: false,
       );
     }
     // Note: If controller already exists, config will be updated when openChatWithConfig is called
-    if (!Get.isRegistered<AttachmentsController>()) {
-      Get.lazyPut<AttachmentsController>(
-        () => AttachmentsController(),
+    if (!Get.isRegistered<PupauAttachmentsController>()) {
+      Get.lazyPut<PupauAttachmentsController>(
+        () => PupauAttachmentsController(),
         fenix: true,
       );
     }
-    if (!Get.isRegistered<BrowserInspectorController>()) {
-      Get.lazyPut<BrowserInspectorController>(
-        () => BrowserInspectorController(),
+    if (!Get.isRegistered<PupauBrowserInspectorController>()) {
+      Get.lazyPut<PupauBrowserInspectorController>(
+        () => PupauBrowserInspectorController(),
         fenix: true,
       );
     }
-    if (!Get.isRegistered<ToolAskUserController>()) {
-      Get.lazyPut<ToolAskUserController>(
-        () => ToolAskUserController(),
+    if (!Get.isRegistered<PupauToolAskUserController>()) {
+      Get.lazyPut<PupauToolAskUserController>(
+        () => PupauToolAskUserController(),
         fenix: true,
       );
     }
-    if (!Get.isRegistered<AssistantsController>()) {
-      Get.lazyPut<AssistantsController>(
-        () => AssistantsController(),
+    if (!Get.isRegistered<PupauAssistantsController>()) {
+      Get.lazyPut<PupauAssistantsController>(
+        () => PupauAssistantsController(),
         fenix: true,
       );
     }

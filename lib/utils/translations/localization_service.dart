@@ -60,38 +60,35 @@ class LocalizationService extends Translations {
   };
 
   static Language getLanguageFromConfig(PupauConfig config) {
-    if (config.language == null) return Language.english;
     switch (config.language) {
-      case 'de':
+      case PupauLanguage.de:
         return Language.german;
-      case 'en':
+      case PupauLanguage.en:
         return Language.english;
-      case 'es':
+      case PupauLanguage.es:
         return Language.spanish;
-      case 'fr':
+      case PupauLanguage.fr:
         return Language.french;
-      case 'hi':
+      case PupauLanguage.hi:
         return Language.hindi;
-      case 'it':
+      case PupauLanguage.it:
         return Language.italian;
-      case 'ko':
+      case PupauLanguage.ko:
         return Language.korean;
-      case 'nl':
+      case PupauLanguage.nl:
         return Language.dutch;
-      case 'pl':
+      case PupauLanguage.pl:
         return Language.polish;
-      case 'pt':
+      case PupauLanguage.pt:
         return Language.portuguese;
-      case 'sq':
+      case PupauLanguage.sq:
         return Language.albanian;
-      case 'sv':
+      case PupauLanguage.sv:
         return Language.swedish;
-      case 'tr':
+      case PupauLanguage.tr:
         return Language.turkish;
-      case 'zh':
+      case PupauLanguage.zh:
         return Language.chinese;
-      default:
-        return Language.english;
     }
   }
 
@@ -128,11 +125,10 @@ class LocalizationService extends Translations {
     }
   }
 
-  /// Get locale directly from config language string
-  /// Returns the locale for the language specified in config, or 'en' (US) as default
-  static Locale? getLocaleFromConfig(PupauConfig? config) {
-    if (config?.language == null) return null;
-    final language = getLanguageFromConfig(config!);
+  /// Get locale directly from config language
+  /// Returns the locale for the language specified in config
+  static Locale getLocaleFromConfig(PupauConfig config) {
+    final language = getLanguageFromConfig(config);
     return getLocaleFromLanguage(language);
   }
 

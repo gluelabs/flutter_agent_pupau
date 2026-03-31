@@ -1,6 +1,6 @@
 import 'package:flutter_agent_pupau/services/json_parse_service.dart';
 
-class Conversation {
+class PupauConversation {
   String id;
   DateTime createdAt;
   DateTime? lastQueryTime;
@@ -16,7 +16,7 @@ class Conversation {
   //Frontend only
   bool hasTempTitle = false;
 
-  Conversation({
+  PupauConversation({
     required this.id,
     required this.createdAt,
     this.lastQueryTime,
@@ -31,7 +31,7 @@ class Conversation {
     required this.userSurname,
   });
 
-  factory Conversation.fromMap(Map<String, dynamic> json) => Conversation(
+  factory PupauConversation.fromMap(Map<String, dynamic> json) => PupauConversation(
     id: getString(json["id"]),
     createdAt: getDateTime(json["createdAt"]),
     lastQueryTime: json["lastQueryTimestamp"] != null

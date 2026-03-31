@@ -5,40 +5,33 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 import 'package:flutter_agent_pupau/services/tag_service.dart';
 
-class MermaidController extends GetxController {
+class MermaidContainer extends StatefulWidget {
+  const MermaidContainer({super.key, required this.mermaidCode});
+
   final String mermaidCode;
 
-  MermaidController({required this.mermaidCode});
-
-  RxDouble contentHeight = 300.0.obs;
-  RxBool isLoading = true.obs;
-  final double minHeight = 100.0;
-
-  void updateHeight(double height) {
-    contentHeight.value = height;
-    isLoading.value = false;
-  }
+  @override
+  State<MermaidContainer> createState() => _MermaidContainerState();
 }
 
-class MermaidContainer extends StatelessWidget {
-  final String mermaidCode;
+class _MermaidContainerState extends State<MermaidContainer> {
+  double _contentHeight = 300.0;
+  bool _isLoading = true;
 
-  const MermaidContainer({super.key, required this.mermaidCode});
+  void _updateHeight(double height) {
+    if (mounted) {
+      setState(() {
+        _contentHeight = height;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Create or find the controller
-    final MermaidController controller = Get.put(
-      MermaidController(mermaidCode: mermaidCode),
-      tag: mermaidCode, // Use the mermaid code as a unique tag
-      permanent: false,
-    );
-
-    // Check if dark mode is enabled
     final bool isDarkMode = Get.isDarkMode;
 
-    // HTML content that loads Mermaid.js and the Mermaid diagram
-    String htmlContent = '''
+    final String htmlContent = '''
       <!DOCTYPE html>
       <html>
       <head>
@@ -62,18 +55,17 @@ class MermaidContainer extends StatelessWidget {
             ${isDarkMode ? 'theme: "dark",' : ''}
           });
           
-          // Function to measure content height and send it to Flutter
           window.addEventListener('load', function() {
             setTimeout(() => {
               const height = document.body.scrollHeight; 
               window.flutter_inappwebview.callHandler('getContentHeight', height);
-            }, 600); // Small delay to ensure diagram is rendered
+            }, 600);
           });
         </script>
       </head>
       <body>
         <div class="mermaid">
-          ${TagService.cleanMermaidCode(mermaidCode)}
+          ${TagService.cleanMermaidCode(widget.mermaidCode)}
         </div>
       </body>
       </html>
@@ -81,49 +73,55 @@ class MermaidContainer extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
-      child: LayoutBuilder(builder: (context, constraints) {
-        return Stack(
-          children: [
-            Obx(() => SizedBox(
-                  width: constraints.maxWidth,
-                  height: controller.contentHeight.value,
-                  child: InAppWebView(
-                    initialUrlRequest: URLRequest(
-                        url: WebUri.uri(Uri.dataFromString(htmlContent,
-                            mimeType: 'text/html',
-                            encoding: Encoding.getByName('utf-8')))),
-                    initialSettings: InAppWebViewSettings(
-                      transparentBackground: true,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Stack(
+            children: [
+              // SizedBox height is updated via setState; InAppWebView itself is
+              // never rebuilt, so _PlatformViewPlaceholderBox is never detached
+              // mid-frame (avoids the getTransformTo null-check crash).
+              SizedBox(
+                width: constraints.maxWidth,
+                height: _contentHeight,
+                child: InAppWebView(
+                  initialUrlRequest: URLRequest(
+                    url: WebUri.uri(
+                      Uri.dataFromString(
+                        htmlContent,
+                        mimeType: 'text/html',
+                        encoding: Encoding.getByName('utf-8'),
+                      ),
                     ),
-                    onWebViewCreated: (webViewController) {
-                      webViewController.addJavaScriptHandler(
-                        handlerName: 'getContentHeight',
-                        callback: (args) {
-                          if (args.isNotEmpty && args[0] is num) {
-                            controller
-                                .updateHeight((args[0] as num).toDouble());
-                          }
-                        },
-                      );
-                    },
-                    onLoadStop: (webViewController, url) {
-                      // Backup method to get height in case the JavaScript event doesn't fire
-                      webViewController.evaluateJavascript(source: '''
-                    window.flutter_inappwebview.callHandler('getContentHeight', document.body.scrollHeight);
-                  ''');
-                    },
                   ),
-                )),
-            Obx(() => controller.isLoading.value
-                ? Positioned.fill(
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
-                : const SizedBox.shrink()),
-          ],
-        );
-      }),
+                  initialSettings: InAppWebViewSettings(
+                    transparentBackground: true,
+                  ),
+                  onWebViewCreated: (webViewController) {
+                    webViewController.addJavaScriptHandler(
+                      handlerName: 'getContentHeight',
+                      callback: (args) {
+                        if (args.isNotEmpty && args[0] is num) {
+                          _updateHeight((args[0] as num).toDouble());
+                        }
+                      },
+                    );
+                  },
+                  onLoadStop: (webViewController, url) {
+                    webViewController.evaluateJavascript(
+                      source:
+                          'window.flutter_inappwebview.callHandler(\'getContentHeight\', document.body.scrollHeight);',
+                    );
+                  },
+                ),
+              ),
+              if (_isLoading)
+                const Positioned.fill(
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

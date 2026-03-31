@@ -59,7 +59,7 @@ class CustomInputField extends StatelessWidget {
     return Opacity(
       opacity: enabled || readOnly ? 1 : 0.3,
       child: AbsorbPointer(
-        absorbing: !enabled || readOnly,
+        absorbing: !enabled,
         child: SizedBox(
           width: isTablet ? DeviceService.width * 0.7 : DeviceService.width,
           child: Padding(
@@ -74,6 +74,7 @@ class CustomInputField extends StatelessWidget {
                   autovalidateMode: AutovalidateMode.onUnfocus,
                   textCapitalization: textCapitalization,
                   maxLines: maxlines,
+                  readOnly: readOnly,
                   style: textStyle,
                   onChanged: onChange,
                   autofillHints: autofillHints,

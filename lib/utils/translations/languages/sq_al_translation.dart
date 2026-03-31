@@ -32,6 +32,10 @@ const Map<String, String> sqAl = {
   Strings.copiedClipboard: 'Kopjuar në të dhënat e kopjuara',
   Strings.searchExternalSource: 'Kërko në burime të jashtme',
   Strings.read: 'Lexo',
+  Strings.write: 'Shkruaj',
+  Strings.execute: 'Ekzekuto',
+  Strings.cronExpression: 'Shprehja cron',
+  Strings.timezone: 'Zona kohore',
   Strings.rateConversation: 'Vlerëso Bisedën',
   Strings.rateConversationFlavor:
       'A jeni i kënaqur me përgjigjet e ofruara nga agjenti juaj? Lëreni një koment për të na ndihmuar të përmirësohemi',
@@ -54,6 +58,21 @@ const Map<String, String> sqAl = {
   Strings.attachmentUploadSuccessMultiple:
       'Bashkëngjitjet u ngarkuan me sukses!',
   Strings.attachmentUploadFailed: 'Ngarkimi i bashkëngjitjes dështoi!',
+  Strings.attachmentTrimmingSnackbar:
+      'Për të respektuar kufijtë e kontekstit, disa bashkëngjitje u zvogëluan.',
+  Strings.attachmentTrimmingDetailBoth: '%1 të shkurtuara, %2 të hequra.',
+  Strings.attachmentTrimmingDetailTruncated: '%1 të shkurtuara.',
+  Strings.attachmentTrimmingDetailRemoved: '%1 të hequra.',
+  Strings.attachmentTrimmingTitle: 'Shkurtimi i bashkëngjitjeve',
+  Strings.emergencyTrimmingTitle: 'Shkurtimi i urgjencës',
+  Strings.attachmentTrimmingEstimatedTokens: 'Token të vlerësuar',
+  Strings.attachmentTrimmingTokensDetail:
+      'Token e kontekstit (përafërsisht): %1 më parë → %2 më pas · %3 kursyer',
+  Strings.attachmentTrimmingReasonProportionalShare: 'Zvogëlim proporcional',
+  Strings.attachmentTrimmingReasonFallbackOverBudget:
+      'E hequr (tejkalon kufirin e kontekstit)',
+  Strings.attachmentTrimmingReasonOverBudget: 'Tejkalon kufirin e kontekstit',
+  Strings.attachmentTrimmingReasonBelowMinUseful: 'Nën minimumin e dobishëm',
   Strings.contextResources: 'Burimet e kontekstit',
   Strings.addResource: 'Shto burim',
   Strings.totalResources: 'Totale aktive resursat',
@@ -156,6 +175,9 @@ const Map<String, String> sqAl = {
   Strings.noScreenshotAvailable: 'Nuk ka screenshot të disponueshëm',
   Strings.executionTime: 'Kohë e ekzekutimit',
   Strings.seconds: 'sekonda',
+  Strings.toolPhaseLint: 'Duke verifikuar përmbajtjen...',
+  Strings.toolPhaseCreating: 'Duke krijuar dokumentin...',
+  Strings.toolPhaseUpdating: 'Duke përditësuar dokumentin...',
   Strings.inspectBrowser: 'Inspekto Browser',
   Strings.network: 'Rrjet',
   Strings.dataLayer: 'Data Layer',

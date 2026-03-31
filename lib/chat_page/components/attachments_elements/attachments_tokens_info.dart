@@ -6,7 +6,7 @@ import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/attachments_controller.dart';
 
-class AttachmentsTokensInfo extends GetView<AttachmentsController> {
+class AttachmentsTokensInfo extends GetView<PupauAttachmentsController> {
   const AttachmentsTokensInfo({
     super.key,
   });

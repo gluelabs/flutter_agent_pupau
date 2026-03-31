@@ -6,7 +6,7 @@ import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/models/assistant_model.dart';
 import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
 
-class MessageStreamBuilder extends GetView<ChatController> {
+class MessageStreamBuilder extends GetView<PupauChatController> {
   const MessageStreamBuilder({
     super.key,
     required this.message,

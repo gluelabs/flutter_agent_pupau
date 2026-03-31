@@ -5,7 +5,7 @@ import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class SendMessageButton extends GetView<ChatController> {
+class SendMessageButton extends GetView<PupauChatController> {
   const SendMessageButton({
     super.key,
   });

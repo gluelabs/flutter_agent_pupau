@@ -12,7 +12,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 void showBrowserInspectorModal() {
   WoltModalSheetPage page(BuildContext modalSheetContext) {
     bool isTablet = DeviceService.isTablet;
-    BrowserInspectorController controller = Get.find<BrowserInspectorController>();
+    PupauBrowserInspectorController controller = Get.find<PupauBrowserInspectorController>();
     return WoltModalSheetPage(
         surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
         backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,

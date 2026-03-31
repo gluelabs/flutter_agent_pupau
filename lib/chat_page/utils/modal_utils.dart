@@ -6,7 +6,7 @@ import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 /// This ensures modals work correctly when the plugin is used in other projects
 BuildContext? getSafeModalContext() {
   try {
-    ChatController chatController = Get.find();
+    PupauChatController chatController = Get.find();
     return chatController.safeContext;
   } catch (e) {
     return null;

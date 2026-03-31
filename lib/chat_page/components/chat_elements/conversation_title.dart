@@ -7,7 +7,7 @@ import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class ConversationTitle extends GetView<ChatController> {
+class ConversationTitle extends GetView<PupauChatController> {
   const ConversationTitle({
     super.key,
   });

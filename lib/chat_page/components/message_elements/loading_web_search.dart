@@ -4,7 +4,7 @@ import 'package:flutter_agent_pupau/chat_page/components/message_elements/web_se
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
 
-class LoadingWebSearch extends GetView<ChatController> {
+class LoadingWebSearch extends GetView<PupauChatController> {
   const LoadingWebSearch({
     super.key,
     required this.loadingMessage,

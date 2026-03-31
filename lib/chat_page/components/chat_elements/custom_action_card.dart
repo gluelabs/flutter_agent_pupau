@@ -8,7 +8,7 @@ import 'package:flutter_agent_pupau/services/tag_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:get/get.dart';
 
-class CustomActionCard extends GetView<ChatController> {
+class CustomActionCard extends GetView<PupauChatController> {
   const CustomActionCard({super.key, required this.customAction});
 
   final CustomAction customAction;
@@ -20,8 +20,8 @@ class CustomActionCard extends GetView<ChatController> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       child: Obx(() {
-        AssistantsController assistantsController =
-            Get.find<AssistantsController>();
+        PupauAssistantsController assistantsController =
+            Get.find<PupauAssistantsController>();
         bool canSendPrompt =
             !controller.stopIsActive() && customAction.setting?.prompt != null;
         String? assistantId = customAction.setting?.assistantId;

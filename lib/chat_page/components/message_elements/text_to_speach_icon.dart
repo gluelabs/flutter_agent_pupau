@@ -7,7 +7,7 @@ import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class TextToSpeachIcon extends GetView<ChatController> {
+class TextToSpeachIcon extends GetView<PupauChatController> {
   const TextToSpeachIcon(
       {super.key, required this.message, this.isAnonymous = false});
 

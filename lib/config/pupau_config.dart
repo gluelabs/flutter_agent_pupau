@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// Configuration class for Pupau Agent package
 class PupauConfig {
   /// API key for authentication
@@ -5,6 +7,9 @@ class PupauConfig {
 
   /// Bearer token for authentication
   final String? bearerToken;
+
+  /// Override the base API URL. If null, defaults to `https://api.pupau.ai`.
+  final String? apiUrl;
 
   /// The id of the assistant to use.
   final String assistantId;
@@ -20,10 +25,8 @@ class PupauConfig {
   /// Whether the chat will be anonymous, ignores conversation id if true. Defaults to false.
   final bool isAnonymous;
 
-  /// Language code used for translations in the plugin. If not set, defaults to `'en'`.
-  ///
-  /// Supported values: `'de'`, `'en'`, `'es'`, `'fr'`, `'hi'`, `'it'`, `'ko'`, `'nl'`, `'pl'`, `'pt'`, `'sq'`, `'sv'`, `'tr'`, `'zh'`.
-  final String? language;
+  /// Language used for translations in the plugin. Defaults to [PupauLanguage.en].
+  final PupauLanguage language;
 
   /// API key for Google Maps used for Google Map syntax builder.
   final String? googleMapsApiKey;
@@ -37,7 +40,7 @@ class PupauConfig {
   /// Widget mode. Defaults to full.
   ///
   /// - `full`: The widget will be displayed in a full screen mode, navigating to the chat page when the user taps on the avatar.
-  /// - `sized`: When the user taps the avatar, it will expand in place using the dimensions specified in [sizedConfig]. Can be initially expanded and show or hide the close button.
+  /// - `sized`: When the user taps the avatar, it will expand in place using the dimensions specified in [sizedConfig]. Can be initially expanded.
   /// - `floating`: When the user taps the avatar, it will show as a floating overlay dialog using the dimensions and anchor specified in [floatingConfig].
   final WidgetMode widgetMode;
 
@@ -56,15 +59,31 @@ class PupauConfig {
   /// Custom properties, useful to pass custom data to the agent.
   final dynamic customProperties;
 
+  /// Configuration for the app bar.
+  final AppBarConfig? appBarConfig;
+
+  /// Configuration for the drawer and end drawer.
+  final DrawerConfig? drawerConfig;
+
+  /// Whether to reset the chat state on open. Defaults to true.
+  final bool resetChatOnOpen;
+
+  /// Optional welcome message passed by the host (e.g. from a list). Used when the
+  /// assistant from [getAssistants] has no welcome message, so the chat can show
+  /// it immediately without waiting for [getAssistant]. Ignored once the API
+  /// returns a welcome message.
+  final String? initialWelcomeMessage;
+
   /// Private constructor - use [createWithApiKey] or [createWithToken] instead
   PupauConfig._internal({
     this.apiKey,
     this.bearerToken,
+    this.apiUrl,
     required this.assistantId,
     this.isMarketplace = false,
     this.conversationId,
     this.isAnonymous = false,
-    this.language,
+    this.language = PupauLanguage.en,
     this.googleMapsApiKey,
     this.hideInputBox = false,
     this.widgetMode = WidgetMode.full,
@@ -74,11 +93,16 @@ class PupauConfig {
     this.hideAudioRecordingButton = false,
     this.customProperties,
     this.conversationStarters = const [],
+    this.appBarConfig,
+    this.drawerConfig,
+    this.resetChatOnOpen = true,
+    this.initialWelcomeMessage,
   });
 
   /// Factory constructor for creating config with API key
   ///
   /// Get the API key from Pupau web or mobile app, navigate to your agent configuration page and then under the "Integrations - API Key" you will find your agent's API keys.
+  /// For marketplace assistants, pass [assistantId] and [isMarketplace: true] so the correct API path is used.
   ///
   /// Example:
   /// ```dart
@@ -88,9 +112,10 @@ class PupauConfig {
   /// ```
   factory PupauConfig.createWithApiKey({
     required String apiKey,
+    String? apiUrl,
     String? conversationId,
     bool isAnonymous = false,
-    String? language,
+    PupauLanguage language = PupauLanguage.en,
     String? googleMapsApiKey,
     bool hideInputBox = false,
     WidgetMode widgetMode = WidgetMode.full,
@@ -100,10 +125,16 @@ class PupauConfig {
     bool hideAudioRecordingButton = false,
     dynamic customProperties,
     List<String> conversationStarters = const [],
+    AppBarConfig? appBarConfig,
+    DrawerConfig? drawerConfig,
+    bool resetChatOnOpen = true,
+    String? initialWelcomeMessage,
   }) {
     return PupauConfig._internal(
       apiKey: apiKey,
+      apiUrl: apiUrl,
       assistantId: assistantIdFromApiKey(apiKey),
+      isMarketplace: false,
       conversationId: conversationId,
       isAnonymous: isAnonymous,
       language: language,
@@ -116,6 +147,10 @@ class PupauConfig {
       hideAudioRecordingButton: hideAudioRecordingButton,
       customProperties: customProperties,
       conversationStarters: conversationStarters,
+      appBarConfig: appBarConfig,
+      drawerConfig: drawerConfig,
+      resetChatOnOpen: resetChatOnOpen,
+      initialWelcomeMessage: initialWelcomeMessage,
     );
   }
 
@@ -132,10 +167,11 @@ class PupauConfig {
   factory PupauConfig.createWithToken({
     required String bearerToken,
     required String assistantId,
+    String? apiUrl,
     bool isMarketplace = false,
     String? conversationId,
     bool isAnonymous = false,
-    String? language,
+    PupauLanguage language = PupauLanguage.en,
     String? googleMapsApiKey,
     bool hideInputBox = false,
     WidgetMode widgetMode = WidgetMode.full,
@@ -145,10 +181,15 @@ class PupauConfig {
     bool hideAudioRecordingButton = false,
     dynamic customProperties,
     List<String> conversationStarters = const [],
+    AppBarConfig? appBarConfig,
+    DrawerConfig? drawerConfig,
+    bool resetChatOnOpen = true,
+    String? initialWelcomeMessage,
   }) {
     return PupauConfig._internal(
       bearerToken: bearerToken,
       assistantId: assistantId,
+      apiUrl: apiUrl,
       isMarketplace: isMarketplace,
       conversationId: conversationId,
       isAnonymous: isAnonymous,
@@ -162,6 +203,10 @@ class PupauConfig {
       hideAudioRecordingButton: hideAudioRecordingButton,
       customProperties: customProperties,
       conversationStarters: conversationStarters,
+      appBarConfig: appBarConfig,
+      drawerConfig: drawerConfig,
+      resetChatOnOpen: resetChatOnOpen,
+      initialWelcomeMessage: initialWelcomeMessage,
     );
   }
 
@@ -177,6 +222,85 @@ class PupauConfig {
       return null;
     } catch (e) {
       return null;
+    }
+  }
+
+  /// Creates a copy of this config with the given fields replaced with new values.
+  /// Note: apiKey, assistantId, and bearerToken cannot be changed as they are locked at creation.
+  ///
+  /// Example:
+  /// ```dart
+  /// final newConfig = config.copyWith(
+  ///   isAnonymous: true,
+  ///   conversationId: null,
+  /// );
+  /// ```
+  PupauConfig copyWith({
+    String? apiUrl,
+    bool? isMarketplace,
+    String? conversationId,
+    bool? isAnonymous,
+    PupauLanguage? language,
+    String? googleMapsApiKey,
+    bool? hideInputBox,
+    WidgetMode? widgetMode,
+    SizedConfig? sizedConfig,
+    FloatingConfig? floatingConfig,
+    bool? showNerdStats,
+    bool? hideAudioRecordingButton,
+    dynamic customProperties,
+    List<String>? conversationStarters,
+    AppBarConfig? appBarConfig,
+    DrawerConfig? drawerConfig,
+    String? initialWelcomeMessage,
+  }) {
+    if (apiKey != null) {
+      return PupauConfig.createWithApiKey(
+        apiKey: apiKey!,
+        apiUrl: apiUrl ?? this.apiUrl,
+        conversationId: conversationId ?? this.conversationId,
+        isAnonymous: isAnonymous ?? this.isAnonymous,
+        language: language ?? this.language,
+        googleMapsApiKey: googleMapsApiKey ?? this.googleMapsApiKey,
+        hideInputBox: hideInputBox ?? this.hideInputBox,
+        widgetMode: widgetMode ?? this.widgetMode,
+        sizedConfig: sizedConfig ?? this.sizedConfig,
+        floatingConfig: floatingConfig ?? this.floatingConfig,
+        showNerdStats: showNerdStats ?? this.showNerdStats,
+        hideAudioRecordingButton:
+            hideAudioRecordingButton ?? this.hideAudioRecordingButton,
+        customProperties: customProperties ?? this.customProperties,
+        conversationStarters: conversationStarters ?? this.conversationStarters,
+        appBarConfig: appBarConfig ?? this.appBarConfig,
+        drawerConfig: drawerConfig ?? this.drawerConfig,
+        initialWelcomeMessage: initialWelcomeMessage ?? this.initialWelcomeMessage,
+      );
+    } else if (bearerToken != null) {
+      return PupauConfig.createWithToken(
+        bearerToken: bearerToken!,
+        assistantId: assistantId,
+        apiUrl: apiUrl ?? this.apiUrl,
+        isMarketplace: isMarketplace ?? this.isMarketplace,
+        conversationId: conversationId ?? this.conversationId,
+        isAnonymous: isAnonymous ?? this.isAnonymous,
+        language: language ?? this.language,
+        googleMapsApiKey: googleMapsApiKey ?? this.googleMapsApiKey,
+        hideInputBox: hideInputBox ?? this.hideInputBox,
+        widgetMode: widgetMode ?? this.widgetMode,
+        sizedConfig: sizedConfig ?? this.sizedConfig,
+        floatingConfig: floatingConfig ?? this.floatingConfig,
+        showNerdStats: showNerdStats ?? this.showNerdStats,
+        hideAudioRecordingButton:
+            hideAudioRecordingButton ?? this.hideAudioRecordingButton,
+        customProperties: customProperties ?? this.customProperties,
+        conversationStarters: conversationStarters ?? this.conversationStarters,
+        appBarConfig: appBarConfig ?? this.appBarConfig,
+        drawerConfig: drawerConfig ?? this.drawerConfig,
+        initialWelcomeMessage: initialWelcomeMessage ?? this.initialWelcomeMessage,
+      );
+    } else {
+      throw Exception(
+          'Cannot copy config: missing apiKey or bearerToken');
     }
   }
 
@@ -196,14 +320,11 @@ class SizedConfig {
   final double height;
   /// Whether the chat is initially expanded.
   final bool initiallyExpanded;
-  /// Whether the close button is shown.
-  final bool hasCloseButton;
 
   const SizedConfig({
     required this.width,
     required this.height,
     this.initiallyExpanded = false,
-    this.hasCloseButton = true
   });
 }
 
@@ -227,4 +348,84 @@ class FloatingConfig {
   });
 }
 
+/// Configuration for the app bar.
+class AppBarConfig {
+  /// Whether the app bar is shown.
+  final bool showAppBar;
+  /// List of actions to be displayed in the app bar.
+  final List<Widget>? actions;
+
+  /// Style of the close button. Defaults to [CloseStyle.arrow] for Full mode, [CloseStyle.cross] for Sized and Floating modes.
+  /// Set to [CloseStyle.none] to hide the close button completely.
+  final CloseStyle? closeStyle;
+
+  /// Position of the close button. Defaults to [CloseButtonPosition.left] for Full mode, [CloseButtonPosition.right] for Sized and Floating modes.
+  final CloseButtonPosition? closeButtonPosition;
+
+  const AppBarConfig({
+    this.showAppBar = true,
+    this.actions,
+    this.closeStyle,
+    this.closeButtonPosition,
+  });
+}
+
+/// Configuration for the drawer.
+class DrawerConfig {
+  /// The drawer to be displayed.
+  final Widget? drawer;
+  /// The end drawer to be displayed.
+  final Widget? endDrawer;
+  /// Called when the drawer is opened or closed.
+  final Function(bool isOpen)? onDrawerChanged;
+  /// Called when the end drawer is opened or closed.
+  final Function(bool isOpen)? onEndDrawerChanged;
+  // Key for Scaffold, allowing to control the drawer from the key
+  final GlobalKey<ScaffoldState>? scaffoldKey;
+
+  const DrawerConfig({
+    this.drawer,
+    this.endDrawer,
+    this.onDrawerChanged,
+    this.onEndDrawerChanged,
+    this.scaffoldKey,
+  });
+}
+
 enum WidgetMode { full, sized, floating }
+
+enum CloseStyle { arrow, cross, none }
+
+enum CloseButtonPosition { left, right }
+
+/// Supported languages for the plugin.
+enum PupauLanguage {
+  /// English (default)
+  en,
+  /// German
+  de,
+  /// Spanish
+  es,
+  /// French
+  fr,
+  /// Hindi
+  hi,
+  /// Italian
+  it,
+  /// Korean
+  ko,
+  /// Dutch
+  nl,
+  /// Polish
+  pl,
+  /// Portuguese
+  pt,
+  /// Albanian
+  sq,
+  /// Swedish
+  sv,
+  /// Turkish
+  tr,
+  /// Chinese
+  zh;
+}

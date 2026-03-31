@@ -32,6 +32,10 @@ const Map<String, String> frFr = {
   Strings.copiedClipboard: 'Copié dans le presse-papiers',
   Strings.searchExternalSource: 'Rechercher dans des sources externes',
   Strings.read: 'Lire',
+  Strings.write: 'Écrire',
+  Strings.execute: 'Exécuter',
+  Strings.cronExpression: 'Expression cron',
+  Strings.timezone: 'Fuseau horaire',
   Strings.rateConversation: 'Évaluer la conversation',
   Strings.rateConversationFlavor:
       'Êtes-vous satisfait des réponses de votre agent ? Laissez un commentaire pour m\'aider à m\'améliorer',
@@ -55,6 +59,21 @@ const Map<String, String> frFr = {
       'Pièces jointes téléchargées avec succès !',
   Strings.attachmentUploadFailed:
       'Échec du téléchargement de la pièce jointe !',
+  Strings.attachmentTrimmingSnackbar:
+      'Pour respecter les limites de contexte, certains fichiers joints ont été réduits.',
+  Strings.attachmentTrimmingDetailBoth: '%1 tronqués, %2 supprimés.',
+  Strings.attachmentTrimmingDetailTruncated: '%1 tronqués.',
+  Strings.attachmentTrimmingDetailRemoved: '%1 supprimés.',
+  Strings.attachmentTrimmingTitle: 'Réduction des pièces jointes',
+  Strings.emergencyTrimmingTitle: 'Réduction d\'urgence',
+  Strings.attachmentTrimmingEstimatedTokens: 'Tokens estimés',
+  Strings.attachmentTrimmingTokensDetail:
+      'Tokens de contexte (env.) : %1 avant → %2 après · %3 économisés',
+  Strings.attachmentTrimmingReasonProportionalShare: 'Réduction proportionnelle',
+  Strings.attachmentTrimmingReasonFallbackOverBudget:
+      'Supprimé (limite de contexte dépassée)',
+  Strings.attachmentTrimmingReasonOverBudget: 'Limite de contexte dépassée',
+  Strings.attachmentTrimmingReasonBelowMinUseful: 'Sous le minimum utile',
   Strings.contextResources: 'Ressources contextuelles',
   Strings.addResource: 'Ajouter une ressource',
   Strings.totalResources: 'Total de ressources actives',
@@ -158,6 +177,9 @@ const Map<String, String> frFr = {
   Strings.noScreenshotAvailable: 'Aucune capture d\'écran disponible',
   Strings.executionTime: 'Temps d\'exécution',
   Strings.seconds: 'secondes',
+  Strings.toolPhaseLint: 'Validation du contenu...',
+  Strings.toolPhaseCreating: 'Création du document...',
+  Strings.toolPhaseUpdating: 'Mise à jour du document...',
   Strings.inspectBrowser: 'Inspecter le navigateur',
   Strings.network: 'Réseau',
   Strings.dataLayer: 'Data Layer',

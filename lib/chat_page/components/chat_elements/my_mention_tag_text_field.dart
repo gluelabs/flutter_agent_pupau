@@ -74,7 +74,6 @@ class MyMentionTagTextField extends TextField {
     super.contentInsertionConfiguration,
     super.clipBehavior = Clip.hardEdge,
     super.restorationId,
-    super.scribbleEnabled = true,
     super.enableIMEPersonalizedLearning = true,
     super.contextMenuBuilder = _defaultContextMenuBuilder,
     super.canRequestFocus = true,
@@ -208,7 +207,6 @@ class MyMentionTagTextFormField extends TextFormField {
     super.contentInsertionConfiguration,
     super.statesController,
     super.clipBehavior = Clip.hardEdge,
-    super.scribbleEnabled = true,
     super.canRequestFocus = true,
   }) : super(
             controller: controller,

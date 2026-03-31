@@ -6,7 +6,7 @@ import 'package:flutter_agent_pupau/chat_page/components/shared/no_data_found_in
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_browser_use_data.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 
-class BrowserUseNetworkContent extends GetView<BrowserInspectorController> {
+class BrowserUseNetworkContent extends GetView<PupauBrowserInspectorController> {
   const BrowserUseNetworkContent({
     super.key,
   });

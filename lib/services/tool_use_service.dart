@@ -57,12 +57,70 @@ class ToolUseService {
               return ToolUseType.nativeToolsAskUser;
             case "CLOSE_CONVERSATION":
               return ToolUseType.nativeToolsCloseConversation;
+            case "CREATE_TASK":
+              return ToolUseType.nativeToolsTaskTool;
             default:
               return ToolUseType.nativeToolsGeneric;
           }
         }
       default:
         return ToolUseType.defaultTool;
+    }
+  }
+
+  /// Like [getToolUseTypeEnum], but treats native tool ids (e.g. "DOCUMENT")
+  /// as first-class type values (no need for "NATIVE_TOOLS" wrapper).
+  ///
+  /// This is useful for SSE async events that expose `actorType` directly.
+  static ToolUseType getToolUseTypeEnumFlat(String typeOrNativeToolType) {
+    switch (typeOrNativeToolType) {
+      case "REMOTE_CALL":
+        return ToolUseType.remoteCall;
+      case "PIPELINE":
+        return ToolUseType.pipeline;
+      case "AGENT":
+        return ToolUseType.agent;
+      case "MCP_SERVER":
+        return ToolUseType.mcpServer;
+      case "MCP_SERVER_TOOL":
+        return ToolUseType.mcpServerTool;
+      case "DATABASE":
+        return ToolUseType.nativeToolsDatabase;
+      case "WEB_SEARCH":
+        return ToolUseType.nativeToolsWebSearch;
+      case "TODO_LIST":
+        return ToolUseType.nativeToolsToDoList;
+      case "PASSTHROUGH":
+        return ToolUseType.nativeToolsPassthrough;
+      case "SMTP":
+        return ToolUseType.nativeToolsSMTP;
+      case "GOOGLE_DRIVE":
+        return ToolUseType.nativeToolsGoogleDrive;
+      case "RAG":
+      case "KNOWLEDGE_BASE":
+        return ToolUseType.nativeToolsKnowledgeBase;
+      case "DOCUMENT":
+        return ToolUseType.nativeToolsDocument;
+      case "UI":
+        return ToolUseType.nativeToolsUI;
+      case "IMAGE_GENERATION":
+        return ToolUseType.nativeToolsImageGeneration;
+      case "CODE_INTERPRETER":
+        return ToolUseType.nativeToolsCodeInterpreter;
+      case "WEB_READER":
+        return ToolUseType.nativeToolsWebReader;
+      case "THINKING":
+        return ToolUseType.nativeToolsThinking;
+      case "BROWSER_USE":
+        return ToolUseType.nativeToolsBrowserUse;
+      case "ASK_USER":
+        return ToolUseType.nativeToolsAskUser;
+      case "CLOSE_CONVERSATION":
+        return ToolUseType.nativeToolsCloseConversation;
+      case "CREATE_TASK":
+        return ToolUseType.nativeToolsTaskTool;
+      default:
+        return ToolUseType.nativeToolsGeneric;
     }
   }
 
@@ -98,6 +156,7 @@ class ToolUseService {
       case ToolUseType.nativeToolsBrowserUse:
       case ToolUseType.nativeToolsAskUser:
       case ToolUseType.nativeToolsCloseConversation:
+      case ToolUseType.nativeToolsTaskTool:
         if (getActorId) {
           switch (type) {
             case ToolUseType.nativeToolsDatabase:
@@ -132,6 +191,8 @@ class ToolUseService {
               return "ASK_USER";
             case ToolUseType.nativeToolsCloseConversation:
               return "CLOSE_CONVERSATION";
+            case ToolUseType.nativeToolsTaskTool:
+              return "CREATE_TASK";
             default:
               return "NATIVE_TOOLS";
           }
@@ -206,6 +267,8 @@ class ToolUseService {
         return Symbols.question_answer;
       case ToolUseType.nativeToolsCloseConversation:
         return Symbols.cancel;
+      case ToolUseType.nativeToolsTaskTool:
+        return Symbols.alarm;
       default:
         return Symbols.construction;
     }
@@ -245,6 +308,8 @@ class ToolUseService {
         return "Ask User";
       case ToolUseType.nativeToolsCloseConversation:
         return "Close Conversation";
+      case ToolUseType.nativeToolsTaskTool:
+        return "Create Task";
       default:
         return type.name.capitalize ?? type.name;
     }
@@ -356,7 +421,7 @@ class ToolUseService {
     List<DocumentData> documents,
   ) {
     List<Attachment> attachments =
-        Get.find<AttachmentsController>().getAttachments;
+        Get.find<PupauAttachmentsController>().getAttachments;
     for (DocumentData document in documents) {
       document.relatedAttachment = attachments.firstWhereOrNull(
         (Attachment attachment) => attachment.id == document.id,
@@ -386,7 +451,8 @@ class ToolUseService {
       type == ToolUseType.nativeToolsBrowserUse ||
       type == ToolUseType.nativeToolsAskUser ||
       type == ToolUseType.nativeToolsCloseConversation ||
-      type == ToolUseType.nativeToolsPassthrough;
+      type == ToolUseType.nativeToolsPassthrough ||
+      type == ToolUseType.nativeToolsTaskTool;
 
   static ToolUseMessage getBrowserLoadingMessage(String name) {
     return ToolUseMessage(
@@ -442,6 +508,7 @@ enum ToolUseType {
   nativeToolsAskUser,
   nativeToolsCloseConversation,
   nativeToolsPassthrough,
+  nativeToolsTaskTool,
   defaultTool,
 }
 

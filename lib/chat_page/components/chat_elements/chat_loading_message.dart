@@ -10,10 +10,8 @@ import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/models/loading_message_model.dart';
 import 'package:flutter_agent_pupau/services/tool_use_service.dart';
 
-class ChatLoadingMessage extends GetView<ChatController> {
-  const ChatLoadingMessage({
-    super.key,
-  });
+class ChatLoadingMessage extends GetView<PupauChatController> {
+  const ChatLoadingMessage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +29,32 @@ class ChatLoadingMessage extends GetView<ChatController> {
         case LoadingType.tag:
           return LoadingTag();
         case LoadingType.toolUse:
-          return LoadingToolUse(
+          final List<ToolLoadingEntry> tools = loadingMessage.tools;
+          // Backwards compatibility: if no tools list is provided, fall back to single entry.
+          if (tools.isEmpty) {
+            return LoadingToolUse(
               toolName: loadingMessage.message,
+              toolKey: loadingMessage.message,
               toolUseType:
-                  loadingMessage.toolUseType ?? ToolUseType.nativeToolsGeneric);
+                  loadingMessage.toolUseType ?? ToolUseType.nativeToolsGeneric,
+            );
+          }
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 4,
+            children: tools
+                .map(
+                  (tool) => LoadingToolUse(
+                    toolName: tool.name,
+                    toolKey: tool.key,
+                    toolUseType:
+                        tool.type ??
+                        loadingMessage.toolUseType ??
+                        ToolUseType.nativeToolsGeneric,
+                  ),
+                )
+                .toList(),
+          );
         default:
           return const LoadingDots();
       }

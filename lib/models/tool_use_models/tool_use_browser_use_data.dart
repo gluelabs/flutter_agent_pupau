@@ -205,7 +205,7 @@ class NetworkItem {
     }
 
     return NetworkItem(
-      id: json['id'] ?? '',
+      id: getString(json['id']),
       status: json['status'] == null ? "" : json['status'].toString(),
       timestamp: getInt(json['timestamp']),
       method: json['method'] ?? '',

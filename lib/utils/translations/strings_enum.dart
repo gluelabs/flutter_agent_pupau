@@ -20,6 +20,10 @@ class Strings {
   static const String noCredits = "Not enough credits";
   static const String text = "Text";
   static const String info = "Additional info";
+  static const String write = "Write";
+  static const String execute = "Execute";
+  static const String cronExpression = "Cron expression";
+  static const String timezone = "Timezone";
   static const String openAppSettings = "Open app settings";
   static const String error = "Error";
   static const String file = "File";
@@ -87,6 +91,25 @@ class Strings {
   static const String attachmentUploadSuccessMultiple =
       "Attachments uploaded successfully!";
   static const String attachmentUploadFailed = "Attachment upload failed!";
+  static const String attachmentTrimmingSnackbar =
+      "To respect context limits, some attachments were reduced.";
+  static const String attachmentTrimmingDetailBoth =
+      "%1 truncated, %2 removed.";
+  static const String attachmentTrimmingDetailTruncated = "%1 truncated.";
+  static const String attachmentTrimmingDetailRemoved = "%1 removed.";
+  static const String attachmentTrimmingTitle = "Attachment trimming";
+  static const String emergencyTrimmingTitle = "Emergency trimming";
+  static const String attachmentTrimmingEstimatedTokens = "Est. tokens";
+  static const String attachmentTrimmingTokensDetail =
+      "Context tokens (approx.): %1 before → %2 after · %3 saved";
+  static const String attachmentTrimmingReasonProportionalShare =
+      "Proportional reduction";
+  static const String attachmentTrimmingReasonFallbackOverBudget =
+      "Removed (over context limit)";
+  static const String attachmentTrimmingReasonOverBudget =
+      "Over context limit";
+  static const String attachmentTrimmingReasonBelowMinUseful =
+      "Below minimum useful";
   static const String contextResources = "Context Resources";
   static const String addResource = "Add Resource";
   static const String totalResources = "Total active resources";
@@ -191,6 +214,9 @@ class Strings {
   static const String noScreenshotAvailable = "No screenshot available";
   static const String executionTime = "Execution time";
   static const String seconds = "seconds";
+  static const String toolPhaseLint = "Validating content...";
+  static const String toolPhaseCreating = "Creating document...";
+  static const String toolPhaseUpdating = "Updating document...";
   static const String inspectBrowser = "Inspect Browser";
   static const String network = "Network";
   static const String dataLayer = "DataLayer";

@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class LoadingText extends GetView<ChatController> {
+class LoadingText extends GetView<PupauChatController> {
   const LoadingText({super.key});
 
   @override

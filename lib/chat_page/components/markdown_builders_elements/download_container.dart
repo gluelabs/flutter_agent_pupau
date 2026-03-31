@@ -7,7 +7,7 @@ import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class DownloadContainer extends GetView<ChatController> {
+class DownloadContainer extends GetView<PupauChatController> {
   const DownloadContainer({
     super.key,
     required this.format,
@@ -22,7 +22,7 @@ class DownloadContainer extends GetView<ChatController> {
   @override
   Widget build(BuildContext context) {
     bool isTablet = DeviceService.isTablet;
-    AttachmentsController attachmentsController = Get.find();
+    PupauAttachmentsController attachmentsController = Get.find();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Obx(() {

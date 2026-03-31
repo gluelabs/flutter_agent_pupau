@@ -7,14 +7,14 @@ import 'package:flutter_agent_pupau/models/assistant_model.dart';
 import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
 import 'package:flutter_agent_pupau/services/tag_service.dart';
 
-class InitialMessage extends GetView<ChatController> {
+class InitialMessage extends GetView<PupauChatController> {
   const InitialMessage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
       String messageText = TagService.addUserNameTag(
-        controller.assistant.value?.welcomeMessage ?? "",
+        controller.effectiveWelcomeMessage,
       );
       bool isEmpty = messageText.trim() == "";
       DateTime firstMessageDate =

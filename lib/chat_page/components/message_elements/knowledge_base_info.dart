@@ -8,7 +8,7 @@ import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
-class KnowledgeBaseInfo extends GetView<ChatController> {
+class KnowledgeBaseInfo extends GetView<PupauChatController> {
   const KnowledgeBaseInfo(
       {super.key, required this.message, required this.onTap});
 

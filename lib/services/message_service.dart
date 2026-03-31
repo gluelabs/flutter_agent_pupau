@@ -54,12 +54,14 @@ class MessageService {
         isNarrating: message.isNarrating,
         urls: message.urls,
         attachments: message.attachments,
+        attachmentTrimming: message.attachmentTrimming,
+        emergencyTrimming: message.emergencyTrimming,
       );
 
   static void checkSSEErrors(PupauMessage message) {
     if (hasCreditsError(message)) {
       showErrorSnackbar(Strings.creditsEndedTitle.tr);
-      Get.find<ChatController>().manageCancelAndErrorMessage();
+      Get.find<PupauChatController>().manageCancelAndErrorMessage();
       PupauEventService.instance.emitPupauEvent(
         PupauEvent(
           type: UpdateConversationType.noCredit,
@@ -68,7 +70,7 @@ class MessageService {
       );
     } else if (hasGenericError(message)) {
       showErrorSnackbar(message.error!);
-      Get.find<ChatController>().manageCancelAndErrorMessage();
+      Get.find<PupauChatController>().manageCancelAndErrorMessage();
       PupauEventService.instance.emitPupauEvent(
         PupauEvent(
           type: UpdateConversationType.error,
@@ -81,7 +83,7 @@ class MessageService {
         ),
       );
     } else if (message.type == MessageType.noVisionCapability) {
-      Get.find<ChatController>().manageNoVisionCapability();
+      Get.find<PupauChatController>().manageNoVisionCapability();
     }
     if (message.forbidden != null) {
       showErrorSnackbar(message.forbidden!);

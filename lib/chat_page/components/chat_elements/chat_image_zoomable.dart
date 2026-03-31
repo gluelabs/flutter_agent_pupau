@@ -19,7 +19,7 @@ class ChatImageZoomable extends StatelessWidget {
     late final ImageProvider imageProvider;
 
     if (image.type == ImageType.url) {
-      imageProvider = CachedNetworkImageProvider(image.value, errorListener: (error) => print);
+      imageProvider = CachedNetworkImageProvider(image.value, errorListener: (error) {});
     } else {
       Uint8List bytes = base64Decode(image.value);
       imageProvider = MemoryImage(bytes);

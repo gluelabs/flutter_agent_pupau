@@ -38,6 +38,8 @@ class PupauMessage {
   ToolUseAgent? toolUseAgent;
   bool webBased = false;
   SourceType sourceType;
+  AttachmentTrimmingInfo? attachmentTrimming;
+  AttachmentTrimmingInfo? emergencyTrimming;
   ToolUseMessage? toolUseMessage;
   UiToolMessage? uiToolMessage;
   bool isExternalSearch = false;
@@ -53,7 +55,6 @@ class PupauMessage {
   WebSearchType? webSearchType;
   String? toolName;
   ToolUseType? toolUseType;
-  bool? isBrowserTool;
   bool? isLast;
   bool? showTool;
   String? toolMessage;
@@ -80,6 +81,8 @@ class PupauMessage {
     this.relatedSearches = const [],
     this.reaction,
     this.sourceType = SourceType.llm,
+    this.attachmentTrimming,
+    this.emergencyTrimming,
     this.toolUseAgent,
     this.toolUseMessage,
     this.uiToolMessage,
@@ -94,7 +97,6 @@ class PupauMessage {
     this.webSearchType,
     this.toolName,
     this.toolUseType,
-    this.isBrowserTool,
     this.isLast,
     this.showTool,
     this.toolMessage,
@@ -106,19 +108,39 @@ class PupauMessage {
 
   bool get isMessageFromAssistant => status != MessageStatus.sent;
 
+  bool get isEmpty =>
+      status == MessageStatus.received &&
+      answer.trim() == "" &&
+      images.isEmpty &&
+      news.isEmpty &&
+      organicInfo.isEmpty &&
+      graphInfo == null &&
+      urls.isEmpty &&
+      relatedSearches.isEmpty &&
+      toolUseAgent == null &&
+      toolUseMessage == null &&
+      uiToolMessage == null &&
+      transcription == null &&
+      attachmentTrimming == null &&
+      emergencyTrimming == null;
+
   factory PupauMessage.fromSseStream(Map<String, dynamic> json) {
     try {
+      SourceType sourceType = ConversationService.getSourceTypeEnum(json["messageType"]);
+      MessageType? messageType = ConversationService.getMessageTypeEnum(
+        json["type"],
+      );
       return PupauMessage(
-        id: json["id"] ?? "",
+        id: getString(json["id"]),
         groupId: '',
         query: getString(json["query"]),
-        answer: getString(json["message"]),
+        answer: sourceType == SourceType.llm ? getString(json["message"]) : "",
         assistantId: getString(json["chatBotId"] ?? json["marketplaceId"]),
         assistantType: json["marketplaceId"] != null
             ? AssistantType.marketplace
             : AssistantType.assistant,
-        sourceType: ConversationService.getSourceTypeEnum(json["messageType"]),
-        type: ConversationService.getMessageTypeEnum(json["type"]),
+        sourceType: sourceType,
+        type: messageType,
         error: json["error"] == null
             ? null
             : json["error"] is String
@@ -169,22 +191,28 @@ class PupauMessage {
         toolUseAgent: json["typeDetails"]?["agent"] != null
             ? ToolUseAgent.fromMap(json["typeDetails"]?["agent"])
             : null,
-        toolName: json["typeDetails"]?["toolName"],
+        toolName: json["toolName"] ?? json["typeDetails"]?["toolName"],
         toolUseType: json["typeDetails"]?["nativeTool"]?["id"] != null
             ? ToolUseService.getToolUseTypeEnum(
                 json["typeDetails"]?["toolType"] ?? "",
                 nativeToolType: json["typeDetails"]?["nativeTool"]?["id"],
               )
             : null,
-        isBrowserTool:
-            json["typeDetails"]?["nativeTool"]?["id"] == "BROWSER_USE",
         isLast: getBool(json["last"]),
         showTool: json["typeDetails"]?["showTool"] ?? true,
         toolMessage: json["typeDetails"]?["toolMessage"],
-        title: json["title"],
+        title: messageType == MessageType.conversationTitleGenerated
+            ? getMessageTitle(json)
+            : null,
         createdAt: DateTime.now(),
         status: MessageStatus.loading,
-        transcription: json["transcription"]
+        transcription: json["transcription"],
+        attachmentTrimming:
+            messageType == MessageType.attachmentTrimming &&
+                json["data"] != null &&
+                json["data"] is Map
+            ? AttachmentTrimmingInfo.fromSseData(json["data"])
+            : null,
       );
     } catch (e) {
       return PupauMessage(
@@ -196,7 +224,7 @@ class PupauMessage {
             ? AssistantType.marketplace
             : AssistantType.assistant,
         createdAt: DateTime.now(),
-        status: MessageStatus.loading,
+        status: MessageStatus.error,
       );
     }
   }
@@ -206,12 +234,17 @@ class PupauMessage {
       return PupauMessage(
         id: getString(json["id"]),
         answer: getString(json["answer"]),
-        query: getString(json["query"]),
+        // REST history uses `query`; SSE history can use `question`.
+        query: getString(json["query"] ?? json["question"]),
         assistantId: getString(json["chatBotId"] ?? json["marketplaceId"]),
         assistantType: json["marketplaceId"] != null
             ? AssistantType.marketplace
             : AssistantType.assistant,
-        groupId: getString(json["queryGroupId"]),
+        groupId: getString(
+          json["queryGroupId"] ??
+              json["questionGroupId"] ??
+              json["groupId"],
+        ),
         status: MessageStatus.loading,
         createdAt: getDateTime(json["createdAt"]),
         kbReferences: json["extraInfo"]?["kbReferences"] != null
@@ -224,6 +257,22 @@ class PupauMessage {
         contextInfo: json["extraInfo"]?["contextInfo"] != null
             ? ContextInfo.fromMap(json["extraInfo"]["contextInfo"])
             : null,
+        attachmentTrimming: AttachmentTrimmingInfo.fromMap(
+          json["extraInfo"]?["contextInfo"]?["contextEngineering"]?["attachmentTrimming"] !=
+                  null
+              ? Map<String, dynamic>.from(
+                  json["extraInfo"]["contextInfo"]["contextEngineering"]["attachmentTrimming"],
+                )
+              : null,
+        ),
+        emergencyTrimming: AttachmentTrimmingInfo.fromSseDataEmergency(
+          json["extraInfo"]?["contextInfo"]?["contextEngineering"]?["emergencyTrimming"] !=
+                  null
+              ? Map<String, dynamic>.from(
+                  json["extraInfo"]["contextInfo"]["contextEngineering"]["emergencyTrimming"],
+                )
+              : null,
+        ),
         organicInfo:
             json["extraInfo"]?["webSearchLinksInfo"]?["organic"] != null
             ? List<OrganicInfo>.from(
@@ -292,6 +341,18 @@ class PupauMessage {
     }
   }
 
+  static String? getMessageTitle(Map<String, dynamic> json) {
+    try {
+      if (json["data"] is Map && json["data"]?["title"] != null) {
+        return json["data"]?["title"];
+      }
+      if (json["title"] != null) return json["title"];
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Merges the current SSE message with a new SSE message.
   /// This method updates the current message with data from the new message,
   /// concatenating the message text and updating other fields as needed.
@@ -299,6 +360,12 @@ class PupauMessage {
     answer += messageFromSse.answer;
     if (messageFromSse.contextInfo != null) {
       contextInfo = messageFromSse.contextInfo;
+    }
+    if (messageFromSse.attachmentTrimming != null) {
+      attachmentTrimming = messageFromSse.attachmentTrimming;
+    }
+    if (messageFromSse.emergencyTrimming != null) {
+      emergencyTrimming = messageFromSse.emergencyTrimming;
     }
     if (messageFromSse.organicInfo.isNotEmpty) {
       organicInfo = messageFromSse.organicInfo;
@@ -323,9 +390,6 @@ class PupauMessage {
     }
     if (messageFromSse.uiToolMessage != null) {
       uiToolMessage = messageFromSse.uiToolMessage;
-    }
-    if (messageFromSse.isBrowserTool == true) {
-      isBrowserTool = messageFromSse.isBrowserTool;
     }
     if (messageFromSse.kbReferences.isNotEmpty) {
       List<KbReference> newKbReferences = List<KbReference>.from(kbReferences);
@@ -363,7 +427,7 @@ class KbReference {
   });
 
   factory KbReference.fromMap(Map<String, dynamic> json) => KbReference(
-    id: json["id"] ?? json["kbId"],
+    id: getString(json["id"] ?? json["kbId"]),
     type: json["type"] ?? "",
     data: json["data"] ?? "",
     pageNumber: json["pageNumber"],
@@ -392,6 +456,186 @@ class ContextInfo {
     outputTokens: getInt(json["outputTokens"]),
     userQuery: getInt(json["userQuery"]),
   );
+}
+
+/// Attachment trimming item (per-file detail).
+class AttachmentTrimmingItem {
+  final String filename;
+  final String action; // 'truncated' | 'removed'
+  final int estimatedTokensBefore;
+  final int estimatedTokensAfter;
+  final int estimatedTokensSaved;
+  final String reason;
+
+  AttachmentTrimmingItem({
+    required this.filename,
+    required this.action,
+    required this.estimatedTokensBefore,
+    required this.estimatedTokensAfter,
+    required this.estimatedTokensSaved,
+    required this.reason,
+  });
+
+  static AttachmentTrimmingItem fromMap(Map<String, dynamic> json) =>
+      AttachmentTrimmingItem(
+        filename: getString(json["fileName"]),
+        action: getString(json["action"]),
+        estimatedTokensBefore: getInt(json["estimatedTokensBefore"]),
+        estimatedTokensAfter: getInt(json["estimatedTokensAfter"]),
+        estimatedTokensSaved: getInt(json["estimatedTokensSaved"]),
+        reason: getString(json["reason"]),
+      );
+}
+
+/// Attachment trimming block (SSE event or persisted contextEngineering.attachmentTrimming).
+class AttachmentTrimmingInfo {
+  final bool applied;
+  final int removedCount;
+  final int truncatedCount;
+  final List<AttachmentTrimmingItem> items;
+
+  AttachmentTrimmingInfo({
+    required this.applied,
+    required this.removedCount,
+    required this.truncatedCount,
+    required this.items,
+  });
+
+  /// From persisted contextEngineering.attachmentTrimming.
+  static AttachmentTrimmingInfo? fromMap(Map<String, dynamic>? json) {
+    if (json == null || !getBool(json["applied"], defaultValue: false)) {
+      return null;
+    }
+    final dynamic itemsList = json["items"];
+    final List<AttachmentTrimmingItem> list = itemsList is List
+        ? itemsList
+              .map(
+                (e) => AttachmentTrimmingItem.fromMap(
+                  Map<String, dynamic>.from(e as Map),
+                ),
+              )
+              .toList()
+        : <AttachmentTrimmingItem>[];
+    return AttachmentTrimmingInfo(
+      applied: true,
+      removedCount: getInt(json["removedCount"]),
+      truncatedCount: getInt(json["truncatedCount"]),
+      items: list,
+    );
+  }
+
+  /// From SSE ATTACHMENT_TRIMMING event data (summary.truncated/removed, items).
+  static AttachmentTrimmingInfo? fromSseDataAttachment(
+    Map<String, dynamic>? json,
+  ) {
+    if (json == null) return null;
+    try {
+      final Map<String, dynamic> summary = json["summary"] is Map
+          ? Map<String, dynamic>.from(json["summary"] as Map)
+          : <String, dynamic>{};
+      final int truncated = getInt(summary["truncated"]);
+      final int removed = getInt(summary["removed"]);
+      final dynamic itemsList = json["items"];
+      final List<AttachmentTrimmingItem> list = itemsList is List
+          ? itemsList
+                .map(
+                  (e) => AttachmentTrimmingItem.fromMap(
+                    Map<String, dynamic>.from(e as Map),
+                  ),
+                )
+                .toList()
+          : <AttachmentTrimmingItem>[];
+      final bool hasAttachmentTrimming =
+          truncated > 0 || removed > 0 || list.isNotEmpty;
+      if (!hasAttachmentTrimming) return null;
+      return AttachmentTrimmingInfo(
+        applied: true,
+        removedCount: removed,
+        truncatedCount: truncated,
+        items: list,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// From SSE or loaded chat EMERGENCY_TRIMMING data (summary.message/excessTokens, categoriesAffected).
+  static AttachmentTrimmingInfo? fromSseDataEmergency(
+    Map<String, dynamic>? json,
+  ) {
+    if (json == null) return null;
+    try {
+      final Map<String, dynamic> summary = json["summary"] is Map
+          ? Map<String, dynamic>.from(json["summary"] as Map)
+          : <String, dynamic>{};
+      final dynamic categoriesRaw = json["categoriesAffected"];
+      final bool hasEmergencySummary =
+          summary["excessTokens"] != null ||
+          summary["message"] != null ||
+          summary["tokensReduced"] != null;
+      final List<dynamic> categoriesList = categoriesRaw is List
+          ? categoriesRaw
+          : <dynamic>[];
+      if (categoriesList.isEmpty && !hasEmergencySummary) return null;
+      final String summaryMessage = getString(summary["message"]).trim();
+      int totalTokensReduced = 0;
+      final List<AttachmentTrimmingItem> emergencyItems = [];
+      for (final dynamic c in categoriesList) {
+        final Map<String, dynamic> cat = c is Map
+            ? Map<String, dynamic>.from(c)
+            : <String, dynamic>{};
+        final String category = getString(cat["category"]).isEmpty
+            ? "context"
+            : getString(cat["category"]);
+        final int tokensReduced = getInt(cat["tokensReduced"]);
+        final double reductionPercent = (cat["reductionPercent"] is num)
+            ? (cat["reductionPercent"] as num).toDouble()
+            : 0.0;
+        totalTokensReduced += tokensReduced;
+        final String reason = summaryMessage.isNotEmpty
+            ? summaryMessage
+            : (reductionPercent > 0
+                  ? "$category: ${reductionPercent.toStringAsFixed(1)}% reduced"
+                  : category);
+        emergencyItems.add(
+          AttachmentTrimmingItem(
+            filename: category,
+            action: 'truncated',
+            estimatedTokensBefore: tokensReduced > 0 ? tokensReduced : 0,
+            estimatedTokensAfter: 0,
+            estimatedTokensSaved: tokensReduced > 0 ? tokensReduced : 0,
+            reason: reason,
+          ),
+        );
+      }
+      if (totalTokensReduced == 0 && summary["tokensReduced"] != null) {
+        totalTokensReduced = getInt(summary["tokensReduced"]).abs();
+      }
+      if (totalTokensReduced == 0 && emergencyItems.isEmpty) {
+        totalTokensReduced = 1;
+      }
+      return AttachmentTrimmingInfo(
+        applied: true,
+        removedCount: 0,
+        truncatedCount: totalTokensReduced > 0 ? totalTokensReduced : 1,
+        items: emergencyItems,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// From SSE ATTACHMENT_TRIMMING or EMERGENCY_TRIMMING event data.
+  /// Tries attachment format first, then emergency. Prefer fromSseDataAttachment/fromSseDataEmergency when event type is known.
+  static AttachmentTrimmingInfo? fromSseData(Map<String, dynamic> json) {
+    try {
+      final AttachmentTrimmingInfo? attachment = fromSseDataAttachment(json);
+      if (attachment != null) return attachment;
+      return fromSseDataEmergency(json);
+    } catch (e) {
+      return null;
+    }
+  }
 }
 
 class OrganicInfo {
@@ -508,7 +752,7 @@ class AttachmentInfo {
   AttachmentInfo({required this.id, required this.type});
 
   factory AttachmentInfo.fromMap(Map<String, dynamic> json) => AttachmentInfo(
-    id: json["id"] ?? "",
+    id: getString(json["id"]),
     type: ConversationService.getAttachmentTypeEnum(json["type"] ?? ""),
   );
 }
@@ -527,7 +771,7 @@ class ToolUseAgent {
   });
 
   factory ToolUseAgent.fromMap(Map<String, dynamic> json) => ToolUseAgent(
-    id: json["id"] ?? "",
+    id: getString(json["id"]),
     name: json["name"] ?? "",
     imageUuid: json["imageUuid"] ?? "",
     type: AssistantService.getAssistantTypeEnum(json["type"] ?? ""),
@@ -556,10 +800,18 @@ enum MessageType {
   layerMessage,
   layerResponse,
   toolUseStart,
+  toolPending,
+  toolArgsDelta,
+  toolHeartbeat,
+  toolEvaluation,
+  toolPartialResult,
+  nativeTools,
   noVisionCapability,
   retry,
   conversationTitleGenerated,
   audioInputTranscription,
+  attachmentTrimming,
+  heartbeat,
   //message,
   //contextInfo,
   //contextExceeded,

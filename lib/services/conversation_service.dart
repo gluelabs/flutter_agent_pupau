@@ -13,13 +13,13 @@ import 'package:uuid/uuid.dart';
 
 class ConversationService {
   /// Creates a new conversation for the given assistant
-  static Future<Conversation?> createConversation(
+  static Future<PupauConversation?> createConversation(
     String assistantId,
     bool isMarketplace, {
     bool isAnonymous = false,
   }) async {
     try {
-      Conversation? conversation;
+      PupauConversation? conversation;
       final String url = ApiUrls.conversationsUrl(
         assistantId,
         isMarketplace: isMarketplace,
@@ -43,7 +43,7 @@ class ConversationService {
                 PupauSharedPreferences.getAnonymousConversationKey(),
         },
         onSuccess: (response) =>
-            conversation = Conversation.fromMap(response.data),
+            conversation = PupauConversation.fromMap(response.data),
       );
       return conversation;
     } catch (e) {
@@ -52,13 +52,13 @@ class ConversationService {
   }
 
   /// Gets a conversation by its assistant and conversation IDs
-  static Future<Conversation?> getConversation(
+  static Future<PupauConversation?> getConversation(
     String idAssistant,
     String idConversation,
     bool isMarketplace,
   ) async {
     try {
-      Conversation? conversation;
+      PupauConversation? conversation;
       String url = ApiUrls.conversationUrl(
         idAssistant,
         idConversation,
@@ -68,7 +68,7 @@ class ConversationService {
         url,
         RequestType.get,
         onSuccess: (response) =>
-            conversation = Conversation.fromMap(response.data),
+            conversation = PupauConversation.fromMap(response.data),
         onError: (error) {
           if (error.statusCode == 403) {
             showErrorSnackbar(Strings.conversationForbidden.tr);
@@ -121,14 +121,14 @@ class ConversationService {
   }
 
   /// Updates a conversation by its assistant and conversation IDs
-  static Future<Conversation?> updateConversation(
+  static Future<PupauConversation?> updateConversation(
     String idAssistant,
     String idConversation,
     Map<String, dynamic> data,
     bool isMarketplace,
   ) async {
     try {
-      Conversation? conversation;
+      PupauConversation? conversation;
       String url = ApiUrls.conversationUrl(
         idAssistant,
         idConversation,
@@ -139,7 +139,7 @@ class ConversationService {
         RequestType.patch,
         data: data,
         onSuccess: (response) =>
-            conversation = Conversation.fromMap(response.data),
+            conversation = PupauConversation.fromMap(response.data),
       );
       return conversation;
     } catch (e) {
@@ -149,7 +149,7 @@ class ConversationService {
 
   static Future<bool> deleteConversation(
     bool isMarketplace,
-    Conversation conversation,
+    PupauConversation conversation,
   ) async {
     try {
       bool success = false;
@@ -170,7 +170,7 @@ class ConversationService {
   }
 
   /// Forks a conversation by its assistant and conversation IDs
-  static Future<Conversation?> forkConversation(
+  static Future<PupauConversation?> forkConversation(
     String assistantId,
     String conversationId,
     String title,
@@ -178,7 +178,7 @@ class ConversationService {
     bool isMarketplace,
   ) async {
     try {
-      Conversation? conversation;
+      PupauConversation? conversation;
       Map<String, dynamic> body = {"title": title, "lastQueryId": queryId};
       await ApiService.call(
         ApiUrls.forkConversationUrl(
@@ -189,7 +189,7 @@ class ConversationService {
         RequestType.post,
         data: body,
         onSuccess: (response) =>
-            conversation = Conversation.fromMap(response.data),
+            conversation = PupauConversation.fromMap(response.data),
       );
       return conversation;
     } catch (e) {
@@ -250,6 +250,18 @@ class ConversationService {
         return MessageType.layerResponse;
       case "tool_use_start":
         return MessageType.toolUseStart;
+      case "native_tools":
+        return MessageType.nativeTools;
+      case "tool_pending":
+        return MessageType.toolPending;
+      case "tool_args_delta":
+        return MessageType.toolArgsDelta;
+      case "tool_heartbeat":
+        return MessageType.toolHeartbeat;
+      case "tool_evaluation":
+        return MessageType.toolEvaluation;
+      case "tool_partial_result":
+        return MessageType.toolPartialResult;
       case "no_vision_capability":
         return MessageType.noVisionCapability;
       case "retry":
@@ -258,6 +270,11 @@ class ConversationService {
         return MessageType.conversationTitleGenerated;
       case "audio_input_transcription":
         return MessageType.audioInputTranscription;
+      case "attachment_trimming":
+      case "emergency_trimming":
+        return MessageType.attachmentTrimming;
+      case "heartbeat":
+        return MessageType.heartbeat;
       default:
         return null;
     }
@@ -357,6 +374,22 @@ class ConversationService {
         return WebSearchType.newsSearch;
       default:
         return WebSearchType.webSearch;
+    }
+  }
+
+  /// User-friendly label for attachment trimming reason (optional).
+  static String getAttachmentTrimmingReasonLabel(String reason) {
+    switch (reason.toLowerCase()) {
+      case "proportional_share":
+        return Strings.attachmentTrimmingReasonProportionalShare.tr;
+      case "fallback_over_budget":
+        return Strings.attachmentTrimmingReasonFallbackOverBudget.tr;
+      case "over_budget":
+        return Strings.attachmentTrimmingReasonOverBudget.tr;
+      case "below_min_useful":
+        return Strings.attachmentTrimmingReasonBelowMinUseful.tr;
+      default:
+        return reason.isNotEmpty ? reason : "—";
     }
   }
 }

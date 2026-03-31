@@ -20,14 +20,18 @@ void showWebSearchNewsModal(List<WebSearchNews> news) {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const SizedBox(width: 48),
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                Strings.news.tr,
-                style: TextStyle(
-                    fontSize: isTablet ? 18 : 16,
-                    fontWeight: FontWeight.w600,
-                    color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  Strings.news.tr,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: isTablet ? 18 : 16,
+                      fontWeight: FontWeight.w600,
+                      color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue),
+                ),
               ),
             ),
             const Padding(

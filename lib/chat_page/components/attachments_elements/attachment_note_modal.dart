@@ -15,7 +15,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 void showAttachmentNoteModal({bool isEditable = true}) {
   WoltModalSheetPage page(BuildContext modalSheetContext) {
     bool isTablet = DeviceService.isTablet;
-    AttachmentsController controller = Get.find();
+    PupauAttachmentsController controller = Get.find();
     return WoltModalSheetPage(
         surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
         backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
@@ -24,22 +24,27 @@ void showAttachmentNoteModal({bool isEditable = true}) {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const SizedBox(width: 48),
-            Obx(() {
-              bool isEditing = controller.openAttachmentNote.value != null;
-              return Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                    isEditable
-                        ? isEditing
-                            ? Strings.editNote.tr
-                            : Strings.createNote.tr
-                        : controller.openAttachmentNote.value?.fileName ?? "",
-                    style: TextStyle(
-                        fontSize: isTablet ? 18 : 16,
-                        fontWeight: FontWeight.w600,
-                        color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue)),
-              );
-            }),
+            Expanded(
+              child: Obx(() {
+                bool isEditing = controller.openAttachmentNote.value != null;
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                      isEditable
+                          ? isEditing
+                              ? Strings.editNote.tr
+                              : Strings.createNote.tr
+                          : controller.openAttachmentNote.value?.fileName ?? "",
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontSize: isTablet ? 18 : 16,
+                          fontWeight: FontWeight.w600,
+                          color: MyStyles.pupauTheme(!Get.isDarkMode)
+                              .darkBlue)),
+                );
+              }),
+            ),
             const Padding(
               padding: EdgeInsets.only(top: 8),
               child: CloseIcon(),
@@ -74,7 +79,7 @@ void showAttachmentNoteModal({bool isEditable = true}) {
                           children: [
                             IntrinsicWidth(
                               child: CustomButton(
-                                horizontalPadding: 4,
+                                horizontalPadding: 8,
                                 text: "MD",
                                 onPressed: () => FileService.saveToDownloads(
                                     controller.noteContentController.text,
@@ -89,7 +94,7 @@ void showAttachmentNoteModal({bool isEditable = true}) {
                             ),
                             IntrinsicWidth(
                               child: CustomButton(
-                                horizontalPadding: 4,
+                                horizontalPadding: 8,
                                 text: "PDF",
                                 onPressed: () => FileService.saveToDownloads(
                                     controller.noteContentController.text,
@@ -104,7 +109,7 @@ void showAttachmentNoteModal({bool isEditable = true}) {
                             ),
                             IntrinsicWidth(
                               child: CustomButton(
-                                horizontalPadding: 4,
+                                horizontalPadding: 8,
                                 text: "DOCX",
                                 onPressed: () => FileService.saveToDownloads(
                                     controller.noteContentController.text,

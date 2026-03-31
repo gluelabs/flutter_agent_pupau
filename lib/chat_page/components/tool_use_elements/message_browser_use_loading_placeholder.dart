@@ -6,7 +6,7 @@ import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/image_not_available_widget.dart';
 import 'package:flutter_agent_pupau/utils/constants.dart';
 
-class MessageBrowserUseLoadingPlaceholder extends GetView<ChatController> {
+class MessageBrowserUseLoadingPlaceholder extends GetView<PupauChatController> {
   const MessageBrowserUseLoadingPlaceholder({
     super.key,
     required this.toolUseMessage,

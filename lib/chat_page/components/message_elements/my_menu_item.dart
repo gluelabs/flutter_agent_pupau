@@ -52,7 +52,7 @@ final class MyMenuItem<T> extends ContextMenuItem<T> {
   }) : super.submenu(items: items);
 
   @override
-  Widget builder(BuildContext context, ContextMenuState menuState,
+  Widget builder(BuildContext context, ContextMenuState<T> menuState,
       [FocusNode? focusNode]) {
     TextStyle textStyle = TextStyle(
         height: 1.0,
@@ -65,7 +65,7 @@ final class MyMenuItem<T> extends ContextMenuItem<T> {
         clipBehavior: Clip.antiAlias,
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => handleItemSelection(context),
+          onTap: () => handleItemSelection(context, menuState),
           canRequestFocus: false,
           child: DefaultTextStyle(
             style: textStyle,
