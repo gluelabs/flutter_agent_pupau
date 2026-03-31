@@ -32,7 +32,7 @@ dependencies:
   saf_stream: ^2.0.0
   saf_util: ^2.0.0
   permission_handler: ^12.0.1
-  file_picker: 10.3.10
+  file_picker: ^10.3.10
   image_picker: ^1.2.1
   saver_gallery: ^4.1.0
   path_provider: ^2.1.5
