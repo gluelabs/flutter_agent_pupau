@@ -153,7 +153,7 @@ class _PupauAgentChatView extends GetView<PupauChatController> {
                   builder: (scaffoldBodyContext) {
                     controller.setScaffoldContext(scaffoldBodyContext);                    
                     return Padding(
-                      padding: EdgeInsets.only(bottom: controller.widgetMode == WidgetMode.full ? 24 : 15),
+                      padding: EdgeInsets.only(bottom: controller.widgetMode == WidgetMode.full ? 12 : 15),
                       child: SafeArea(
                         top: false,
                         child: Stack(

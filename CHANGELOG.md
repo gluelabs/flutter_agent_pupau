@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.4+2] - 14/04/2026
+
+### Changes
+- Fixed chat input padding
+
 ## [1.0.4+1] - 14/04/2026
 
 ### Changes
