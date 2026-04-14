@@ -156,7 +156,6 @@ class _PupauAgentChatView extends GetView<PupauChatController> {
                       padding: EdgeInsets.only(bottom: controller.widgetMode == WidgetMode.full ? 24 : 15),
                       child: SafeArea(
                         top: false,
-                        bottom: false,
                         child: Stack(
                           clipBehavior: Clip.none,
                           children: [

@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.4+1] - 14/04/2026
+
+### Changes
+- Fixed missing SafeArea in chat page
+
 ## [1.0.4] - 14/04/2026
 
 ### Changes
