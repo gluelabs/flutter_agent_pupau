@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_code_interpreter_data.dart';
+import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_native_database_data.dart';
+import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_spreadsheet_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_task_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_thinking_data.dart';
 import 'package:flutter_agent_pupau/services/json_parse_service.dart';
@@ -15,6 +18,7 @@ import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_s_m_t_p_data
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_to_do_list_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_web_reader_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_web_search_data.dart';
+import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_subagent_data.dart';
 import 'package:flutter_agent_pupau/services/tool_use_service.dart';
 
 class ToolUseMessage {
@@ -42,7 +46,11 @@ class ToolUseMessage {
   ToolUseBrowserUseData? browserUseData;
   ToolUseAskUserData? askUserData;
   ToolUseWebReaderData? webReaderData;
+  ToolUseCodeInterpreterData? codeInterpreterData;
+  ToolUseNativeDatabaseData? nativeDatabaseData;
+  ToolUseSpreadsheetData? spreadsheetData;
   ToolUseTaskData? taskToolData;
+  ToolUseSubagentData? subagentData;
 
   ToolUseMessage({
     required this.id,
@@ -69,7 +77,11 @@ class ToolUseMessage {
     this.browserUseData,
     this.askUserData,
     this.webReaderData,
+    this.codeInterpreterData,
+    this.nativeDatabaseData,
+    this.spreadsheetData,
     this.taskToolData,
+    this.subagentData,
   });
 
   factory ToolUseMessage.fromJsonSSE(Map<String, dynamic> json) {
@@ -86,11 +98,23 @@ class ToolUseMessage {
     bool isDocument = type == ToolUseType.nativeToolsDocument;
     bool isSMTP = type == ToolUseType.nativeToolsSMTP;
     bool isImageGeneration = type == ToolUseType.nativeToolsImageGeneration;
+    bool isCodeInterpreter = type == ToolUseType.nativeToolsCodeInterpreter;
+    bool isNativeDatabase = type == ToolUseType.nativeToolsNativeDatabase;
+    final String nativeDbToolName = getString(json["typeDetails"]?["toolName"]);
+    final bool isSpreadsheetTool =
+        isNativeDatabase && nativeDbToolName.trim().startsWith('spreadsheet_');
     bool isBrowserUse = type == ToolUseType.nativeToolsBrowserUse;
     bool isAskUser = type == ToolUseType.nativeToolsAskUser;
     bool isWebReader = type == ToolUseType.nativeToolsWebReader;
     bool isTaskTool = type == ToolUseType.nativeToolsTaskTool;
+    bool isSubagent = type == ToolUseType.nativeToolsSubagent;
     Map<String, dynamic> data = ToolUseMessage.getMessage(json, true);
+    Map<String, dynamic>? nativeForSubagent;
+    if (isSubagent) {
+      nativeForSubagent = ToolUseService.isNativeTool(type)
+          ? getNativeToolData(json, true)
+          : null;
+    }
 
     return ToolUseMessage(
       id: getString(json["id"]),
@@ -125,6 +149,23 @@ class ToolUseMessage {
       imageGenerationData: isImageGeneration
           ? ToolUseImageGenerationData.fromJson(data)
           : null,
+      codeInterpreterData: isCodeInterpreter
+          ? ToolUseCodeInterpreterData.fromJson(data, json["typeDetails"])
+          : null,
+      nativeDatabaseData: isNativeDatabase && !isSpreadsheetTool
+          ? ToolUseNativeDatabaseData.fromToolUseMessage(
+              toolName: nativeDbToolName,
+              message: data,
+              typeDetails: json["typeDetails"],
+            )
+          : null,
+      spreadsheetData: isSpreadsheetTool
+          ? ToolUseSpreadsheetData.fromToolUseMessage(
+              toolName: nativeDbToolName,
+              message: data,
+              typeDetails: json["typeDetails"],
+            )
+          : null,
       browserUseData: isBrowserUse
           ? ToolUseBrowserUseData.fromJson(data, json["typeDetails"])
           : null,
@@ -140,6 +181,9 @@ class ToolUseMessage {
                 true,
               ),
             )
+          : null,
+      subagentData: isSubagent && nativeForSubagent != null
+          ? ToolUseSubagentData.fromNativeMap(nativeForSubagent)
           : null,
     );
   }
@@ -158,11 +202,24 @@ class ToolUseMessage {
     bool isDocument = type == ToolUseType.nativeToolsDocument;
     bool isSMTP = type == ToolUseType.nativeToolsSMTP;
     bool isImageGeneration = type == ToolUseType.nativeToolsImageGeneration;
+    bool isCodeInterpreter = type == ToolUseType.nativeToolsCodeInterpreter;
+    bool isNativeDatabase = type == ToolUseType.nativeToolsNativeDatabase;
+    final String nativeDbToolName =
+        getString(json["extraInfo"]?["typeDetails"]?["toolName"]);
+    final bool isSpreadsheetTool =
+        isNativeDatabase && nativeDbToolName.trim().startsWith('spreadsheet_');
     bool isBrowserUse = type == ToolUseType.nativeToolsBrowserUse;
     bool isAskUser = type == ToolUseType.nativeToolsAskUser;
     bool isWebReader = type == ToolUseType.nativeToolsWebReader;
     bool isTaskTool = type == ToolUseType.nativeToolsTaskTool;
+    bool isSubagent = type == ToolUseType.nativeToolsSubagent;
     Map<String, dynamic> answer = getMessage(json, false);
+    Map<String, dynamic>? nativeForSubagent;
+    if (isSubagent) {
+      nativeForSubagent = ToolUseService.isNativeTool(type)
+          ? getNativeToolData(json, false)
+          : null;
+    }
 
     return ToolUseMessage(
       id: getString(json["id"]),
@@ -203,6 +260,26 @@ class ToolUseMessage {
       imageGenerationData: isImageGeneration
           ? ToolUseImageGenerationData.fromJson(answer)
           : null,
+      codeInterpreterData: isCodeInterpreter
+          ? ToolUseCodeInterpreterData.fromJson(
+              answer,
+              json["extraInfo"]?["typeDetails"],
+            )
+          : null,
+      nativeDatabaseData: isNativeDatabase && !isSpreadsheetTool
+          ? ToolUseNativeDatabaseData.fromToolUseMessage(
+              toolName: nativeDbToolName,
+              message: answer,
+              typeDetails: json["extraInfo"]?["typeDetails"],
+            )
+          : null,
+      spreadsheetData: isSpreadsheetTool
+          ? ToolUseSpreadsheetData.fromToolUseMessage(
+              toolName: nativeDbToolName,
+              message: answer,
+              typeDetails: json["extraInfo"]?["typeDetails"],
+            )
+          : null,
       browserUseData: isBrowserUse
           ? ToolUseBrowserUseData.fromJson(
               answer,
@@ -222,12 +299,21 @@ class ToolUseMessage {
               ),
             )
           : null,
+      subagentData: isSubagent && nativeForSubagent != null
+          ? ToolUseSubagentData.fromNativeMap(nativeForSubagent)
+          : null,
     );
   }
 
   String getName() {
     if (thinkingData != null && thinkingData!.subject.trim() != "") {
       return thinkingData!.subject;
+    }
+    if (codeInterpreterData != null) {
+      final String language = codeInterpreterData!.language.trim();
+      final String name = toolName.replaceAll("_", " ").capitalize ?? toolName;
+      return language.isEmpty ? name : '$name ($language)';
+
     }
     if (documentData?.action != null) {
       return toolName.replaceAll("_", " ").capitalize! +

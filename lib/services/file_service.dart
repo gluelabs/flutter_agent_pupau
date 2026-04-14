@@ -6,6 +6,7 @@ import 'package:downloadsfolder/downloadsfolder.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_agent_pupau/chat_page/utils/modal_utils.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -31,12 +32,10 @@ import 'package:share_plus/share_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
-
 class FileService {
   static final safStream = SafStream();
   static final SafUtil safUtil = SafUtil();
   static final DateFormat fileFormat = DateFormat("dd-MM-yyyy-HH-mm-ss");
-
 
   //IMAGES
   static Future<Uint8List?> getImageFromUrl(String imageUrl) async {
@@ -47,14 +46,19 @@ class FileService {
     Directory tempDir = await getTemporaryDirectory();
     File imageFile = await File('${tempDir.path}/${generateImageName()}')
         .writeAsBytes(
-            buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+          buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes),
+        );
     return await editImage(imageFile);
   }
 
-  static Future<List<Uint8ListWithName>> getImageFromGallery(
-      {bool allowMultiple = false}) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.media, allowMultiple: allowMultiple, withData: true);
+  static Future<List<Uint8ListWithName>> getImageFromGallery({
+    bool allowMultiple = false,
+  }) async {
+    FilePickerResult? result = await FilePicker.pickFiles(
+      type: FileType.media,
+      allowMultiple: allowMultiple,
+      withData: true,
+    );
     if (result == null) return [];
     if (result.files.length == 1) {
       File imageFile = File(result.files.single.path!);
@@ -63,9 +67,16 @@ class FileService {
           ? [Uint8ListWithName(image: image, name: result.files.single.name)]
           : [];
     }
-    return Future.wait(result.files.where((file) => file.path != null).map(
-        (file) async => Uint8ListWithName(
-            image: await File(file.path!).readAsBytes(), name: file.name)));
+    return Future.wait(
+      result.files
+          .where((file) => file.path != null)
+          .map(
+            (file) async => Uint8ListWithName(
+              image: await File(file.path!).readAsBytes(),
+              name: file.name,
+            ),
+          ),
+    );
   }
 
   static Future<Uint8ListWithName?> getImageFromCamera() async {
@@ -73,8 +84,9 @@ class FileService {
       openAppSettings();
     } else {
       try {
-        XFile? result =
-            await ImagePicker().pickImage(source: ImageSource.camera);
+        XFile? result = await ImagePicker().pickImage(
+          source: ImageSource.camera,
+        );
         if (result != null) {
           File imageFile = File(result.path);
           Uint8List? image = await editImage(imageFile);
@@ -95,32 +107,39 @@ class FileService {
     BuildContext? safeContext = getSafeModalContext();
     if (safeContext == null) return null;
     await Navigator.push(
-        safeContext,
-        MaterialPageRoute(
-          builder: (context) => ProImageEditor.file(
-            file,
-            configs: ProImageEditorConfigs(
-              cropRotateEditor: CropRotateEditorConfigs(
-                  style: CropRotateEditorStyle(cropCornerColor: Colors.white)),
-            ),
-            callbacks: ProImageEditorCallbacks(
-              onImageEditingComplete: (Uint8List bytes) async {
-                imageBytes = bytes;
-                Navigator.pop(context);
-              },
+      safeContext,
+      MaterialPageRoute(
+        builder: (context) => ProImageEditor.file(
+          file,
+          configs: ProImageEditorConfigs(
+            cropRotateEditor: CropRotateEditorConfigs(
+              style: CropRotateEditorStyle(cropCornerColor: Colors.white),
             ),
           ),
-        ));
+          callbacks: ProImageEditorCallbacks(
+            onImageEditingComplete: (Uint8List bytes) async {
+              imageBytes = bytes;
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      ),
+    );
     return imageBytes;
   }
 
   static Future<void> downloadImage(String imageUrl) async {
     try {
-      var response = await Dio()
-          .get(imageUrl, options: Options(responseType: ResponseType.bytes));
+      var response = await Dio().get(
+        imageUrl,
+        options: Options(responseType: ResponseType.bytes),
+      );
 
-      await SaverGallery.saveImage(Uint8List.fromList(response.data),
-          fileName: generateImageName(), skipIfExists: false);
+      await SaverGallery.saveImage(
+        Uint8List.fromList(response.data),
+        fileName: generateImageName(),
+        skipIfExists: false,
+      );
       showFeedbackSnackbar(Strings.imageDownloadSuccess.tr, Symbols.photo);
     } catch (e) {
       showErrorSnackbar(Strings.imageDownloadFail.tr);
@@ -130,8 +149,11 @@ class FileService {
   static Future<void> downloadBase64Image(String imageUrl) async {
     try {
       Uint8List imageBytes = base64Decode(imageUrl);
-      await SaverGallery.saveImage(imageBytes,
-          fileName: generateImageName(), skipIfExists: false);
+      await SaverGallery.saveImage(
+        imageBytes,
+        fileName: generateImageName(),
+        skipIfExists: false,
+      );
       showFeedbackSnackbar(Strings.imageDownloadSuccess.tr, Symbols.photo);
     } catch (e) {
       showErrorSnackbar(Strings.imageDownloadFail.tr);
@@ -143,10 +165,7 @@ class FileService {
       final url = Uri.parse(imageUrl);
       final response = await http.get(url);
       final contentType = response.headers['content-type'];
-      final image = XFile.fromData(
-        response.bodyBytes,
-        mimeType: contentType,
-      );
+      final image = XFile.fromData(response.bodyBytes, mimeType: contentType);
       await SharePlus.instance.share(ShareParams(files: [image]));
     } catch (e) {
       showErrorSnackbar(Strings.apiErrorGeneric.tr);
@@ -156,41 +175,128 @@ class FileService {
   static String generateImageName() =>
       "PupauAiImage-${fileFormat.format(DateTime.now())}";
 
-  //FILES
-  static Future<void> downloadKbFile(String fileId, String fileName,
-      String assistandId, String conversationId, bool isMarketplace) async {
-    String url = ApiUrls.fileDownloadUrl(assistandId, conversationId, fileId, isMarketplace: isMarketplace);
-    await ApiService.call(url, RequestType.get,
-        onSuccess: (response) async {
-      String downloadUrl = response.data["signedUrl"];
-      Directory downloadDirectory = await getDownloadDirectory();
-      String fullPath = "${downloadDirectory.path}/$fileName";
-      await ApiService.download(
-        url: downloadUrl,
-        savePath: fullPath,
-        onSuccess: () => showFeedbackSnackbar(
-            Strings.fileDownloadSuccess.tr, Symbols.download),
-        onError: (e) => showErrorSnackbar(Strings.fileDownloadFail.tr),
+  /// Writes [contents] to a temporary file named [fileName] and opens the
+  /// platform share sheet to share it as a file.
+  ///
+  /// Note: on web this returns immediately because file sharing is not
+  /// consistently supported; callers should provide a web fallback (e.g.
+  /// copy to clipboard if supported).
+  static Future<void> shareTextAsFile({
+    required String fileName,
+    required String contents,
+    required String mimeType,
+  }) async {
+    try {
+      // On web, sharing a file isn't reliably supported; clipboard is used by caller.
+      if (kIsWeb) {
+        Clipboard.setData(ClipboardData(text: contents));
+        showFeedbackSnackbar(Strings.copiedClipboard.tr, Symbols.content_copy, isInfo: true);
+        return;
+      }
+      final Directory dir = await getTemporaryDirectory();
+      final File file = File('${dir.path}/$fileName');
+      await file.writeAsString(contents);
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path, mimeType: mimeType, name: fileName)],
+        ),
       );
-    });
+    } catch (_) {
+      Clipboard.setData(ClipboardData(text: contents));
+      showFeedbackSnackbar(Strings.copiedClipboard.tr, Symbols.content_copy, isInfo: true);
+      return;
+    }
   }
 
-  static Future<List<File>> getFileFromDevice(
-      {bool allowMultiple = false}) async {
+  /// Exports [rows] as a CSV file and shares it using [shareTextAsFile].
+  ///
+  /// The header row is inferred from the keys of the first row; values are
+  /// escaped with [escape] (RFC 4180-style quoting).
+  static Future<void> exportCsv(
+    String fileName,
+    List<Map<String, dynamic>> rows,
+  ) async {
+    if (rows.isEmpty) return;
+    final List<String> headers = rows.first.keys.toList();
+    final StringBuffer buffer = StringBuffer();
+    buffer.writeln(headers.map((String header) => escapeCsvCell(header)).join(','));
+    for (final Map<String, dynamic> row in rows) {
+      buffer.writeln(
+        headers
+            .map((String header) => escapeCsvCell((row[header] ?? '').toString()))
+            .join(','),
+      );
+    }
+    await FileService.shareTextAsFile(
+      fileName: fileName,
+      contents: buffer.toString(),
+      mimeType: 'text/csv',
+    );
+  }
+
+  /// Escapes a single CSV cell value.
+  ///
+  /// Doubles any embedded quotes and wraps the value in quotes when it
+  /// contains a comma, quote, or a newline.
+  static String escapeCsvCell(String value) {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-          type: FileType.custom,
-          withData: true,
-          allowMultiple: allowMultiple,
-          allowedExtensions: [
-            "png",
-            "jpg",
-            "jpeg",
-            "pdf",
-            "txt",
-            "csv",
-            "xlsx"
-          ]);
+      final String string = value.replaceAll('"', '""');
+      if (string.contains(',') ||
+          string.contains('\n') ||
+          string.contains('\r') ||
+          string.contains('"')) {
+        return '"$string"';
+      }
+      return string;
+    } catch (e) {
+      return value;
+    }
+  }
+
+  //FILES
+  static Future<void> downloadKbFile(
+    String fileId,
+    String fileName,
+    String assistandId,
+    String conversationId,
+    bool isMarketplace,
+  ) async {
+    String url = ApiUrls.fileDownloadUrl(
+      assistandId,
+      conversationId,
+      fileId,
+      isMarketplace: isMarketplace,
+    );
+    await ApiService.call(
+      url,
+      RequestType.get,
+      onSuccess: (response) async {
+        String downloadUrl = response.data["signedUrl"];
+        Directory downloadDirectory = await getDownloadDirectory();
+        String fullPath = "${downloadDirectory.path}/$fileName";
+        await ApiService.download(
+          url: downloadUrl,
+          savePath: fullPath,
+          onSuccess: () => showFeedbackSnackbar(
+            Strings.fileDownloadSuccess.tr,
+            Symbols.download,
+          ),
+          onError: (e) => showErrorSnackbar(Strings.fileDownloadFail.tr),
+        );
+      },
+    );
+  }
+
+  static Future<List<File>> getFileFromDevice({
+    bool allowMultiple = false,
+  }) async {
+    try {
+      FilePickerResult? result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        withData: true,
+        allowMultiple: allowMultiple,
+        allowedExtensions: ["png", "jpg", "jpeg", "pdf", "txt", "csv", "xlsx"],
+      );
       return (result?.files ?? [])
           .map((PlatformFile file) => File(file.path.toString()))
           .toList();
@@ -282,12 +388,16 @@ class FileService {
   }
 
   static Future<bool> saveToDownloadsAndroid(
-      String content, String fileName, String extension) async {
+    String content,
+    String fileName,
+    String extension,
+  ) async {
     try {
       // 1. Ask user for a directory (if you don’t already have one)
       //    Use SAF to open a directory picker (with write permission)
-      SafDocumentFile? treeUri =
-          await safUtil.pickDirectory(writePermission: true);
+      SafDocumentFile? treeUri = await safUtil.pickDirectory(
+        writePermission: true,
+      );
       if (treeUri == null) return false;
 
       // 2. Prepare file name and MIME type
@@ -314,7 +424,10 @@ class FileService {
   }
 
   static Future<bool> saveToDownloadsIos(
-      String content, String fileName, String extension) async {
+    String content,
+    String fileName,
+    String extension,
+  ) async {
     try {
       Directory downloadDirectory = await getDownloadDirectory();
       final filePath = '${downloadDirectory.path}/$fileName.$extension';

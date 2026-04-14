@@ -43,18 +43,17 @@ class _AttachmentTrimmingContainerState
     final int removed = widget.attachmentTrimming.removedCount;
 
     final String summaryLine = truncated > 0 && removed > 0
-        ? Strings.attachmentTrimmingDetailBoth.tr
-              .replaceAll("%1", truncated.toString())
-              .replaceAll("%2", removed.toString())
+        ? Strings.attachmentTrimmingDetailBoth.trParams({
+            'truncated': truncated.toString(),
+            'removed': removed.toString(),
+          })
         : truncated > 0
-        ? Strings.attachmentTrimmingDetailTruncated.tr.replaceAll(
-            "%1",
-            truncated.toString(),
-          )
-        : Strings.attachmentTrimmingDetailRemoved.tr.replaceAll(
-            "%1",
-            removed.toString(),
-          );
+            ? Strings.attachmentTrimmingDetailTruncated.trParams({
+                'truncated': truncated.toString(),
+              })
+            : Strings.attachmentTrimmingDetailRemoved.trParams({
+                'removed': removed.toString(),
+              });
 
     final Color borderColor = isAnonymous ? Colors.white70 : theme.lilacPressed;
     return Padding(
@@ -203,22 +202,17 @@ class _AttachmentTrimmingContainerState
                                                 Text(
                                                   Strings
                                                       .attachmentTrimmingTokensDetail
-                                                      .tr
-                                                      .replaceAll(
-                                                        "%1",
-                                                        item.estimatedTokensBefore
+                                                      .trParams({
+                                                        'before': item
+                                                            .estimatedTokensBefore
                                                             .toString(),
-                                                      )
-                                                      .replaceAll(
-                                                        "%2",
-                                                        item.estimatedTokensAfter
+                                                        'after': item
+                                                            .estimatedTokensAfter
                                                             .toString(),
-                                                      )
-                                                      .replaceAll(
-                                                        "%3",
-                                                        item.estimatedTokensSaved
+                                                        'saved': item
+                                                            .estimatedTokensSaved
                                                             .toString(),
-                                                      ),
+                                                      }),
                                                   style: TextStyle(
                                                     fontSize: isTablet
                                                         ? 12

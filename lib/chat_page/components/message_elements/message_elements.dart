@@ -58,7 +58,7 @@ class MessageElements extends GetView<PupauChatController> {
             .where((attachment) => attachment.link == "")
             .isNotEmpty &&
         !isAssistant;
-    bool showBottomElements = isAssistant && !isUiTool && !isToolUse;
+    bool showBottomElements = isAssistant && !isUiTool && !isToolUse && message.answer.trim().isNotEmpty;
     ToolUseMessage? toolUseMessage = message.toolUseMessage;
     toolUseMessage?.messageId = message.id;
 

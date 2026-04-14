@@ -23,6 +23,9 @@ ContextMenu getContextMenu(
 }) {
   PupauChatController controller = Get.find();
   bool showForkConversationIcon = controller.pupauConfig?.bearerToken != null;
+  final bool canEditUserMessage = !isFromAssistant &&
+      showForkConversationIcon &&
+      (message?.isAudioInput != true);
   final bool hasTrimmingContent = isFromAssistant &&
       (_hasTrimmingContent(message?.attachmentTrimming) ||
           _hasTrimmingContent(message?.emergencyTrimming));
@@ -48,6 +51,8 @@ ContextMenu getContextMenu(
     MyMenuItem(label: Strings.copy.tr, icon: Symbols.content_copy, value: 2),
     if (!isFromAssistant && !hideInputBox)
       MyMenuItem(label: Strings.use.tr, icon: Symbols.send, value: 3),
+    if (canEditUserMessage)
+      MyMenuItem(label: Strings.edit.tr, icon: Symbols.edit, value: 8),
     if (isFromAssistant)
       MyMenuItem(label: Strings.read.tr, icon: Symbols.volume_up, value: 4),
     if (isFromAssistant) const MenuDivider(),

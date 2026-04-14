@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.4] - 14/04/2026
+
+### Changes
+- Added more native tools custom UIs
+- Performance improvements
+
 ## [1.0.3] - 12/02/2026
 
 ### Changes

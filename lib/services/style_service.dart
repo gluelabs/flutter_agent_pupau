@@ -69,8 +69,26 @@ class StyleService {
   );
 
   static TextStyle appbarTextStyle(bool isDarkMode) => TextStyle(
-      fontSize: DeviceService.isTablet ? 24 : 22,
-      fontWeight: FontWeight.w600,
-      color: MyStyles.pupauTheme(!isDarkMode).darkBlue,
-      height: DeviceService.isTablet ? 1.25 : 1);
+    fontSize: DeviceService.isTablet ? 24 : 22,
+    fontWeight: FontWeight.w600,
+    color: MyStyles.pupauTheme(!isDarkMode).darkBlue,
+    height: DeviceService.isTablet ? 1.25 : 1,
+  );
+
+  static TextStyle toolHeaderTextStyle(bool isDarkMode) => TextStyle(
+    fontSize: DeviceService.isTablet ? 15 : 14,
+    fontWeight: FontWeight.w700,
+    color: isDarkMode ? Colors.white : Colors.black87,
+  );
+
+   static TextStyle toolCellHeaderTextStyle(bool isDarkMode) => TextStyle(
+    fontSize: DeviceService.isTablet ? 14 : 13,
+    fontWeight: FontWeight.w600,
+    color: isDarkMode ? Colors.white : Colors.black87,
+  );
+
+  static TextStyle toolNormalTextStyle(bool isDarkMode) => TextStyle(
+    fontSize: DeviceService.isTablet ? 14 : 13,
+    color: isDarkMode ? Colors.white70 : Colors.black87,
+  );
 }

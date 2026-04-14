@@ -67,6 +67,7 @@ class MessageContent extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   MessageBody(
+                      messageId: messageId,
                       message: message,
                       isFromAssistant: isAssistant,
                       isAnonymous: isAnonymous)

@@ -18,6 +18,7 @@ import 'package:flutter_agent_pupau/utils/pupau_shared_preferences.dart';
 import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/my_mention_tag_text_editing_controller.dart';
+import 'package:flutter_agent_pupau/chat_page/components/message_elements/edit_message_dialog.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/fork_conversation_modal.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/message_notifier.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/attachment_trimming_dialog.dart';
@@ -63,6 +64,7 @@ class PupauChatController extends GetxController {
     if (currentId != null && currentId.trim().isNotEmpty) return currentId;
     return _cachedAssistantId ?? "";
   }
+
   bool get isMarketplace => pupauConfig?.isMarketplace ?? false;
   bool get isAnonymous => pupauConfig?.isAnonymous ?? false;
   bool get hideAudioRecordingButton =>
@@ -354,6 +356,9 @@ class PupauChatController extends GetxController {
   TextEditingController forkConversationTitleController =
       TextEditingController();
 
+  /// Shared with [showEditMessageModal]; disposed in [onClose] only.
+  TextEditingController editMessageTextController = TextEditingController();
+
   // Tool Use Management
   RxSet<String> expandedToolUseMessages = <String>{}.obs;
   RxList<String> userToggledToolUseMessages = <String>[].obs;
@@ -458,6 +463,7 @@ class PupauChatController extends GetxController {
     messageSendStream?.cancel();
     conversationSseSubscription?.cancel();
     chatScrollController.dispose();
+    editMessageTextController.dispose();
     // Set boot status to OFF when component is closed
     _updateBootStatus(BootState.off);
     super.onClose();
@@ -1511,18 +1517,17 @@ class PupauChatController extends GetxController {
     final int truncated = trimming.truncatedCount;
     final int removed = trimming.removedCount;
     final String detail = truncated > 0 && removed > 0
-        ? Strings.attachmentTrimmingDetailBoth.tr
-              .replaceAll("%1", truncated.toString())
-              .replaceAll("%2", removed.toString())
+        ? Strings.attachmentTrimmingDetailBoth.trParams({
+            'truncated': truncated.toString(),
+            'removed': removed.toString(),
+          })
         : truncated > 0
-        ? Strings.attachmentTrimmingDetailTruncated.tr.replaceAll(
-            "%1",
-            truncated.toString(),
-          )
-        : Strings.attachmentTrimmingDetailRemoved.tr.replaceAll(
-            "%1",
-            removed.toString(),
-          );
+            ? Strings.attachmentTrimmingDetailTruncated.trParams({
+                'truncated': truncated.toString(),
+              })
+            : Strings.attachmentTrimmingDetailRemoved.trParams({
+                'removed': removed.toString(),
+              });
     showFeedbackSnackbar(
       "${Strings.attachmentTrimmingSnackbar.tr} $detail",
       Symbols.content_cut,
@@ -1702,22 +1707,26 @@ class PupauChatController extends GetxController {
     update();
   }
 
-  Future<void> updateConversationTitle(String title) async {
-    conversation.value?.title = title;
-    conversation.value?.hasTempTitle = false;
-    conversation.refresh();
-    update();
-    PupauEventService.instance.emitPupauEvent(
-      PupauEvent(
-        type: UpdateConversationType.conversationTitleGenerated,
-        payload: {
-          "conversationTitle": title,
-          "assistantId": assistantId,
-          "assistantType": assistant.value?.type ?? AssistantType.assistant,
-          "conversationId": conversation.value?.id ?? "",
-        },
-      ),
-    );
+  void updateConversationTitle(String title) {
+    try {
+      conversation.value?.title = title;
+      conversation.value?.hasTempTitle = false;
+      conversation.refresh();
+      update();
+      PupauEventService.instance.emitPupauEvent(
+        PupauEvent(
+          type: UpdateConversationType.conversationTitleGenerated,
+          payload: {
+            "conversationTitle": title,
+            "assistantId": assistantId,
+            "assistantType": assistant.value?.type ?? AssistantType.assistant,
+            "conversationId": conversation.value?.id ?? "",
+          },
+        ),
+      );
+    } catch (e) {
+      return;
+    }
   }
 
   void manageChatAutoScroll({bool bypassHeightCheck = false}) {
@@ -2540,7 +2549,7 @@ class PupauChatController extends GetxController {
       case 2: //Copy
         Clipboard.setData(
           ClipboardData(
-            text: ConversationService.copyMessageWithoutTags(
+            text: TagService.plainTextForCopy(
               message.isMessageFromAssistant ? message.answer : message.query,
             ),
           ),
@@ -2567,6 +2576,8 @@ class PupauChatController extends GetxController {
         reportMessage(message);
       case 7: //Attachment trimming
         showAttachmentTrimmingModalForMessage(message);
+      case 8: //Edit user message (fork from previous + send new text)
+        showEditMessageModal(message);
     }
   }
 
@@ -2792,6 +2803,82 @@ class PupauChatController extends GetxController {
         flipX: true,
         flipY: true,
       );
+    } finally {
+      isForking.value = false;
+      update();
+    }
+  }
+
+  /// [lastQueryId] for fork: the **previous user** message id (not the assistant
+  /// row, not the edited bubble). Resolves the edited row via
+  /// [PupauMessage.isMessageFromAssistant] because user/assistant share [PupauMessage.id].
+  ///
+  /// Returns null when [userMessage] is the first user message in the thread (no
+  /// older user to branch after) — caller should start a new conversation instead.
+  String? _previousUserMessageIdForEdit(PupauMessage userMessage) {
+    try {
+      List<PupauMessage> allUserMessages = messages
+          .where((m) => m.status == MessageStatus.sent)
+          .toList();
+      int thisMessageIndex = allUserMessages.indexWhere(
+        (m) => m.id == userMessage.id,
+      );
+      if (thisMessageIndex == -1 ||
+          allUserMessages.length <= thisMessageIndex + 1) {
+        return null;
+      }
+      return allUserMessages[thisMessageIndex + 1]
+          .id; // +1 Because list is reversed
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Fork after the previous user query (or new conversation if this was the first
+  /// user message), then send [newText].
+  Future<void> editUserMessage(PupauMessage message, String newText) async {
+    if (assistant.value == null || conversation.value == null) return;
+    if (message.isMessageFromAssistant) return;
+    final String trimmed = newText.trim();
+    if (trimmed.isEmpty) return;
+
+    final String? previousMessageId = _previousUserMessageIdForEdit(message);
+    isForking.value = true;
+    update();
+    try {
+      if (previousMessageId == null || previousMessageId.isEmpty) {
+        await createNewConversation();
+        if (conversation.value == null) {
+          showErrorSnackbar(Strings.apiErrorGeneric.tr);
+          return;
+        }
+        await loadConversation(conversation.value!.id);
+        assistantsReplying.value = 0;
+        isStreaming.value = false;
+        resetLoadingMessage();
+        await sendMessage(trimmed, false);
+        return;
+      }
+
+      final String title =
+          "${conversation.value?.title ?? Strings.newConversation.tr} (${Strings.edit.tr})";
+      final PupauConversation? forked =
+          await ConversationService.forkConversation(
+            assistantId,
+            conversation.value!.id,
+            title,
+            previousMessageId,
+            isMarketplace,
+          );
+      if (forked == null) {
+        showErrorSnackbar(Strings.apiErrorGeneric.tr);
+        return;
+      }
+      await loadConversation(forked.id);
+      assistantsReplying.value = 0;
+      isStreaming.value = false;
+      resetLoadingMessage();
+      await sendMessage(trimmed, false);
     } finally {
       isForking.value = false;
       update();

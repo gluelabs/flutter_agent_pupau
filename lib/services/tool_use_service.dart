@@ -26,6 +26,8 @@ class ToolUseService {
           switch (nativeToolType) {
             case "DATABASE":
               return ToolUseType.nativeToolsDatabase;
+            case "NATIVE_DATABASE":
+              return ToolUseType.nativeToolsNativeDatabase;
             case "WEB_SEARCH":
               return ToolUseType.nativeToolsWebSearch;
             case "TODO_LIST":
@@ -59,6 +61,8 @@ class ToolUseService {
               return ToolUseType.nativeToolsCloseConversation;
             case "CREATE_TASK":
               return ToolUseType.nativeToolsTaskTool;
+            case "SUBAGENT":
+              return ToolUseType.nativeToolsSubagent;
             default:
               return ToolUseType.nativeToolsGeneric;
           }
@@ -86,6 +90,8 @@ class ToolUseService {
         return ToolUseType.mcpServerTool;
       case "DATABASE":
         return ToolUseType.nativeToolsDatabase;
+      case "NATIVE_DATABASE":
+        return ToolUseType.nativeToolsNativeDatabase;
       case "WEB_SEARCH":
         return ToolUseType.nativeToolsWebSearch;
       case "TODO_LIST":
@@ -119,10 +125,16 @@ class ToolUseService {
         return ToolUseType.nativeToolsCloseConversation;
       case "CREATE_TASK":
         return ToolUseType.nativeToolsTaskTool;
+      case "SUBAGENT":
+        return ToolUseType.nativeToolsSubagent;
       default:
         return ToolUseType.nativeToolsGeneric;
     }
   }
+
+  /// SSE heartbeats and tool names use the `subagent_` prefix (e.g. `subagent_spawn`).
+  static bool isSubagentTool(String? toolName) =>
+      toolName?.trim().toLowerCase().startsWith('subagent_') ?? false;
 
   static String getToolUseTypeString(
     ToolUseType type, {
@@ -141,6 +153,7 @@ class ToolUseService {
         return "MCP_SERVER_TOOL";
       case ToolUseType.nativeToolsGeneric:
       case ToolUseType.nativeToolsDatabase:
+      case ToolUseType.nativeToolsNativeDatabase:
       case ToolUseType.nativeToolsWebSearch:
       case ToolUseType.nativeToolsToDoList:
       case ToolUseType.nativeToolsPassthrough:
@@ -157,10 +170,13 @@ class ToolUseService {
       case ToolUseType.nativeToolsAskUser:
       case ToolUseType.nativeToolsCloseConversation:
       case ToolUseType.nativeToolsTaskTool:
+      case ToolUseType.nativeToolsSubagent:
         if (getActorId) {
           switch (type) {
             case ToolUseType.nativeToolsDatabase:
               return "DATABASE";
+            case ToolUseType.nativeToolsNativeDatabase:
+              return "NATIVE_DATABASE";
             case ToolUseType.nativeToolsWebSearch:
               return "WEB_SEARCH";
             case ToolUseType.nativeToolsToDoList:
@@ -193,6 +209,8 @@ class ToolUseService {
               return "CLOSE_CONVERSATION";
             case ToolUseType.nativeToolsTaskTool:
               return "CREATE_TASK";
+            case ToolUseType.nativeToolsSubagent:
+              return "SUBAGENT";
             default:
               return "NATIVE_TOOLS";
           }
@@ -237,6 +255,8 @@ class ToolUseService {
       case ToolUseType.mcpServerTool:
       case ToolUseType.nativeToolsDatabase:
         return Symbols.database;
+      case ToolUseType.nativeToolsNativeDatabase:
+        return Symbols.dataset_linked;
       case ToolUseType.nativeToolsWebSearch:
         return Symbols.travel_explore;
       case ToolUseType.nativeToolsToDoList:
@@ -269,6 +289,8 @@ class ToolUseService {
         return Symbols.cancel;
       case ToolUseType.nativeToolsTaskTool:
         return Symbols.alarm;
+      case ToolUseType.nativeToolsSubagent:
+        return Symbols.graph_2;
       default:
         return Symbols.construction;
     }
@@ -282,6 +304,8 @@ class ToolUseService {
         return "Passthrough";
       case ToolUseType.nativeToolsDatabase:
         return "Database";
+      case ToolUseType.nativeToolsNativeDatabase:
+        return "Native Database";
       case ToolUseType.nativeToolsToDoList:
         return "Todo List";
       case ToolUseType.nativeToolsSMTP:
@@ -310,6 +334,8 @@ class ToolUseService {
         return "Close Conversation";
       case ToolUseType.nativeToolsTaskTool:
         return "Create Task";
+      case ToolUseType.nativeToolsSubagent:
+        return "Subagent";
       default:
         return type.name.capitalize ?? type.name;
     }
@@ -452,7 +478,8 @@ class ToolUseService {
       type == ToolUseType.nativeToolsAskUser ||
       type == ToolUseType.nativeToolsCloseConversation ||
       type == ToolUseType.nativeToolsPassthrough ||
-      type == ToolUseType.nativeToolsTaskTool;
+      type == ToolUseType.nativeToolsTaskTool ||
+      type == ToolUseType.nativeToolsSubagent;
 
   static ToolUseMessage getBrowserLoadingMessage(String name) {
     return ToolUseMessage(
@@ -494,6 +521,7 @@ enum ToolUseType {
   nativeToolsGeneric,
   nativeToolsToDoList,
   nativeToolsDatabase,
+  nativeToolsNativeDatabase,
   nativeToolsThinking,
   nativeToolsDocument,
   nativeToolsWebSearch,
@@ -509,6 +537,7 @@ enum ToolUseType {
   nativeToolsCloseConversation,
   nativeToolsPassthrough,
   nativeToolsTaskTool,
+  nativeToolsSubagent,
   defaultTool,
 }
 

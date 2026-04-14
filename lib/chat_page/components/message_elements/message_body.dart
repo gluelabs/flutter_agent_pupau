@@ -11,6 +11,7 @@ import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_eleme
 import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/mermaid_syntax.dart';
 import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/thinking_builder.dart';
 import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/thinking_syntax_builder.dart';
+import 'package:flutter_agent_pupau/chat_page/components/message_elements/message_markdown_scope.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/selection_transformer.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/services/string_service.dart';
@@ -21,11 +22,13 @@ import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 class MessageBody extends StatelessWidget {
   const MessageBody({
     super.key,
+    required this.messageId,
     required this.message,
     required this.isFromAssistant,
     required this.isAnonymous,
   });
 
+  final String messageId;
   final String message;
   final bool isFromAssistant;
   final bool isAnonymous;
@@ -38,7 +41,9 @@ class MessageBody extends StatelessWidget {
       child: SelectionArea(
         child: SelectionTransformer.separated(
           separator: "\n\n",
-          child: MarkdownBody(
+          child: MessageMarkdownScope(
+            messageId: messageId,
+            child: MarkdownBody(
             data: StringService.fixMarkdownNewLines(convertedMessage),
             selectable: false,
             onTapLink: (link, href, title) =>
@@ -100,6 +105,7 @@ class MessageBody extends StatelessWidget {
                   ),
                   blockquotePadding: const EdgeInsets.all(12),
                 ),
+            ),
           ),
         ),
       ),

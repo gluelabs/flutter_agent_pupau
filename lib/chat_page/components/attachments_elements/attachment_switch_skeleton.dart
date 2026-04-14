@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:get/get.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/services/file_service.dart';
@@ -54,7 +55,7 @@ class AttachmentCardSkeleton extends GetView<PupauChatController> {
             IconButton(
                 onPressed: () {},
                 icon: Icon(Icons.delete,
-                    size: isTablet ? 28 : 24, color: Colors.red))
+                    size: isTablet ? 28 : 24, color: MyStyles.pupauTheme(!Get.isDarkMode).redAlarm))
           ],
         ),
       ),

@@ -6,6 +6,7 @@ import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/services/style_service.dart';
 import 'package:flutter_agent_pupau/services/tool_use_service.dart';
+import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -21,28 +22,73 @@ class LoadingToolUse extends GetView<PupauChatController> {
   final String toolKey;
   final ToolUseType toolUseType;
 
+  static String _loadingLabelForTool(String name) {
+    final String t = name.trim().toLowerCase();
+    // Native Database (native_db_*)
+    switch (t) {
+      case 'native_db_list':
+        return Strings.nativeDbLoadingList.tr;
+      case 'native_db_search':
+        return Strings.nativeDbLoadingSearch.tr;
+      case 'native_db_insert':
+        return Strings.nativeDbLoadingInsert.tr;
+      case 'native_db_update':
+        return Strings.nativeDbLoadingUpdate.tr;
+      case 'native_db_delete':
+        return Strings.nativeDbLoadingDelete.tr;
+      case 'native_db_create_database':
+        return Strings.nativeDbLoadingCreateDatabase.tr;
+      case 'native_db_add_column':
+        return Strings.nativeDbLoadingAddColumn.tr;
+    }
+
+    // Spreadsheet (spreadsheet_*) — same infra, but user-facing copy differs.
+    switch (t) {
+      case 'spreadsheet_info':
+        return Strings.spreadsheetLoadingInfo.tr;
+      case 'spreadsheet_sample':
+        return Strings.spreadsheetLoadingSample.tr;
+      case 'spreadsheet_search':
+        return Strings.spreadsheetLoadingSearch.tr;
+      case 'spreadsheet_insert':
+        return Strings.spreadsheetLoadingInsert.tr;
+      case 'spreadsheet_update':
+        return Strings.spreadsheetLoadingUpdate.tr;
+      case 'spreadsheet_delete':
+        return Strings.spreadsheetLoadingDelete.tr;
+      case 'spreadsheet_summary':
+        return Strings.spreadsheetLoadingSummary.tr;
+      case 'spreadsheet_distinct':
+        return Strings.spreadsheetLoadingDistinct.tr;
+    }
+
+    // Fallback: show nothing (keeps UI compact).
+    return '';
+  }
+
   @override
   Widget build(BuildContext context) {
     bool isTablet = DeviceService.isTablet;
     bool isAnonymous = controller.isAnonymous;
     IconData? toolUseIcon = ToolUseService.getToolUseIcon(toolUseType);
     final bool canShowPreview = controller.hasToolArgsPreview(toolKey);
+    final String loadingLabel = _loadingLabelForTool(toolKey);
     return Container(
       padding: const EdgeInsets.only(top: 4),
       margin: const EdgeInsets.symmetric(horizontal: 10),
       child: Material(
         color: StyleService.getBubbleColor(true, isAnonymous, false),
         borderRadius: BorderRadius.circular(6),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(6),
-          onTap: () => controller.toggleLoadingToolExpanded(toolKey),
-          child: Padding(
-            padding: const EdgeInsets.all(6),
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                splashFactory: NoSplash.splashFactory,
-                focusColor: Colors.transparent,
-              ),
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              splashFactory: NoSplash.splashFactory,
+              focusColor: Colors.transparent,
+            ),
+            child: InkWell(
+              onTap: () => controller.toggleLoadingToolExpanded(toolKey),
+              borderRadius: BorderRadius.circular(6),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
@@ -61,8 +107,8 @@ class LoadingToolUse extends GetView<PupauChatController> {
                       );
                   final bool isUserToggled = controller.userToggledLoadingTools
                       .contains(toolKey.trim());
-                  final int elapsedSeconds =
-                      controller.getToolLoadingSeconds(toolKey);
+                  final String elapsedLabel =
+                      '${controller.getToolLoadingSeconds(toolKey)}s';
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -112,7 +158,7 @@ class LoadingToolUse extends GetView<PupauChatController> {
                                   Padding(
                                     padding: const EdgeInsets.only(left: 5),
                                     child: Text(
-                                      '${elapsedSeconds}s',
+                                      elapsedLabel,
                                       style: TextStyle(
                                         fontSize: isTablet ? 15 : 13,
                                         fontWeight: FontWeight.w600,
@@ -150,6 +196,18 @@ class LoadingToolUse extends GetView<PupauChatController> {
                           ),
                         ],
                       ),
+                      if (loadingLabel.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 36, top: 2),
+                          child: Text(
+                            loadingLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: StyleService.toolNormalTextStyle(
+                              Get.isDarkMode || isAnonymous,
+                            ),
+                          ),
+                        ),
                       if (isExpanded && canShowPreview)
                         LoadingToolPreviewContent(toolName: toolKey),
                     ],

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_subagent.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_task_tool.dart';
 import 'package:flutter_agent_pupau/models/tool_use_message_model.dart';
 import 'package:flutter_agent_pupau/services/tool_use_service.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_ask_user.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_browser_use.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_code_interpreter.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_document.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_knowledge_base.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_native_database.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_thinking.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_to_do_list.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/tool_use_info_list.dart';
@@ -30,12 +33,15 @@ class ToolUseMessageContent extends StatelessWidget {
         ToolUseType.nativeToolsWebSearch ||
         ToolUseType.pipeline ||
         ToolUseType.remoteCall ||
-        ToolUseType.nativeToolsDatabase ||
         ToolUseType.nativeToolsSMTP ||
         ToolUseType.nativeToolsGoogleDrive ||
         ToolUseType.nativeToolsWebReader ||
         ToolUseType.nativeToolsPassthrough =>
           SizedBox(),
+        ToolUseType.nativeToolsNativeDatabase => MessageNativeDatabase(
+            toolUseMessage: toolUseMessage,
+            isAnonymous: isAnonymous,
+          ),
         ToolUseType.nativeToolsToDoList => MessageToDoList(
             toolUseMessage: toolUseMessage,
             isAnonymous: isAnonymous,
@@ -58,7 +64,15 @@ class ToolUseMessageContent extends StatelessWidget {
             toolUseMessage: toolUseMessage,
             isAnonymous: isAnonymous,
           ),
+        ToolUseType.nativeToolsSubagent => MessageSubagent(
+            toolUseMessage: toolUseMessage!,
+            isAnonymous: isAnonymous,
+          ),
         ToolUseType.nativeToolsThinking => MessageThinking(
+            toolUseMessage: toolUseMessage,
+            isAnonymous: isAnonymous,
+          ),
+        ToolUseType.nativeToolsCodeInterpreter => MessageCodeInterpreter(
             toolUseMessage: toolUseMessage,
             isAnonymous: isAnonymous,
           ),

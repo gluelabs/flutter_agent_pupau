@@ -94,14 +94,15 @@ class Strings {
   static const String attachmentTrimmingSnackbar =
       "To respect context limits, some attachments were reduced.";
   static const String attachmentTrimmingDetailBoth =
-      "%1 truncated, %2 removed.";
-  static const String attachmentTrimmingDetailTruncated = "%1 truncated.";
-  static const String attachmentTrimmingDetailRemoved = "%1 removed.";
+      "@truncated truncated, @removed removed.";
+  static const String attachmentTrimmingDetailTruncated =
+      "@truncated truncated.";
+  static const String attachmentTrimmingDetailRemoved = "@removed removed.";
   static const String attachmentTrimmingTitle = "Attachment trimming";
   static const String emergencyTrimmingTitle = "Emergency trimming";
   static const String attachmentTrimmingEstimatedTokens = "Est. tokens";
   static const String attachmentTrimmingTokensDetail =
-      "Context tokens (approx.): %1 before → %2 after · %3 saved";
+      "Context tokens (approx.): @before before → @after after · @saved saved";
   static const String attachmentTrimmingReasonProportionalShare =
       "Proportional reduction";
   static const String attachmentTrimmingReasonFallbackOverBudget =
@@ -146,6 +147,9 @@ class Strings {
       "Thank you for your report! We will analyze it as soon as possible";
   static const String fork = "Continue from here";
   static const String forkTitle = "Continue conversation from here";
+  static const String editMessageTitle = "Edit message";
+  static const String editMessageDescription =
+      "Edit this message and keep all messages before it.";
   static const String forkDescription =
       "You will create a copy of this conversation ending with this message. This conversation will remain untouched. Do you want to continue?";
   static const String newConversationTitle = "New conversation title";
@@ -154,6 +158,9 @@ class Strings {
   static const String resourceDeleteConfirm =
       "Are you sure you want to delete this resource: ";
   static const String documents = "Documents";
+  static const String databases = "Databases";
+  static const String database = "Database";
+  static const String columns = "Columns";
   static const String images = "Images";
   static const String generatedImages = "Generated Images";
   static const String links = "Links";
@@ -186,6 +193,9 @@ class Strings {
   static const String toDateBeforeFromDate =
       "This date must be after the starting date";
   static const String showFullMessage = "Show full message";
+  static const String results = "results";
+  static const String showing = "Showing";
+  static const String of = "of";
   static const String query = "Query";
   static const String searchEngine = "Search Engine";
   static const String country = "Country";
@@ -213,10 +223,73 @@ class Strings {
   static const String thinking = "Thinking...";
   static const String noScreenshotAvailable = "No screenshot available";
   static const String executionTime = "Execution time";
+  static const String time = "Time";
+  static const String language = "Language";
+  static const String success = "Success";
+  static const String failed = "Failed";
+  static const String result = "Result";
+  static const String code = "Code";
+  static const String output = "Output";
+  static const String errors = "Errors";
+  static const String noOutput = "No output";
+  static const String noCodeProvided = "No code provided";
   static const String seconds = "seconds";
   static const String toolPhaseLint = "Validating content...";
   static const String toolPhaseCreating = "Creating document...";
   static const String toolPhaseUpdating = "Updating document...";
+  static const String subagentAsyncPending =
+      "Subagent accepted; results will appear in a follow-up message.";
+  static const String subagentOpenChildConversation =
+      "Open subagent conversation";
+  static const String subagentErrorGeneric = "Subagent error";
+
+  // NATIVE DATABASE
+  static const String nativeDbRowInserted = "Row inserted";
+  static const String nativeDbRowUpdated = "Row updated";
+  static const String nativeDbRowDeleted = "Row deleted";
+  static const String nativeDbDatabaseCreated = "Database created";
+  static const String nativeDbColumnAdded = "Column added";
+  static const String nativeDbBulkInsertSummary = "Bulk insert";
+  static const String nativeDbDatabaseId = "Database ID";
+  static const String nativeDbRows = "Rows";
+  static const String nativeDbAction = "Action";
+  static const String nativeDbInserted = "Inserted";
+  static const String nativeDbInsertedRows = "Inserted rows";
+  // Loading labels (keys must be unique across all Strings.* constants)
+  static const String nativeDbLoadingList = "native_db_loading_list";
+  static const String nativeDbLoadingSearch = "native_db_loading_search";
+  static const String nativeDbLoadingInsert = "native_db_loading_insert";
+  static const String nativeDbLoadingUpdate = "native_db_loading_update";
+  static const String nativeDbLoadingDelete = "native_db_loading_delete";
+  static const String nativeDbLoadingCreateDatabase =
+      "native_db_loading_create_database";
+  static const String nativeDbLoadingAddColumn = "native_db_loading_add_column";
+  static const String exportCsv = "Export CSV";
+  static const String spreadsheetLoadingInfo = "spreadsheet_loading_info";
+  static const String spreadsheetLoadingSample = "spreadsheet_loading_sample";
+  static const String spreadsheetLoadingSearch = "spreadsheet_loading_search";
+  static const String spreadsheetLoadingInsert = "spreadsheet_loading_insert";
+  static const String spreadsheetLoadingUpdate = "spreadsheet_loading_update";
+  static const String spreadsheetLoadingDelete = "spreadsheet_loading_delete";
+  static const String spreadsheetLoadingSummary = "spreadsheet_loading_summary";
+  static const String spreadsheetLoadingDistinct = "spreadsheet_loading_distinct";
+  static const String spreadsheetResultsSummary =
+      'Results from "@fileName" — @rowCount rows found';
+  static const String spreadsheetRowAdded = 'Row added to spreadsheet';
+  static const String spreadsheetRowUpdated = 'Row updated in spreadsheet';
+  static const String spreadsheetRowDeleted = 'Row deleted from spreadsheet';
+  static const String spreadsheetRowDeletedWithId =
+      'Row deleted from spreadsheet (id: @id)';
+  static const String spreadsheetStats = 'Spreadsheet statistics';
+  static const String spreadsheetStatsSummary = 'Statistics from "@fileName"';
+  static const String spreadsheetTotal = 'Total';
+  static const String spreadsheetAverage = 'Average';
+  static const String spreadsheetMin = 'Min';
+  static const String spreadsheetMax = 'Max';
+  static const String spreadsheetDistinct = 'Distinct values';
+  static const String spreadsheetDistinctSummary =
+      'Distinct values for "@column" — @categories categories, @rows rows';
+  static const String spreadsheetDistinctMore = '...and @count more values';
   static const String inspectBrowser = "Inspect Browser";
   static const String network = "Network";
   static const String dataLayer = "DataLayer";

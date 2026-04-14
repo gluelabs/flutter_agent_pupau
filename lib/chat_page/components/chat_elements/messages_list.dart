@@ -20,7 +20,7 @@ class MessagesList extends GetView<PupauChatController> {
     return CustomScrollView(
       controller: controller.chatScrollController,
       physics: const ClampingScrollPhysics(),
-      cacheExtent: 500, // Limit off-screen rendering to improve performance
+      cacheExtent: 700, // Limit off-screen rendering to improve performance
       slivers: [
         const ConversationTitle(),
         SliverToBoxAdapter(
@@ -77,8 +77,7 @@ class MessagesList extends GetView<PupauChatController> {
                 return MessageElements(message: message);
               },
               childCount: messages.length,
-              addAutomaticKeepAlives:
-                  false, // Don't keep off-screen items alive
+              addAutomaticKeepAlives: true,
               addRepaintBoundaries:
                   true, // Add repaint boundaries for better performance
             ),

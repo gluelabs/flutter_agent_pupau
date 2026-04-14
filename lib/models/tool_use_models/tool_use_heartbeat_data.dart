@@ -16,11 +16,17 @@ class ToolUseHeartbeatData {
 
   factory ToolUseHeartbeatData.fromJson(Map<String, dynamic> json) {
     final String actorType = getString(json['actorType']);
+    final String toolName = getString(json['toolName']);
+    ToolUseType resolved = ToolUseService.getToolUseTypeEnumFlat(actorType);
+    if (resolved == ToolUseType.nativeToolsGeneric &&
+        ToolUseService.isSubagentTool(toolName)) {
+      resolved = ToolUseType.nativeToolsSubagent;
+    }
     return ToolUseHeartbeatData(
       toolSessionId: getString(json['toolSessionId']),
-      toolName: getString(json['toolName']),
+      toolName: toolName,
       elapsedMs: getInt(json['elapsedMs']),
-      toolUseType: ToolUseService.getToolUseTypeEnumFlat(actorType),
+      toolUseType: resolved,
     );
   }
 }

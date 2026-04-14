@@ -3,6 +3,7 @@ import 'package:flutter_agent_pupau/models/prompt_option_model.dart';
 import 'package:flutter_agent_pupau/models/prompt_reflection_model.dart';
 import 'package:flutter_agent_pupau/services/assistant_service.dart';
 import 'package:flutter_agent_pupau/services/google_maps_service.dart';
+import 'package:markdown/markdown.dart' as md;
 
 class TagService {
   static const String assistantOpeningTag = "<assistant id=";
@@ -279,5 +280,132 @@ class TagService {
       String content = match.group(1) ?? '';
       return '$thinkingOpeningTag${content.replaceAll(RegExp(r'\r\n|\r|\n'), '<line-break>')}$thinkingClosingTag';
     });
+  }
+
+  /// Strips custom Pupau tags and Markdown formatting for clipboard / plain-text export.
+  /// Keeps human-visible text (e.g. option labels, link text, code content).
+  static String plainTextForCopy(String message) {
+    final String stripped = _stripCustomMarkupForCopy(message);
+    final String plain = _markdownAstToPlainText(stripped);
+    return plain
+        .replaceAll(RegExp(r'\n\s*\n\s*\n+', multiLine: true), '\n\n')
+        .trim();
+  }
+
+  static String _stripCustomMarkupForCopy(String baseMessage) {
+    String message = baseMessage;
+    message = message.replaceAllMapped(thinkingRegex, (_) => '');
+    message = message.replaceAllMapped(optionsRegex, (m) {
+      final block = m.group(0) ?? '';
+      return _optionsBlockToPlainLines(block);
+    });
+    message = message.replaceAllMapped(
+      RegExp(r'<reflection>([\s\S]*?)</reflection>', dotAll: true),
+      (m) => (m.group(1)?.split('<evaluation').first ?? '').trim(),
+    );
+    message = message.replaceAllMapped(
+      RegExp(r'<assistant[^>]*>([\s\S]*?)</assistant>'),
+      (m) => (m.group(1) ?? '').trim(),
+    );
+    message = message.replaceAll(mapRegex, '');
+    // Visual diagrams: omit source entirely from plain-text copy (like maps).
+    message = message.replaceAll(mermaidRegex, '');
+    message = message.replaceAllMapped(downloadRegex, (m) => (m.group(3) ?? '').trim());
+    message = message.replaceAll(userNameTag, '');
+    return message;
+  }
+
+  /// Visible lines from `<options>…</options>` (inner text of each `<option>`, no tags).
+  static String _optionsBlockToPlainLines(String optionsBlock) {
+    final String? content = RegExp(
+      r'<options>([\s\S]*?)</options>',
+      dotAll: true,
+    ).firstMatch(optionsBlock)?.group(1);
+    if (content == null) return '';
+    final optionRegex = RegExp(
+      r'<option\s+prompt="[^"]*">([\s\S]*?)</option>',
+      dotAll: true,
+    );
+    final List<String> lines = [];
+    for (final match in optionRegex.allMatches(content)) {
+      final String line = (match.group(1) ?? '').trim();
+      if (line.isNotEmpty) lines.add('- $line');
+    }
+    return lines.join('\n');
+  }
+
+  static String _markdownAstToPlainText(String markdown) {
+    final md.Document doc = md.Document(extensionSet: md.ExtensionSet.gitHubFlavored);
+    final List<md.Node> nodes = doc.parseLines(markdown.split('\n'));
+    return _markdownBlocksToPlainText(nodes);
+  }
+
+  /// Block-level plain text with list markers preserved (`- ` / `1. `). Using
+  /// [Node.textContent] alone drops bullets because the AST stores them structurally.
+  static String _markdownBlocksToPlainText(List<md.Node> nodes) {
+    final List<String> parts = <String>[];
+    for (final md.Node node in nodes) {
+      final String t = _markdownBlockToPlainText(node).trimRight();
+      if (t.isNotEmpty) parts.add(t);
+    }
+    return parts.join('\n\n');
+  }
+
+  static String _markdownBlockToPlainText(md.Node node) {
+    if (node is md.Text) return node.text;
+    if (node is md.Element) {
+      switch (node.tag) {
+        case 'ul':
+          return _markdownUnorderedListToPlainText(node);
+        case 'ol':
+          return _markdownOrderedListToPlainText(node);
+        default:
+          return node.textContent;
+      }
+    }
+    return node.textContent;
+  }
+
+  static String _markdownUnorderedListToPlainText(md.Element ul) {
+    final List<String> lines = <String>[];
+    for (final md.Node child in ul.children ?? const <md.Node>[]) {
+      if (child is md.Element && child.tag == 'li') {
+        lines.add('- ${_markdownListItemToPlainText(child)}');
+      }
+    }
+    return lines.join('\n');
+  }
+
+  static String _markdownOrderedListToPlainText(md.Element ol) {
+    final List<String> lines = <String>[];
+    int index = int.tryParse(ol.attributes['start'] ?? '') ?? 1;
+    for (final md.Node child in ol.children ?? const <md.Node>[]) {
+      if (child is md.Element && child.tag == 'li') {
+        lines.add('$index. ${_markdownListItemToPlainText(child)}');
+        index++;
+      }
+    }
+    return lines.join('\n');
+  }
+
+  static String _markdownListItemToPlainText(md.Element li) {
+    final List<md.Node> children = li.children ?? const <md.Node>[];
+    if (children.isEmpty) return '';
+
+    final List<String> segments = <String>[];
+    for (final md.Node child in children) {
+      if (child is md.Element) {
+        if (child.tag == 'ul') {
+          segments.add(_markdownUnorderedListToPlainText(child));
+        } else if (child.tag == 'ol') {
+          segments.add(_markdownOrderedListToPlainText(child));
+        } else {
+          segments.add(child.textContent);
+        }
+      } else {
+        segments.add(child.textContent);
+      }
+    }
+    return segments.where((String s) => s.isNotEmpty).join('\n');
   }
 }

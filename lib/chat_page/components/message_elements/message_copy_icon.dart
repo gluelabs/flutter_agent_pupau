@@ -5,7 +5,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/feedback_snackbar.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
-import 'package:flutter_agent_pupau/services/conversation_service.dart';
+import 'package:flutter_agent_pupau/services/tag_service.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
@@ -27,7 +27,7 @@ class MessageCopyIcon extends GetView<PupauChatController> {
           child: InkWell(
             onTap: () {
               Clipboard.setData(ClipboardData(
-                  text: ConversationService.copyMessageWithoutTags(message.answer)));
+                  text: TagService.plainTextForCopy(message.answer)));
               showFeedbackSnackbar(
                   Strings.copiedClipboard.tr, Symbols.content_copy,
                   isInfo: true);

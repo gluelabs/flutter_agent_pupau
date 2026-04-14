@@ -117,14 +117,17 @@ class _TrimmingSection extends StatelessWidget {
     final int truncated = info.truncatedCount;
     final int removed = info.removedCount;
     final String summaryLine = truncated > 0 && removed > 0
-        ? Strings.attachmentTrimmingDetailBoth.tr
-            .replaceAll("%1", truncated.toString())
-            .replaceAll("%2", removed.toString())
+        ? Strings.attachmentTrimmingDetailBoth.trParams({
+            'truncated': truncated.toString(),
+            'removed': removed.toString(),
+          })
         : truncated > 0
-            ? Strings.attachmentTrimmingDetailTruncated.tr
-                .replaceAll("%1", truncated.toString())
-            : Strings.attachmentTrimmingDetailRemoved.tr
-                .replaceAll("%1", removed.toString());
+            ? Strings.attachmentTrimmingDetailTruncated.trParams({
+                'truncated': truncated.toString(),
+              })
+            : Strings.attachmentTrimmingDetailRemoved.trParams({
+                'removed': removed.toString(),
+              });
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,19 +192,11 @@ class _TrimmingSection extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          Strings.attachmentTrimmingTokensDetail.tr
-                              .replaceAll(
-                                "%1",
-                                item.estimatedTokensBefore.toString(),
-                              )
-                              .replaceAll(
-                                "%2",
-                                item.estimatedTokensAfter.toString(),
-                              )
-                              .replaceAll(
-                                "%3",
-                                item.estimatedTokensSaved.toString(),
-                              ),
+                          Strings.attachmentTrimmingTokensDetail.trParams({
+                            'before': item.estimatedTokensBefore.toString(),
+                            'after': item.estimatedTokensAfter.toString(),
+                            'saved': item.estimatedTokensSaved.toString(),
+                          }),
                           style: TextStyle(fontSize: isTablet ? 16 : 14),
                         ),
                       ],

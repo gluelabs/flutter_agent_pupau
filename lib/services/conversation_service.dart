@@ -308,17 +308,6 @@ class ConversationService {
     }
   }
 
-  static String copyMessageWithoutTags(String message) {
-    return message
-        .replaceAll(RegExp(r'<thinking>.*?</thinking>', dotAll: true), '')
-        .replaceAll(RegExp(r'<reflection>.*?</reflection>', dotAll: true), '')
-        .replaceAll(RegExp(r'<map[^>]*>.*?</map>', dotAll: true), '')
-        .replaceAll(
-          RegExp(r'<mermaid-graph[^>]*>.*?</mermaid-graph>', dotAll: true),
-          '',
-        )
-        .replaceAll(RegExp(r'\n\s*\n\s*\n+', multiLine: true), '\n\n');
-  }
 
   static String getNoVisionCapabilityMessage() {
     String pixtralTag =
