@@ -13,10 +13,12 @@ class NativeDatabaseListView extends StatefulWidget {
     super.key,
     required this.databases,
     required this.isAnonymous,
+    required this.scope,
   });
 
   final List<NativeDbListItem> databases;
   final bool isAnonymous;
+  final NativeDbScope scope;
 
   @override
   State<NativeDatabaseListView> createState() => _NativeDatabaseListViewState();
@@ -48,6 +50,7 @@ class _NativeDatabaseListViewState extends State<NativeDatabaseListView> {
         children: [
           ...visible.map(
             (db) => NativeDatabaseCard(
+              scope: widget.scope,
               database: db,
               isAnonymous: widget.isAnonymous,
               isSingleDatabase: databases.length == 1,
@@ -73,11 +76,13 @@ class NativeDatabaseCard extends StatelessWidget {
     super.key,
     required this.database,
     required this.isAnonymous,
+    required this.scope,
     this.isSingleDatabase = false,
   });
 
   final NativeDbListItem database;
   final bool isAnonymous;
+  final NativeDbScope scope;
   final bool isSingleDatabase;
 
   @override
@@ -94,13 +99,14 @@ class NativeDatabaseCard extends StatelessWidget {
               border: Border.all(
                 color: isAnonymous
                     ? Colors.white70
-                    : MyStyles.pupauTheme(!Get.isDarkMode).lilacPressed,
+                    : MyStyles.pupauTheme(!Get.isDarkMode).grey,
               ),
             ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Text(
@@ -111,18 +117,17 @@ class NativeDatabaseCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              NativeDatabaseBadge(
-                text: '${database.columns.length} ${Strings.columns.tr}',
-                isAnonymous: isAnonymous,
-              ),
+              NativeDatabaseScopeBadge(scope: scope, isAnonymous: isAnonymous),
             ],
+          ),
+          SizedBox(height: 6),
+          NativeDatabaseBadge(
+            text: '${database.columns.length} ${Strings.columns.tr}',
+            isAnonymous: isAnonymous,
           ),
           if (description.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(
-              description,
-              style: StyleService.toolNormalTextStyle(isDark),
-            ),
+            Text(description, style: StyleService.toolNormalTextStyle(isDark)),
           ],
           if (database.allowedOperations.isNotEmpty) ...[
             const SizedBox(height: 12),

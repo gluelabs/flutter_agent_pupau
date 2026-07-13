@@ -57,8 +57,8 @@ void showAttachmentTrimmingDialog(
   final String dialogTitle = hasAttachment && hasEmergency
       ? '${Strings.attachmentTrimmingTitle.tr} & ${Strings.emergencyTrimmingTitle.tr}'
       : hasAttachment
-          ? Strings.attachmentTrimmingTitle.tr
-          : Strings.emergencyTrimmingTitle.tr;
+      ? Strings.attachmentTrimmingTitle.tr
+      : Strings.emergencyTrimmingTitle.tr;
 
   showDialog<void>(
     context: context,
@@ -76,7 +76,7 @@ void showAttachmentTrimmingDialog(
                 fontSize: isTablet ? 18 : 16,
                 color: Get.isDarkMode || isAnonymous
                     ? Colors.white
-                    : MyStyles.pupauTheme(!Get.isDarkMode).accent,
+                    : MyStyles.pupauTheme(!Get.isDarkMode).primary,
               ),
             ),
           ),
@@ -122,12 +122,12 @@ class _TrimmingSection extends StatelessWidget {
             'removed': removed.toString(),
           })
         : truncated > 0
-            ? Strings.attachmentTrimmingDetailTruncated.trParams({
-                'truncated': truncated.toString(),
-              })
-            : Strings.attachmentTrimmingDetailRemoved.trParams({
-                'removed': removed.toString(),
-              });
+        ? Strings.attachmentTrimmingDetailTruncated.trParams({
+            'truncated': truncated.toString(),
+          })
+        : Strings.attachmentTrimmingDetailRemoved.trParams({
+            'removed': removed.toString(),
+          });
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,7 +140,9 @@ class _TrimmingSection extends StatelessWidget {
             fontSize: isTablet ? 16 : 14,
             color: Get.isDarkMode || isAnonymous
                 ? Colors.white
-                : MyStyles.pupauTheme(!Get.isDarkMode).accent,
+                : MyStyles.getTextTheme(
+                    isLightTheme: !Get.isDarkMode,
+                  ).bodyMedium?.color,
           ),
         ),
         const SizedBox(height: 6),
@@ -156,8 +158,8 @@ class _TrimmingSection extends StatelessWidget {
           ...info.items.map((AttachmentTrimmingItem item) {
             final String reasonLabel =
                 ConversationService.getAttachmentTrimmingReasonLabel(
-              item.reason,
-            );
+                  item.reason,
+                );
             final bool wasRemoved = item.action == "removed";
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),

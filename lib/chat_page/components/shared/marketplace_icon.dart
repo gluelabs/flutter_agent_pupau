@@ -17,7 +17,7 @@ class MarketplaceIcon extends StatelessWidget {
       message: Strings.marketplace.tr,
       child: Icon(
         Symbols.local_mall,
-        color: color ?? MyStyles.pupauTheme(!Get.isDarkMode).accent,
+        color: color ?? MyStyles.pupauTheme(!Get.isDarkMode).primary,
         size: isTablet ? 17 : 15,
       ),
     );

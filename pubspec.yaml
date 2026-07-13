@@ -2,7 +2,7 @@ name: flutter_agent_pupau
 description: A Flutter plugin that integrates Pupau AI agents into your application.
 repository: https://github.com/gluelabs/flutter_agent_pupau
 issue_tracker: https://github.com/gluelabs/flutter_agent_pupau/issues
-version: 1.0.4+2
+version: 1.0.5+3
 
 topics:
   - ai
@@ -21,31 +21,31 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   get: ^4.7.3
-  dio: ^5.9.2
+  dio: ^5.10.0
   flutter_client_sse: ^2.0.3
   url_launcher: ^6.3.2
-  material_symbols_icons: ^4.2928.1
+  material_symbols_icons: ^4.2951.0
   http: ^1.6.0
   downloadsfolder: ^1.2.0
   share_plus: ^12.0.2
-  pro_image_editor: ^12.0.13
-  saf_stream: ^2.0.0
-  saf_util: ^2.0.0
-  permission_handler: ^12.0.1
+  pro_image_editor: ^13.2.0
+  saf_stream: ^3.1.0
+  saf_util: ^3.1.0
+  permission_handler: ^12.0.3
   file_picker: ^11.0.2
-  image_picker: ^1.2.1
-  saver_gallery: ^4.1.1
-  path_provider: ^2.1.5
-  intl: ^0.20.2
+  image_picker: ^1.2.3
+  saver_gallery: ^5.1.0
+  path_provider: ^2.1.6
+  intl: ^0.20.3
   wolt_modal_sheet: ^0.11.0
   skeletonizer: ^2.1.3
-  flutter_markdown_plus: ^1.0.7
+  flutter_markdown_plus: ^1.0.12
   google_sign_in: ^7.2.0
   cached_network_image: ^3.4.1
   cached_network_svg_image: ^2.0.0
   flutter_expanded_tile: ^0.4.0
   mention_tag_text_field: ^0.0.9
-  flutter_svg: ^2.2.4
+  flutter_svg: ^2.3.0
   date_format: ^2.0.9
   jumping_dot: ^0.0.7
   bubble: ^1.2.1
@@ -59,7 +59,10 @@ dependencies:
   uuid: ^4.5.3
   highlight: ^0.7.0
   web: ^1.1.1
-  record: ^6.2.0
+  record: ^7.1.0
+  audioplayers: ^6.8.1
+  flutter_widget_from_html: ^0.17.2
+  use_scramble: ^0.0.13
 
 dev_dependencies:
   flutter_test:

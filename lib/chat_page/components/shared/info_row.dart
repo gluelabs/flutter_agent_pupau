@@ -44,7 +44,9 @@ class InfoRow extends StatelessWidget {
                         style: TextStyle(
                           fontSize: isTablet ? 20 : 15,
                           fontWeight: FontWeight.w500,
-                          color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                          color: MyStyles.getTextTheme(
+                            isLightTheme: !Get.isDarkMode,
+                          ).bodyMedium?.color,
                         ),
                       ),
                       Text(
@@ -70,7 +72,7 @@ class InfoRow extends StatelessWidget {
                     tooltip: Strings.copy.tr,
                     icon: Icon(
                       Symbols.content_copy,
-                      color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                      color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
                       size: isTablet ? 26 : 24,
                     ),
                   ),

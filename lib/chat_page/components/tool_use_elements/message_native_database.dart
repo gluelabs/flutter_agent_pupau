@@ -6,6 +6,7 @@ import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/nativ
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/native_database/native_database_list.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/native_database/native_database_row_confirmation.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/native_database/native_database_search.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/native_database/native_database_shared_widgets.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_spreadsheet.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/tool_use_info_list.dart';
 import 'package:flutter_agent_pupau/models/tool_use_message_model.dart';
@@ -48,11 +49,13 @@ class MessageNativeDatabase extends StatelessWidget {
           message: data.errorMessage ?? (data.raw?['error']?.toString() ?? ''),
           isAnonymous: isAnonymous,
           databaseName: databaseName,
+          scope: data.scope,
         );
       case NativeDbToolResultType.dbList:
         return NativeDatabaseListView(
           databases: data.databases,
           isAnonymous: isAnonymous,
+          scope: data.scope,
         );
       case NativeDbToolResultType.search:
         final result = data.searchResult;
@@ -60,6 +63,7 @@ class MessageNativeDatabase extends StatelessWidget {
         return NativeDatabaseSearchResults(
           result: result,
           isAnonymous: isAnonymous,
+          scope: data.scope,
         );
       case NativeDbToolResultType.rowCreated:
         return NativeDatabaseRowConfirmationCard(
@@ -69,6 +73,7 @@ class MessageNativeDatabase extends StatelessWidget {
           row: data.row ?? const {},
           isAnonymous: isAnonymous,
           databaseName: databaseName,
+          scope: data.scope,
         );
       case NativeDbToolResultType.bulkInsert:
         return NativeDatabaseBulkInsertCard(
@@ -76,6 +81,7 @@ class MessageNativeDatabase extends StatelessWidget {
           toolArgs: data.toolArgs,
           isAnonymous: isAnonymous,
           databaseName: databaseName,
+          scope: data.scope,
         );
       case NativeDbToolResultType.rowUpdated:
         return NativeDatabaseRowConfirmationCard(
@@ -85,6 +91,7 @@ class MessageNativeDatabase extends StatelessWidget {
           row: data.row ?? const {},
           isAnonymous: isAnonymous,
           databaseName: databaseName,
+          scope: data.scope,
         );
       case NativeDbToolResultType.rowDeleted:
         return NativeDatabaseCompactStatusCard(
@@ -94,6 +101,7 @@ class MessageNativeDatabase extends StatelessWidget {
           subtitle: data.message,
           isAnonymous: isAnonymous,
           databaseName: databaseName,
+          scope: data.scope,
         );
       case NativeDbToolResultType.dbCreated:
         final db = data.createdDatabase;
@@ -101,6 +109,7 @@ class MessageNativeDatabase extends StatelessWidget {
         return NativeDatabaseCreatedCard(
           database: db,
           isAnonymous: isAnonymous,
+          scope: data.scope,
         );
       case NativeDbToolResultType.columnAdded:
         final col = data.addedColumn;
@@ -113,12 +122,25 @@ class MessageNativeDatabase extends StatelessWidget {
               '${col.displayName.isNotEmpty ? col.displayName : col.name} [${col.type}]',
           isAnonymous: isAnonymous,
           databaseName: databaseName,
+          scope: data.scope,
         );
       case NativeDbToolResultType.raw:
-        return ToolUseInfoList(
-          infoList: toolUseMessage?.nativeToolData ?? const {},
-          isAnonymous: isAnonymous,
-          forceExpanded: true,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 12, bottom: 8),
+              child: NativeDatabaseScopeBadge(
+                scope: data.scope,
+                isAnonymous: isAnonymous,
+              ),
+            ),
+            ToolUseInfoList(
+              infoList: toolUseMessage?.nativeToolData ?? const {},
+              isAnonymous: isAnonymous,
+              forceExpanded: true,
+            ),
+          ],
         );
     }
   }

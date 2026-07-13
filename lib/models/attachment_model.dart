@@ -22,6 +22,7 @@ class Attachment {
   //Frontend
   bool isShown = false;
   bool isLoadingContent = false;
+  bool get isEditable => type == 'NOTE';
 
   Attachment({
     required this.id,

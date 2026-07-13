@@ -4,10 +4,13 @@ import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/messa
 import 'package:flutter_agent_pupau/models/tool_use_message_model.dart';
 import 'package:flutter_agent_pupau/services/tool_use_service.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_ask_user.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_attachment_tool.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_browser_use.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_code_interpreter.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_document.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_knowledge_base.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_mail.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_memory_profile.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_native_database.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_thinking.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_to_do_list.dart';
@@ -18,17 +21,19 @@ class ToolUseMessageContent extends StatelessWidget {
     super.key,
     required this.toolUseMessage,
     required this.isAnonymous,
+    required this.showContentOnly,
   });
 
   final ToolUseMessage? toolUseMessage;
   final bool isAnonymous;
+  final bool showContentOnly;
 
   @override
   Widget build(BuildContext context) {
     bool isNativeTool = (ToolUseService.isNativeTool(toolUseMessage?.type)) &&
         toolUseMessage?.nativeToolData != null;
     return Padding(
-      padding: const EdgeInsets.only(left: 4),
+      padding: showContentOnly ? EdgeInsets.zero : const EdgeInsets.only(left: 4),
       child: switch (toolUseMessage?.type) {
         ToolUseType.nativeToolsWebSearch ||
         ToolUseType.pipeline ||
@@ -73,6 +78,18 @@ class ToolUseMessageContent extends StatelessWidget {
             isAnonymous: isAnonymous,
           ),
         ToolUseType.nativeToolsCodeInterpreter => MessageCodeInterpreter(
+            toolUseMessage: toolUseMessage,
+            isAnonymous: isAnonymous,
+          ),
+        ToolUseType.nativeToolsMail => MessageMail(
+            toolUseMessage: toolUseMessage,
+            isAnonymous: isAnonymous,
+          ),
+        ToolUseType.nativeToolsMemoryProfile => MessageMemoryProfile(
+            toolUseMessage: toolUseMessage,
+            isAnonymous: isAnonymous,
+          ),
+        ToolUseType.nativeToolsAttachment => MessageAttachmentTool(
             toolUseMessage: toolUseMessage,
             isAnonymous: isAnonymous,
           ),

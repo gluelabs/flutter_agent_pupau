@@ -6,6 +6,7 @@ import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/models/ui_tool_message_model.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
+import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
 class MessageAuthorizeTool extends GetView<PupauChatController> {
@@ -15,8 +16,14 @@ class MessageAuthorizeTool extends GetView<PupauChatController> {
 
   @override
   Widget build(BuildContext context) {
-    bool isTablet = DeviceService.isTablet;
-    bool isAnonymous = controller.isAnonymous;
+    Theme.of(context);
+    final bool isTablet = DeviceService.isTablet;
+    final bool isAnonymous = controller.isAnonymous;
+    final Color basicColor = isAnonymous
+        ? AnonymousThemeColors.assistantText
+        : (MyStyles.getTextTheme(
+            isLightTheme: !Get.isDarkMode,
+          ).bodyMedium?.color)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -29,7 +36,7 @@ class MessageAuthorizeTool extends GetView<PupauChatController> {
                 size: isTablet ? 26 : 24,
                 color: isAnonymous
                     ? Colors.white
-                    : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                    : MyStyles.pupauTheme(!Get.isDarkMode).primary,
               ),
               const SizedBox(width: 8),
               Flexible(
@@ -37,12 +44,7 @@ class MessageAuthorizeTool extends GetView<PupauChatController> {
                   message.data.message,
                   style: TextStyle(
                     fontSize: isTablet ? 16 : 14,
-                    color: Get.isDarkMode || isAnonymous
-                        ? Colors.white
-                        : MyStyles.getTextTheme(
-                                isLightTheme: !Get.isDarkMode,
-                              ).bodyMedium?.color ??
-                              Colors.black,
+                    color: basicColor,
                   ),
                 ),
               ),

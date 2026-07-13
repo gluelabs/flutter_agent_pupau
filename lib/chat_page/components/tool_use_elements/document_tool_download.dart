@@ -42,13 +42,13 @@ class DocumentToolDownload extends StatelessWidget {
             ),
           ).copyWith(
             a: TextStyle(
-              color: MyStyles.pupauTheme(!Get.isDarkMode).blue,
+              color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
               fontWeight: FontWeight.w500,
             ),
             blockquoteDecoration: BoxDecoration(
               color: MyStyles.pupauTheme(
                 !Get.isDarkMode,
-              ).lilacHover.withValues(alpha: Get.isDarkMode ? 0.4 : 1),
+              ).primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
             ),
             blockquotePadding: const EdgeInsets.all(12),

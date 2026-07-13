@@ -28,49 +28,55 @@ class ReferenceText extends GetView<PupauChatController> {
                   ref.data,
                   controller.assistant.value?.id ?? "",
                   controller.conversation.value?.id ?? "",
-                  controller.isMarketplace)
+                  controller.isMarketplace,
+                )
               : null,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 18),
-            child: Row(children: [
-              Icon(
-                  enableKbDownload ? Symbols.file_download : Symbols.file_copy),
-              const SizedBox(width: 8),
-              Expanded(
-                child: RichText(
-                  text: TextSpan(
-                    style:
-                        TextStyle(color: Get.theme.textTheme.bodyMedium?.color),
-                    children: [
-                      TextSpan(text: ref.data),
-                      if (ref.pageNumber != null)
-                        TextSpan(
-                          text: " (${Strings.page.tr}: ${ref.pageNumber!})",
-                          style: TextStyle(
-                            color: Get.theme.textTheme.bodyMedium?.color
-                                ?.withValues(alpha: 0.7),
+            child: Row(
+              children: [
+                Icon(
+                  enableKbDownload ? Symbols.file_download : Symbols.file_copy,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      style: TextStyle(
+                        color: Get.theme.textTheme.bodyMedium?.color,
+                      ),
+                      children: [
+                        TextSpan(text: ref.data),
+                        if (ref.pageNumber != null)
+                          TextSpan(
+                            text: " (${Strings.page.tr}: ${ref.pageNumber!})",
+                            style: TextStyle(
+                              color: Get.theme.textTheme.bodyMedium?.color
+                                  ?.withValues(alpha: 0.7),
+                            ),
                           ),
-                        )
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              )
-            ]),
+              ],
+            ),
           ),
         );
       case 'URL':
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 18),
           child: RichTextClickable(
-              icon: Symbols.link,
-              text: ref.data,
-              onPressed: () {
-                try {
-                  DeviceService.openLink(ref.data);
-                } catch (e) {
-                  throw "Could not launch $ref]";
-                }
-              }),
+            icon: Symbols.link,
+            text: ref.data,
+            onPressed: () {
+              try {
+                DeviceService.openLink(ref.data);
+              } catch (e) {
+                throw "Could not launch $ref]";
+              }
+            },
+          ),
         );
       default:
         return const SizedBox();
@@ -99,18 +105,17 @@ class RichTextClickable extends StatelessWidget {
             alignment: PlaceholderAlignment.middle,
             child: Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: Icon(
-                icon,
-              ),
+              child: Icon(icon),
             ),
           ),
           TextSpan(
-              text: text,
-              style: const TextStyle(
-                color: Colors.blue,
-                decoration: TextDecoration.underline,
-              ),
-              recognizer: TapGestureRecognizer()..onTap = onPressed),
+            text: text,
+            style: TextStyle(
+              color: Get.theme.textTheme.bodyMedium?.color,
+              decoration: TextDecoration.underline,
+            ),
+            recognizer: TapGestureRecognizer()..onTap = onPressed,
+          ),
         ],
       ),
     );

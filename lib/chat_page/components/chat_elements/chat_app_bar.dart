@@ -70,7 +70,7 @@ class ChatAppBar extends GetView<PupauChatController>
           iconSize: isTablet ? 26 : 24,
           color: isAnonymous
               ? Colors.white
-              : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+              : MyStyles.pupauTheme(!Get.isDarkMode).primary,
           tooltip: Strings.back.tr,
           onPressed: () => widgetMode == WidgetMode.full
               ? Navigator.of(context).pop()
@@ -92,7 +92,7 @@ class ChatAppBar extends GetView<PupauChatController>
       // Build actions list: custom actions + close button (if on right)
       List<Widget>? actionsList;
       List<Widget>? customActions = appBarConfig?.actions;
-      
+
       if (customActions != null) {
         // Wrap actions to use controller's scaffoldContext which has Scaffold access
         customActions = customActions.map((action) {
@@ -115,10 +115,11 @@ class ChatAppBar extends GetView<PupauChatController>
                 } catch (e) {
                   // If Scaffold.of() fails, try to open drawer using scaffoldKey or scaffoldContext
                   final errorStr = e.toString();
-                  if (errorStr.contains('Scaffold') && 
+                  if (errorStr.contains('Scaffold') &&
                       errorStr.contains('does not contain')) {
                     // First try scaffoldKey (most reliable)
-                    final scaffoldKey = controller.pupauConfig?.drawerConfig?.scaffoldKey;
+                    final scaffoldKey =
+                        controller.pupauConfig?.drawerConfig?.scaffoldKey;
                     if (scaffoldKey?.currentState != null) {
                       scaffoldKey!.currentState!.openEndDrawer();
                       return;
@@ -149,14 +150,30 @@ class ChatAppBar extends GetView<PupauChatController>
           return action;
         }).toList();
       }
-      
+
+      final Widget? dashboardIconButton = controller.isDashboardAvailable.value
+          ? IconButton(
+              icon: const Icon(Symbols.grid_layout_side),
+              iconSize: isTablet ? 26 : 24,
+              color: isAnonymous
+                  ? Colors.white
+                  : MyStyles.pupauTheme(!Get.isDarkMode).primary,
+              tooltip: Strings.chatDashboard.tr,
+              onPressed: () => controller.openChatDashboard(),
+            )
+          : null;
+
       if (closePosition == CloseButtonPosition.right && closeButton != null) {
         actionsList = [
+          if (dashboardIconButton != null) dashboardIconButton,
           if (customActions != null) ...customActions,
           closeButton,
         ];
-      } else if (customActions != null) {
-        actionsList = customActions;
+      } else if (customActions != null || dashboardIconButton != null) {
+        actionsList = [
+          if (dashboardIconButton != null) dashboardIconButton,
+          if (customActions != null) ...customActions,
+        ];
       }
 
       return AppBar(
@@ -171,8 +188,9 @@ class ChatAppBar extends GetView<PupauChatController>
         actionsIconTheme: IconThemeData(
           color: isAnonymous
               ? Colors.white
-              : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+              : MyStyles.pupauTheme(!Get.isDarkMode).primary,
           size: isTablet ? 26 : 24,
+          weight: 600,
         ),
         backgroundColor: isAnonymous
             ? Colors.black
@@ -208,12 +226,12 @@ class ChatAppBar extends GetView<PupauChatController>
                     decoration: BoxDecoration(
                       color: isAnonymous
                           ? Colors.white
-                          : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                          : MyStyles.pupauTheme(!Get.isDarkMode).primary,
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: isAnonymous
                             ? Colors.white
-                            : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                            : MyStyles.pupauTheme(!Get.isDarkMode).primary,
                         width: 1.5,
                       ),
                     ),
@@ -250,7 +268,7 @@ class ChatAppBar extends GetView<PupauChatController>
                             fontSize: isTablet ? 18 : 15,
                             color: isAnonymous
                                 ? Colors.white
-                                : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                                : MyStyles.pupauTheme(!Get.isDarkMode).primary,
                           ),
                         ),
                       ),
@@ -258,9 +276,7 @@ class ChatAppBar extends GetView<PupauChatController>
                         Padding(
                           padding: const EdgeInsets.only(left: 6),
                           child: MarketplaceIcon(
-                            color: MyStyles.pupauTheme(
-                              !Get.isDarkMode,
-                            ).darkBlue,
+                            color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
                           ),
                         ),
                     ],

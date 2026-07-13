@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:downloadsfolder/downloadsfolder.dart';
 import 'package:file_picker/file_picker.dart';
@@ -29,27 +28,12 @@ import 'package:saf_util/saf_util.dart';
 import 'package:saf_util/saf_util_platform_interface.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 class FileService {
   static final safStream = SafStream();
   static final SafUtil safUtil = SafUtil();
   static final DateFormat fileFormat = DateFormat("dd-MM-yyyy-HH-mm-ss");
-
-  //IMAGES
-  static Future<Uint8List?> getImageFromUrl(String imageUrl) async {
-    final http.Response responseData = await http.get(Uri.parse(imageUrl));
-    Uint8List imageFromUrl = responseData.bodyBytes;
-    ByteBuffer buffer = imageFromUrl.buffer;
-    ByteData byteData = ByteData.view(buffer);
-    Directory tempDir = await getTemporaryDirectory();
-    File imageFile = await File('${tempDir.path}/${generateImageName()}')
-        .writeAsBytes(
-          buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes),
-        );
-    return await editImage(imageFile);
-  }
 
   static Future<List<Uint8ListWithName>> getImageFromGallery({
     bool allowMultiple = false,
@@ -157,18 +141,6 @@ class FileService {
       showFeedbackSnackbar(Strings.imageDownloadSuccess.tr, Symbols.photo);
     } catch (e) {
       showErrorSnackbar(Strings.imageDownloadFail.tr);
-    }
-  }
-
-  static Future<void> shareImage(String imageUrl) async {
-    try {
-      final url = Uri.parse(imageUrl);
-      final response = await http.get(url);
-      final contentType = response.headers['content-type'];
-      final image = XFile.fromData(response.bodyBytes, mimeType: contentType);
-      await SharePlus.instance.share(ShareParams(files: [image]));
-    } catch (e) {
-      showErrorSnackbar(Strings.apiErrorGeneric.tr);
     }
   }
 

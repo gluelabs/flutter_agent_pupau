@@ -13,7 +13,8 @@ class LoadingWebSearch extends GetView<PupauChatController> {
   final String loadingMessage;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) {    
+    Theme.of(context);
     return Obx(() {
       WebSearchType? webSearchType = controller.currentWebSearchType.value;
       return Padding(

@@ -8,10 +8,7 @@ import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class AssistantCapabilities extends StatefulWidget {
-  const AssistantCapabilities({
-    super.key,
-    required this.assistant,
-  });
+  const AssistantCapabilities({super.key, required this.assistant});
 
   final Assistant assistant;
 
@@ -25,8 +22,9 @@ class _AssistantCapabilitiesState extends State<AssistantCapabilities> {
   @override
   Widget build(BuildContext context) {
     bool isTablet = DeviceService.isTablet;
-    Set<String> capabilities =
-        AssistantService.getCapabilities(widget.assistant).toSet();
+    Set<String> capabilities = AssistantService.getCapabilities(
+      widget.assistant,
+    ).toSet();
     String? modelName = widget.assistant.model?.name;
     if (modelName != null) {
       bool canUseTools = widget.assistant.model?.canUseTools ?? false;
@@ -48,25 +46,29 @@ class _AssistantCapabilitiesState extends State<AssistantCapabilities> {
                         child: Text(
                           Strings.capabilities.tr,
                           style: TextStyle(
-                              fontSize: isTablet ? 20 : 15,
-                              fontWeight: FontWeight.w500,
-                              color: MyStyles.pupauTheme(!Get.isDarkMode)
-                                  .darkBlue),
+                            fontSize: isTablet ? 20 : 15,
+                            fontWeight: FontWeight.w500,
+                            color: MyStyles.getTextTheme(
+                              isLightTheme: !Get.isDarkMode,
+                            ).bodyMedium?.color,
+                          ),
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: SizedBox(
                           child: SingleChildScrollView(
-                            scrollDirection:
-                                _isOpen ? Axis.vertical : Axis.horizontal,
+                            scrollDirection: _isOpen
+                                ? Axis.vertical
+                                : Axis.horizontal,
                             child: _isOpen
                                 ? CapabilitiesOpen(capabilities: capabilities)
                                 : CapabilitiesClosed(
-                                    capabilities: capabilities),
+                                    capabilities: capabilities,
+                                  ),
                           ),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -80,7 +82,8 @@ class _AssistantCapabilitiesState extends State<AssistantCapabilities> {
                     },
                     tooltip: _isOpen ? Strings.collapse.tr : Strings.expand.tr,
                     icon: Icon(
-                        _isOpen ? Symbols.expand_less : Symbols.expand_more),
+                      _isOpen ? Symbols.expand_less : Symbols.expand_more,
+                    ),
                   ),
                 ),
               ],
@@ -90,10 +93,7 @@ class _AssistantCapabilitiesState extends State<AssistantCapabilities> {
 }
 
 class CapabilitiesClosed extends StatelessWidget {
-  const CapabilitiesClosed({
-    super.key,
-    required this.capabilities,
-  });
+  const CapabilitiesClosed({super.key, required this.capabilities});
 
   final Set<String> capabilities;
 
@@ -120,10 +120,7 @@ class CapabilitiesClosed extends StatelessWidget {
 }
 
 class CapabilitiesOpen extends StatelessWidget {
-  const CapabilitiesOpen({
-    super.key,
-    required this.capabilities,
-  });
+  const CapabilitiesOpen({super.key, required this.capabilities});
 
   final Set<String> capabilities;
 

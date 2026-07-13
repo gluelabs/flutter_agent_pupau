@@ -6,17 +6,16 @@ import 'package:flutter_agent_pupau/models/assistant_model.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 
 class TaggedAssistantsList extends GetView<PupauChatController> {
-  const TaggedAssistantsList({
-    super.key,
-  });
+  const TaggedAssistantsList({super.key});
 
   @override
   Widget build(BuildContext context) {
-    bool isTablet = DeviceService.isTablet;
+    Theme.of(context);
+    final bool isTablet = DeviceService.isTablet;
     return Obx(() {
-      List<Assistant> taggedAssistants = controller.taggedAssistants;
-      int length = taggedAssistants.length;
-      bool isTagging = controller.filteredAssistants.isNotEmpty;
+      final List<Assistant> taggedAssistants = controller.taggedAssistants;
+      final int length = taggedAssistants.length;
+      final bool isTagging = controller.filteredAssistants.isNotEmpty;
       return length > 0 && !isTagging
           ? Padding(
               padding: const EdgeInsets.only(bottom: 2.5),
@@ -29,9 +28,12 @@ class TaggedAssistantsList extends GetView<PupauChatController> {
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     child: Row(
                       children: taggedAssistants
-                          .map((assistant) => AssistantChip(
+                          .map(
+                            (assistant) => AssistantChip(
                               assistant: assistant,
-                              isAnonymous: controller.isAnonymous))
+                              isAnonymous: controller.isAnonymous,
+                            ),
+                          )
                           .toList(),
                     ),
                   ),

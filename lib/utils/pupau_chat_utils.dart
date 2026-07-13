@@ -31,41 +31,24 @@ class PupauChatUtils {
   /// )
   /// ```
   static Future<void> openChat(BuildContext context, PupauConfig config) async {
-    bool shouldResetChat = config.resetChatOnOpen;
-    // Check if controller exists and has an existing conversation
-    if (Get.isRegistered<PupauChatController>() && shouldResetChat) {
-      final PupauChatController controller = Get.find<PupauChatController>();
-      final bool hasExistingConversation =
-          controller.conversation.value != null ||
-          (controller.pupauConfig?.conversationId != null &&
-              controller.pupauConfig!.conversationId!.trim().isNotEmpty);
-
-      if (hasExistingConversation) {
-        // Update config first
-        await controller.openChatWithConfig(config);
-
-        // Always create new conversation - reset chat state
-        await resetChat();
-        // After resetting, we still need to navigate to ensure chat page is open
-      }
-    }
-
-    // Navigate to chat page if needed
-    // Initialize binding with config (only registers, doesn't create)
+    // Register controller before any await so [PupauChatController.onInit] can run.
     ChatBinding(config: config).dependencies();
 
-    // Apply cached assistant immediately so first paint shows the right agent (no delay)
+    // Always sync the controller before the route builds. Previously we only did this
+    // when a conversation already existed, so reopening the same assistant often
+    // skipped [openChatWithConfig] until a post-frame callback — one stale frame and
+    // inconsistent resets on 2nd+ open.
     if (Get.isRegistered<PupauChatController>()) {
-      final PupauChatController controller = Get.find<PupauChatController>();
-      controller.pupauConfig = config;
-      controller.applyCachedAssistantIfAvailable();
+      await Get.find<PupauChatController>().openChatWithConfig(config);
     }
 
-    // Navigate to chat page
     if (!context.mounted) return;
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => PupauAgentChat(config: config)),
+      MaterialPageRoute(
+        builder: (BuildContext routeContext) =>
+            PupauAgentChat(config: config, skipOpenChatOnAttach: true),
+      ),
     );
   }
 
@@ -106,14 +89,18 @@ class PupauChatUtils {
     if (effectiveConfig == null &&
         bearerToken != null &&
         bearerToken.trim().isNotEmpty) {
-      final PupauChatController? controller = Get.isRegistered<PupauChatController>()
+      final PupauChatController? controller =
+          Get.isRegistered<PupauChatController>()
           ? Get.find<PupauChatController>()
           : null;
       final PupauConfig? existing = controller?.pupauConfig;
       final String? cachedAssistantId = controller?.assistant.value?.id;
-      final String resolvedAssistantId = (existing?.assistantId.trim().isNotEmpty == true)
+      final String resolvedAssistantId =
+          (existing?.assistantId.trim().isNotEmpty == true)
           ? existing!.assistantId
-          : (cachedAssistantId?.trim().isNotEmpty == true ? cachedAssistantId! : "");
+          : (cachedAssistantId?.trim().isNotEmpty == true
+                ? cachedAssistantId!
+                : "");
       effectiveConfig = PupauConfig.createWithToken(
         bearerToken: bearerToken.trim(),
         assistantId: resolvedAssistantId,
@@ -176,7 +163,9 @@ class PupauChatUtils {
   /// PupauChatUtils.resetChat();
   /// ```
   static Future<void> resetChat() async {
-    Get.find<PupauChatController>().resetChatState();
+    Get.find<PupauChatController>().resetChatState(
+      clearConversationStarters: false,
+    );
   }
 
   /// Loads a conversation by its id in the current chat with the current config
@@ -191,7 +180,7 @@ class PupauChatUtils {
     final PupauChatController controller = Get.find<PupauChatController>();
 
     // Reset the whole chat state first
-    controller.resetChatState();
+    controller.resetChatState(clearConversationStarters: false);
 
     // Then load the conversation (it will validate and load if valid)
     await controller.loadConversation(conversationId);
@@ -219,7 +208,7 @@ class PupauChatUtils {
     );
 
     // Reset chat state
-    controller.resetChatState();
+    controller.resetChatState(clearConversationStarters: false);
 
     // Update config and refresh UI
     await controller.openChatWithConfig(anonymousConfig);
@@ -246,7 +235,7 @@ class PupauChatUtils {
     );
 
     // Reset chat state
-    controller.resetChatState();
+    controller.resetChatState(clearConversationStarters: false);
 
     // Update config and refresh UI
     await controller.openChatWithConfig(toggledConfig);
@@ -329,7 +318,12 @@ class PupauChatUtils {
   /// PupauChatUtils.setNerdStats(false);
   /// ```
   static void setNerdStats(bool show) {
+    if (!Get.isRegistered<PupauChatController>()) return;
     final PupauChatController controller = Get.find<PupauChatController>();
+    final PupauConfig? currentConfig = controller.pupauConfig;
+    if (currentConfig != null) {
+      controller.pupauConfig = currentConfig.copyWith(showNerdStats: show);
+    }
     controller.setNerdStats(show);
   }
 
@@ -348,10 +342,8 @@ class PupauChatUtils {
       throw Exception('No config found. Please open chat first.');
     }
 
-    final String resolvedAssistantId = controller.assistant.value?.id
-            .trim()
-            .isNotEmpty ==
-        true
+    final String resolvedAssistantId =
+        controller.assistant.value?.id.trim().isNotEmpty == true
         ? controller.assistant.value!.id
         : currentConfig.assistantId;
 
@@ -383,7 +375,7 @@ class PupauChatUtils {
     ApiService.notifyAuthTokenUpdated();
     controller.update();
   }
-  
+
   /// Reloads the current assistant from the API using the current config.
   /// Use when the user has changed configuration (e.g. assistantId or API settings)
   /// and you want the chat to reflect the updated assistant in real time without

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.5] - 13/07/2026
+
+### Changes
+- Added Dashboard in chat with all documents, attachments, files and todo list in the current conversation
+- Added Voice Mode to talk live with your agents
+- Implemented UI for newer tools
+
 ## [1.0.4+2] - 14/04/2026
 
 ### Changes
@@ -23,7 +30,7 @@
 - Added DrawerConfig to set a drawer or endDrawer and have access to onDrawerChanged() and onEndDrawerChanged()
 - Added `apiUrl` override support for multi-tenant deployments
 - Added `PupauConfig.copyWith(...)`
-- Added `resetChatOnOpen`parameter in PupauConfig
+- Added `resetChatOnOpen` parameter in PupauConfig
 - Added new `PupauChatUtils` methods: `loadConversation`, `startAnonymousChat`, `toggleAnonymousMode`, `exitAnonymousAndStartNewConversation`, `startNewConversation`, `setNerdStats`, `setHideInputBox`, `reloadCurrentAssistant`, `preloadAssistantsList`, `updateAuthToken`
 - Added bearer-token auth refresh flow: emits `authError` on 401 and supports host-driven token update via `PupauChatUtils.updateAuthToken(...)`
 - Improved chat performance

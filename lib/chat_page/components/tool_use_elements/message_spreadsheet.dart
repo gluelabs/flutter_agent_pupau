@@ -57,7 +57,7 @@ class MessageSpreadsheet extends StatelessWidget {
         return SpreadsheetRowCard(
           title: Strings.spreadsheetRowUpdated.tr,
           icon: Symbols.edit,
-          iconColor: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+          iconColor: MyStyles.pupauTheme(!Get.isDarkMode).primary,
           row: data.row ?? const {},
           isAnonymous: isAnonymous,
         );

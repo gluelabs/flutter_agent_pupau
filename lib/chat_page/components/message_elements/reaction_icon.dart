@@ -29,7 +29,7 @@ class ReactionIcon extends StatelessWidget {
         child: Icon(
           color: isAnonymous
               ? Colors.white
-              : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+              : MyStyles.pupauTheme(!Get.isDarkMode).primary,
           isSelected == null
               ? reaction == Reaction.like
                   ? Symbols.thumb_up
@@ -44,6 +44,8 @@ class ReactionIcon extends StatelessWidget {
                           : Symbols.thumb_down
                       : Symbols.thumb_down,
           size: isTablet ? 22 : 18,
+          opticalSize: 1,
+          grade: 150,
         ),
       ),
     );

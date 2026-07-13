@@ -10,13 +10,13 @@ class MyTheme {
       fontFamily: 'Poppins',
       // main color (app bar,tabs..etc)
       primaryColor: isLight
-          ? LightThemeColors.primaryColor
-          : DarkThemeColors.primaryColor,
+          ? LightThemeColors.primary
+          : DarkThemeColors.primary,
       // inputDecoration theme
       textSelectionTheme: TextSelectionThemeData(
         cursorColor: isLight
-            ? LightThemeColors.primaryColor
-            : DarkThemeColors.primaryColor,
+            ? LightThemeColors.primary
+            : DarkThemeColors.primary,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -33,16 +33,16 @@ class MyTheme {
       colorScheme:
           ColorScheme.fromSwatch(
             accentColor: isLight
-                ? LightThemeColors.accentColor
-                : DarkThemeColors.accentColor,
+                ? LightThemeColors.primary
+                : DarkThemeColors.primary,
             backgroundColor: isLight
                 ? LightThemeColors.backgroundColor
                 : DarkThemeColors.backgroundColor,
             brightness: isLight ? Brightness.light : Brightness.dark,
           ).copyWith(
             secondary: isLight
-                ? LightThemeColors.accentColor
-                : DarkThemeColors.accentColor,
+                ? LightThemeColors.primary
+                : DarkThemeColors.primary,
           ),
       dialogTheme: DialogThemeData(
         backgroundColor: isLight
@@ -79,13 +79,13 @@ class MyTheme {
       // progress bar theme
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: isLight
-            ? LightThemeColors.primaryColor
-            : DarkThemeColors.primaryColor,
+            ? LightThemeColors.primary
+            : DarkThemeColors.primary,
       ),
       dividerTheme: DividerThemeData(
         color: isLight
-            ? LightThemeColors.primaryColor
-            : DarkThemeColors.primaryColor,
+            ? LightThemeColors.primary
+            : DarkThemeColors.primary,
       ),
 
       // elevated button theme
@@ -115,8 +115,8 @@ class MyTheme {
         borderRadius: const BorderRadius.all(Radius.circular(16)),
         borderSide: BorderSide(
           color: isLight
-              ? LightThemeColors.primaryColor
-              : DarkThemeColors.primaryColor,
+              ? LightThemeColors.primary
+              : DarkThemeColors.primary,
           width: 1,
         ),
       );

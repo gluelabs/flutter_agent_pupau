@@ -52,11 +52,15 @@ final class MyMenuItem<T> extends ContextMenuItem<T> {
   }) : super.submenu(items: items);
 
   @override
-  Widget builder(BuildContext context, ContextMenuState<T> menuState,
-      [FocusNode? focusNode]) {
+  Widget builder(
+    BuildContext context,
+    ContextMenuState<T> menuState, [
+    FocusNode? focusNode,
+  ]) {
     TextStyle textStyle = TextStyle(
-        height: 1.0,
-        color: context.theme.textTheme.bodyMedium?.color ?? Colors.white);
+      height: 1.0,
+      color: context.theme.textTheme.bodyMedium?.color ?? Colors.white,
+    );
 
     return ConstrainedBox(
       constraints: constraints ?? const BoxConstraints.expand(height: 32.0),
@@ -78,7 +82,7 @@ final class MyMenuItem<T> extends ContextMenuItem<T> {
                     child: Icon(
                       icon,
                       size: 16.0,
-                      color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                      color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
                     ),
                   ),
                 ),
@@ -89,7 +93,8 @@ final class MyMenuItem<T> extends ContextMenuItem<T> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                        color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue),
+                      color: context.theme.textTheme.bodyMedium?.color,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8.0),
@@ -97,10 +102,12 @@ final class MyMenuItem<T> extends ContextMenuItem<T> {
                   dimension: 32.0,
                   child: Align(
                     alignment: AlignmentDirectional.centerStart,
-                    child: Icon(isSubmenuItem ? Symbols.arrow_right : null,
-                        size: 16.0),
+                    child: Icon(
+                      isSubmenuItem ? Symbols.arrow_right : null,
+                      size: 16.0,
+                    ),
                   ),
-                )
+                ),
               ],
             ),
           ),

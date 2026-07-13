@@ -32,8 +32,11 @@ class PupauAttachmentsController extends GetxController {
   RxList<String> downloadingAttachments = <String>[].obs;
   /// Attachment IDs that are currently loading note content for the note modal.
   RxSet<String> attachmentIdsLoadingNoteModal = <String>{}.obs;
-  /// Monotonic request id used to ignore stale note-content loads.
+  /// Monotonic request id used to ignore stale note-content loads (modal).
   int _noteModalLoadRequestId = 0;
+  /// Separate monotonic request id for canvas loads (independent of modal).
+  int _canvasLoadRequestId = 0;
+
   bool isAttachmentNoteModalLoading(String attachmentId) =>
       attachmentIdsLoadingNoteModal.contains(attachmentId);
 
@@ -301,6 +304,48 @@ class PupauAttachmentsController extends GetxController {
 
   void setNoteContent(String content) {
     noteContent.value = content.trim();
+    update();
+  }
+
+
+  /// Loads attachment content and sets the controller state without opening
+  /// the modal. Used by the dashboard canvas to render content inline.
+  ///
+  /// Adds [attachment.id] to [attachmentIdsLoadingNoteModal] synchronously
+  /// before the first await so that any Obx observer immediately sees the
+  /// loading state before the widget tree even builds.
+  Future<void> loadAttachmentForCanvas(Attachment? attachment) async {
+    _canvasLoadRequestId++;
+    final int requestId = _canvasLoadRequestId;
+    final String? attachmentId = attachment?.id;
+
+    noteName.value = attachment?.fileName ?? '';
+    noteContent.value = '';
+
+    // Mark as loading before the first await so Obx sees it synchronously.
+    if (attachmentId != null && attachmentId.isNotEmpty) {
+      attachmentIdsLoadingNoteModal.add(attachmentId);
+    }
+
+    if (attachment != null) {
+      try {
+        final String? content =
+            await AttachmentService.readAttachmentContent(attachment.id);
+        if (requestId != _canvasLoadRequestId) return;
+        noteContent.value = content ?? '';
+      } catch (_) {
+        if (requestId != _canvasLoadRequestId) return;
+        noteContent.value = '';
+      }
+    }
+
+    noteNameController.text = noteName.value;
+    noteContentController.text = noteContent.value;
+    openAttachmentNote.value = attachment;
+
+    if (attachmentId != null && attachmentId.isNotEmpty) {
+      attachmentIdsLoadingNoteModal.remove(attachmentId);
+    }
     update();
   }
 

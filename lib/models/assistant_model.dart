@@ -26,6 +26,15 @@ class Assistant {
   String costMessage;
   List<String> capabilities;
   AssistantApiKeyConfig? apiKeyConfig;
+  bool supportsThinking;
+  List<String>? supportedThinkingEfforts;
+  bool voiceEnabled;
+  bool liveVoiceEnabled;
+  bool avatarEnabled;
+  bool sttAvailable;
+  bool ttsAvailable;
+  List<VoiceOption> availableVoices;
+  List<String> voiceSupportedLanguages;
 
   Assistant({
     required this.id,
@@ -42,6 +51,15 @@ class Assistant {
     this.costMessage = "",
     this.capabilities = const [],
     this.apiKeyConfig,
+    this.supportsThinking = false,
+    this.supportedThinkingEfforts,
+    this.voiceEnabled = false,
+    this.liveVoiceEnabled = false,
+    this.avatarEnabled = false,
+    this.sttAvailable = false,
+    this.ttsAvailable = false,
+    this.availableVoices = const [],
+    this.voiceSupportedLanguages = const [],
   });
 
   factory Assistant.fromMap(Map<String, dynamic> json) {
@@ -68,6 +86,12 @@ class Assistant {
                     )
                   : json["assistantSettings"]?["settings"]
                         as Map<String, dynamic>,
+              conversationActions: json["assistantSettings"]
+                      ?["conversationActions"] is List
+                  ? List<dynamic>.from(
+                      json["assistantSettings"]?["conversationActions"] as List,
+                    )
+                  : null,
             )
           : null,
       kbSettings: json["assistantSettings"]?["kbSettings"] != null
@@ -97,8 +121,52 @@ class Assistant {
       apiKeyConfig: json["apiKeyConfiguration"] != null
           ? AssistantApiKeyConfig.fromJson(json["apiKeyConfiguration"])
           : null,
+      supportsThinking: json["supportsThinking"] ?? false,
+      supportedThinkingEfforts: json["supportedThinkingEfforts"] is List
+          ? List<String>.from(
+              (json["supportedThinkingEfforts"] as List)
+                  .where((x) => x != null)
+                  .map((x) => x.toString()),
+            )
+          : null,
+      voiceEnabled: json["voiceEnabled"] ?? false,
+      liveVoiceEnabled: json["liveVoiceEnabled"] ?? false,
+      avatarEnabled: json["avatarEnabled"] ?? false,
+      sttAvailable: json["sttAvailable"] ?? false,
+      ttsAvailable: json["ttsAvailable"] ?? false,
+      availableVoices: json["availableVoices"] is List
+          ? (json["availableVoices"] as List)
+                .map((e) => VoiceOption.fromJson(e as Map<String, dynamic>))
+                .toList()
+          : const [],
+      voiceSupportedLanguages: json["voiceSupportedLanguages"] is List
+          ? List<String>.from(json["voiceSupportedLanguages"] as List)
+          : const [],
     );
   }
+}
+
+class VoiceOption {
+  final String id;
+  final String label;
+  final String gender;
+  final List<String> languages;
+
+  const VoiceOption({
+    required this.id,
+    required this.label,
+    required this.gender,
+    required this.languages,
+  });
+
+  factory VoiceOption.fromJson(Map<String, dynamic> json) => VoiceOption(
+        id: getString(json["id"]),
+        label: getString(json["label"]),
+        gender: getString(json["gender"]),
+        languages: json["languages"] is List
+            ? List<String>.from(json["languages"] as List)
+            : const [],
+      );
 }
 
 class UsageSettings {
@@ -109,6 +177,9 @@ class UsageSettings {
   bool actionBarAlwaysVisible;
   bool canAnonymous;
   ChatVisibility chatVisibility;
+  bool thinkingEnabled;
+  String? thinkingEffort;
+  List<String> chatEngagementPrompts;
 
   UsageSettings({
     required this.canAttach,
@@ -118,9 +189,15 @@ class UsageSettings {
     required this.actionBarAlwaysVisible,
     required this.canAnonymous,
     required this.chatVisibility,
+    required this.thinkingEnabled,
+    required this.thinkingEffort,
+    required this.chatEngagementPrompts,
   });
 
-  factory UsageSettings.fromMap(Map<String, dynamic> json) => UsageSettings(
+  factory UsageSettings.fromMap(
+    Map<String, dynamic> json, {
+    List<dynamic>? conversationActions,
+  }) => UsageSettings(
     canAttach:
         json[Settings.settingAttachmentId]?[Settings.settingEnableName] ??
         false,
@@ -145,6 +222,20 @@ class UsageSettings {
               .settingChatVisibilityName] ??
           "",
     ),
+    thinkingEnabled:
+        json[Settings.assistantThinkingEnabledId]?[Settings
+            .settingEnableName] ??
+        false,
+    thinkingEffort:
+        json[Settings.assistantThinkingEffortId]?[Settings
+            .assistantThinkingEffortName],
+    chatEngagementPrompts: (conversationActions ?? const <dynamic>[])
+        .whereType<Map<String, dynamic>>()
+        .map((Map<String, dynamic> action) {
+          return getString(action["userMessage"]);
+        })
+        .where((String message) => message.isNotEmpty)
+        .toList(growable: false),
   );
 
   static ChatSharing getChatSharingEnum(String chatSharing) {

@@ -6,9 +6,9 @@ import 'package:flutter_agent_pupau/services/file_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/attachments_controller.dart';
-import 'package:flutter_agent_pupau/chat_page/components/shared/close_icon.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/custom_button.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/custom_input_field.dart';
+import 'package:flutter_agent_pupau/chat_page/components/shared/modal_top_bar_title.dart';
 import 'package:flutter_agent_pupau/chat_page/utils/modal_utils.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
@@ -16,40 +16,16 @@ void showAttachmentNoteModal({bool isEditable = true}) {
   WoltModalSheetPage page(BuildContext modalSheetContext) {
     bool isTablet = DeviceService.isTablet;
     PupauAttachmentsController controller = Get.find();
+    bool isEditMode = controller.openAttachmentNote.value != null;
+    final String title = isEditable
+        ? (isEditMode ? Strings.editNote.tr : Strings.createNote.tr)
+        : (controller.openAttachmentNote.value?.fileName ?? "");
     return WoltModalSheetPage(
         surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
         backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
         hasTopBarLayer: true,
-        topBarTitle: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const SizedBox(width: 48),
-            Expanded(
-              child: Obx(() {
-                bool isEditing = controller.openAttachmentNote.value != null;
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                      isEditable
-                          ? isEditing
-                              ? Strings.editNote.tr
-                              : Strings.createNote.tr
-                          : controller.openAttachmentNote.value?.fileName ?? "",
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                          fontSize: isTablet ? 18 : 16,
-                          fontWeight: FontWeight.w600,
-                          color: MyStyles.pupauTheme(!Get.isDarkMode)
-                              .darkBlue)),
-                );
-              }),
-            ),
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: CloseIcon(),
-            )
-          ],
+        topBarTitle: ModalTopBarTitle(
+          title: title,
         ),
         isTopBarLayerAlwaysVisible: true,
         child: Padding(
@@ -89,7 +65,7 @@ void showAttachmentNoteModal({bool isEditable = true}) {
                                 hasBorders: true,
                                 icon: Icon(Symbols.download,
                                     color: MyStyles.pupauTheme(!Get.isDarkMode)
-                                        .accent),
+                                        .primary),
                               ),
                             ),
                             IntrinsicWidth(
@@ -104,7 +80,7 @@ void showAttachmentNoteModal({bool isEditable = true}) {
                                 hasBorders: true,
                                 icon: Icon(Symbols.download,
                                     color: MyStyles.pupauTheme(!Get.isDarkMode)
-                                        .accent),
+                                        .primary),
                               ),
                             ),
                             IntrinsicWidth(
@@ -119,7 +95,7 @@ void showAttachmentNoteModal({bool isEditable = true}) {
                                 hasBorders: true,
                                 icon: Icon(Symbols.download,
                                     color: MyStyles.pupauTheme(!Get.isDarkMode)
-                                        .accent),
+                                        .primary),
                               ),
                             ),
                           ],

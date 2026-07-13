@@ -20,10 +20,10 @@ class ContextInfoContainer extends GetView<PupauChatController> {
 
   @override
   Widget build(BuildContext context) {
-    bool isTablet = DeviceService.isTablet;
+    final bool isTablet = DeviceService.isTablet;
     return Obx(() {
-      bool showNerdStats = controller.showNerdStats.value;
-      bool isAnonymous = controller.isAnonymous;
+      final bool showNerdStats = controller.showNerdStats.value;
+      final bool isAnonymous = controller.isAnonymous;
       return showNerdStats
           ? Padding(
               padding: const EdgeInsets.only(bottom: 4, top: 14),
@@ -47,7 +47,8 @@ class ContextInfoContainer extends GetView<PupauChatController> {
                           size: isTablet ? 26 : 24,
                           color: isAnonymous
                               ? AnonymousThemeColors.assistantText
-                              : null),
+                              : MyStyles.pupauTheme(!Get.isDarkMode)
+                              .primary),
                       ContextInfoItem(
                           label: Strings.context.tr,
                           info:

@@ -7,17 +7,18 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:get/get.dart';
 
 class BasicAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const BasicAppBar(
-      {super.key,
-      required this.title,
-      this.hasBackground = false,
-      this.isArrowWhite = false,
-      this.icon,
-      this.iconColor,
-      this.onPressed,
-      this.onBack,
-      this.onMenuPressed,
-      this.tooltip});
+  const BasicAppBar({
+    super.key,
+    required this.title,
+    this.hasBackground = false,
+    this.isArrowWhite = false,
+    this.icon,
+    this.iconColor,
+    this.onPressed,
+    this.onBack,
+    this.onMenuPressed,
+    this.tooltip,
+  });
 
   final String title;
   final bool hasBackground;
@@ -28,7 +29,7 @@ class BasicAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Function()? onBack;
   final Function()? onMenuPressed;
   final String? tooltip;
-  
+
   @override
   PreferredSizeWidget build(BuildContext context) {
     Theme.of(context);
@@ -43,54 +44,64 @@ class BasicAppBar extends StatelessWidget implements PreferredSizeWidget {
           ? MyStyles.pupauTheme(!Get.isDarkMode).white
           : Colors.transparent,
       title: Padding(
-          padding: hasBackground
-              ? EdgeInsets.zero
-              : EdgeInsets.only(
-                  top: 12, right: isTablet ? 6 : 0, left: isTablet ? 6 : 0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                  onPressed: onBack ?? () => Navigator.of(context).pop(),
-                  icon: const Icon(Symbols.arrow_back_ios),
-                  tooltip: Strings.back.tr,
-                  color: isArrowWhite
-                      ? Colors.white
-                      : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
-                  iconSize: isTablet ? 28 : 24),
-              if (title != "")
-                Expanded(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(title,
-                        style: StyleService.appbarTextStyle(Get.isDarkMode)),
+        padding: hasBackground
+            ? EdgeInsets.zero
+            : EdgeInsets.only(
+                top: 12,
+                right: isTablet ? 6 : 0,
+                left: isTablet ? 6 : 0,
+              ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IconButton(
+              onPressed: onBack ?? () => Navigator.of(context).pop(),
+              icon: const Icon(Symbols.arrow_back_ios),
+              tooltip: Strings.back.tr,
+              color: isArrowWhite
+                  ? Colors.white
+                  : MyStyles.pupauTheme(!Get.isDarkMode).primary,
+              iconSize: isTablet ? 28 : 24,
+            ),
+            if (title != "")
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    title,
+                    style: StyleService.appbarTextStyle(Get.isDarkMode),
                   ),
                 ),
-              icon == null || onPressed == null
-                  ? const SizedBox(width: 48)
-                  : IconButton(
-                      onPressed: onPressed,
-                      tooltip: tooltip,
-                      icon: Icon(icon),
-                      color: iconColor ?? (hasBackground ? Colors.white : null),
-                      iconSize: isTablet ? 28 : 24),
-            ],
-          )),
+              ),
+            icon == null || onPressed == null
+                ? const SizedBox(width: 48)
+                : IconButton(
+                    onPressed: onPressed,
+                    tooltip: tooltip,
+                    icon: Icon(icon),
+                    color: iconColor ?? (hasBackground ? Colors.white : null),
+                    iconSize: isTablet ? 28 : 24,
+                  ),
+          ],
+        ),
+      ),
       actions: [
         if (onMenuPressed != null)
           IconButton(
             onPressed: onMenuPressed,
             icon: const Icon(Symbols.menu),
             tooltip: Strings.openDrawer.tr,
-            color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+            color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
             iconSize: isTablet ? 26 : 24,
           )
         else
           const SizedBox.shrink(),
       ],
       iconTheme: IconThemeData(
-          color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
-          size: isTablet ? 32 : null),
+        color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
+        size: isTablet ? 32 : null,
+        weight: 600,
+      ),
     );
   }
 

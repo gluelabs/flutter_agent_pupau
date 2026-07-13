@@ -47,10 +47,10 @@ class SourceInfo extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: isTablet ? 15 : 13,
-                      color: MyStyles.pupauTheme(!Get.isDarkMode).blue,
+                      color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
                       decoration: TextDecoration.underline,
                       decorationColor:
-                          MyStyles.pupauTheme(!Get.isDarkMode).blue,
+                          MyStyles.pupauTheme(!Get.isDarkMode).primary,
                     )),
               )),
               IconButton(
@@ -62,7 +62,7 @@ class SourceInfo extends StatelessWidget {
                   },
                   icon: Icon(Symbols.content_copy,
                       size: isTablet ? 26 : 24,
-                      color: MyStyles.pupauTheme(!Get.isDarkMode).blue)),
+                      color: MyStyles.pupauTheme(!Get.isDarkMode).primary)),
             ],
           ),
           Transform.translate(

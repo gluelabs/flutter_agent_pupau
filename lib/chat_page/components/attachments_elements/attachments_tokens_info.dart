@@ -7,53 +7,64 @@ import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/attachments_controller.dart';
 
 class AttachmentsTokensInfo extends GetView<PupauAttachmentsController> {
-  const AttachmentsTokensInfo({
-    super.key,
-  });
+  const AttachmentsTokensInfo({super.key});
 
   @override
   Widget build(BuildContext context) {
     bool isTablet = DeviceService.isTablet;
     return Obx(() {
       int tokensUsed = AttachmentService.getTokensUsed(controller.attachments);
-      bool hasAttachments = controller.attachments.isNotEmpty ||
+      bool hasAttachments =
+          controller.attachments.isNotEmpty ||
           controller.sendingAttachments.value > 0;
       return hasAttachments
           ? Column(
               children: [
                 Padding(
                   padding: const EdgeInsets.only(
-                      top: 10, left: 14, right: 14, bottom: 4),
+                    top: 10,
+                    left: 14,
+                    right: 14,
+                    bottom: 4,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         Strings.totalResources.tr,
                         style: TextStyle(
-                            fontSize: isTablet ? 16 : 14,
-                            fontWeight: FontWeight.w600,
-                            color:
-                                MyStyles.pupauTheme(!Get.isDarkMode).darkBlue),
+                          fontSize: isTablet ? 16 : 14,
+                          fontWeight: FontWeight.w600,
+                          color: MyStyles.getTextTheme(
+                            isLightTheme: !Get.isDarkMode,
+                          ).bodyMedium?.color,
+                        ),
                       ),
                       Text(
                         "$tokensUsed tokens",
                         style: TextStyle(
-                            fontSize: isTablet ? 16 : 14,
-                            fontWeight: FontWeight.w600,
-                            color:
-                                MyStyles.pupauTheme(!Get.isDarkMode).darkBlue),
-                      )
+                          fontSize: isTablet ? 16 : 14,
+                          fontWeight: FontWeight.w600,
+                          color: MyStyles.getTextTheme(
+                            isLightTheme: !Get.isDarkMode,
+                          ).bodyMedium?.color,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 Padding(
-                  padding:
-                      const EdgeInsets.only(left: 14, right: 14, bottom: 20),
+                  padding: const EdgeInsets.only(
+                    left: 14,
+                    right: 14,
+                    bottom: 20,
+                  ),
                   child: Text(
                     Strings.totalResourcesFlavor.tr,
                     style: TextStyle(
-                        fontSize: isTablet ? 15 : 13,
-                        fontWeight: FontWeight.w300),
+                      fontSize: isTablet ? 15 : 13,
+                      fontWeight: FontWeight.w300,
+                    ),
                   ),
                 ),
               ],
@@ -63,7 +74,9 @@ class AttachmentsTokensInfo extends GetView<PupauAttachmentsController> {
               child: Text(
                 Strings.contextResourcesInfo.tr,
                 style: TextStyle(
-                    fontSize: isTablet ? 15 : 13, fontWeight: FontWeight.w300),
+                  fontSize: isTablet ? 15 : 13,
+                  fontWeight: FontWeight.w300,
+                ),
               ),
             );
     });

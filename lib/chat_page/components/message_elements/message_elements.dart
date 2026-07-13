@@ -6,6 +6,8 @@ import 'package:flutter_agent_pupau/chat_page/components/attachments_elements/at
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/message_action_bar.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/message_bottom_elements.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/message_bubble.dart';
+import 'package:flutter_agent_pupau/chat_page/components/message_elements/skill_event_bubble.dart';
+import 'package:flutter_agent_pupau/chat_page/components/message_elements/skills_loaded_badge.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/related_searches_list.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/search_external_button.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/urls_list.dart';
@@ -18,6 +20,7 @@ import 'package:flutter_agent_pupau/chat_page/controllers/assistants_controller.
 import 'package:flutter_agent_pupau/models/assistant_model.dart';
 import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
 import 'package:flutter_agent_pupau/models/tool_use_message_model.dart';
+import 'package:flutter_agent_pupau/services/tag_service.dart';
 
 class MessageElements extends GetView<PupauChatController> {
   const MessageElements({
@@ -25,15 +28,21 @@ class MessageElements extends GetView<PupauChatController> {
     required this.message,
     this.urls = const [],
     this.isReadOnly = false,
+    this.isConversationLatestMessageOverride,
   });
 
   final PupauMessage message;
   final List<UrlInfo> urls;
   final bool isReadOnly;
 
+  /// When non-null, used for related-search / "last message" UI instead of
+  /// comparing [message] to [PupauChatController.messages.firstOrNull].
+  final bool? isConversationLatestMessageOverride;
+
   @override
   Widget build(BuildContext context) {
-    bool isAssistant = message.isMessageFromAssistant;
+    Theme.of(context);
+    final bool isAssistant = message.isMessageFromAssistant;
     Assistant? taggedAssistant = Get.find<PupauAssistantsController>()
         .assistants
         .firstWhereOrNull(
@@ -46,29 +55,41 @@ class MessageElements extends GetView<PupauChatController> {
         chatAssistant?.type == taggedAssistant?.type) {
       taggedAssistant = null;
     }
-    bool isToolUse = message.toolUseMessage != null;
-    bool isUiTool = message.uiToolMessage != null;
-    List<OrganicInfo> organicInfo = message.organicInfo;
-    List<WebSearchImage> images = message.images;
-    List<WebSearchNews> news = message.news;
-    GraphInfo? graphInfo = message.graphInfo;
-    List<String> relatedSearches = message.relatedSearches;
-    bool showAttachmentBox =
+    final bool isToolUse = message.toolUseMessage != null;
+    final bool isUiTool = message.uiToolMessage != null;
+    final List<OrganicInfo> organicInfo = message.organicInfo;
+    final List<WebSearchImage> images = message.images;
+    final List<WebSearchNews> news = message.news;
+    final GraphInfo? graphInfo = message.graphInfo;
+    final List<String> relatedSearches = message.relatedSearches;
+    final bool showAttachmentBox =
         message.attachments
             .where((attachment) => attachment.link == "")
             .isNotEmpty &&
         !isAssistant;
-    bool showBottomElements = isAssistant && !isUiTool && !isToolUse && message.answer.trim().isNotEmpty;
-    ToolUseMessage? toolUseMessage = message.toolUseMessage;
+    final String answer =
+        isAssistant &&
+            !isToolUse &&
+            !isUiTool &&
+            TagService.hasThinkingTag(message.answer)
+        ? TagService.stripThinkingForMarkdown(message.answer)
+        : message.answer;
+    final bool showBottomElements =
+        isAssistant &&
+        !isUiTool &&
+        !isToolUse &&
+        answer.trim().isNotEmpty &&
+        message.skillEventDetail == null;
+    final ToolUseMessage? toolUseMessage = message.toolUseMessage;
     toolUseMessage?.messageId = message.id;
 
     // Only wrap reactive parts in Obx to minimize rebuilds
     return Obx(() {
-      bool isAnonymous = controller.isAnonymous;
-      bool isLastMessage =
-          message ==
-          controller.messages.firstOrNull; //messages list is reversed
-      bool isActionBarAlwaysVisible =
+      final bool isAnonymous = controller.isAnonymous;
+      final bool isLastMessage =
+          isConversationLatestMessageOverride ??
+          (message == controller.messages.firstOrNull);
+      final bool isActionBarAlwaysVisible =
           controller.isActionBarAlwaysVisible.value && !isReadOnly;
 
       return Container(
@@ -91,12 +112,20 @@ class MessageElements extends GetView<PupauChatController> {
               isAnonymous: isAnonymous,
               isCanceled: message.isCancelled,
             ),
+            if (!isToolUse &&
+                !isUiTool &&
+                message.skillEventDetail == null &&
+                isAssistant &&
+                message.skillsLoaded.isNotEmpty)
+              SkillsLoadedBadge(skills: message.skillsLoaded),
             if (!isAssistant && message.isAudioInput)
               ChatAudioLabel(isAnonymous: isAnonymous),
             isToolUse
                 ? ToolUseBubble(message: message.toolUseMessage!)
                 : isUiTool
                 ? UiToolBubble(message: message.uiToolMessage!)
+                : message.skillEventDetail != null
+                ? SkillEventBubble(detail: message.skillEventDetail!)
                 : MessageBubble(
                     assistant: taggedAssistant ?? chatAssistant,
                     message: message,
@@ -104,7 +133,6 @@ class MessageElements extends GetView<PupauChatController> {
                   ),
             if (showBottomElements &&
                 isActionBarAlwaysVisible &&
-                !message.isInitialMessage &&
                 message.status == MessageStatus.received)
               MessageActionBar(message: message),
             if (showBottomElements) MessageBottomElements(message: message),

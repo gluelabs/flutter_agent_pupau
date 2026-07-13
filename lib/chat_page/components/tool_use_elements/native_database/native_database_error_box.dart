@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/native_database/native_database_shared_widgets.dart';
+import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_native_database_data.dart';
 import 'package:flutter_agent_pupau/services/style_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
@@ -10,12 +12,14 @@ class NativeDatabaseErrorBox extends StatelessWidget {
     super.key,
     required this.message,
     required this.isAnonymous,
+    required this.scope,
     this.databaseName,
   });
 
   final String message;
   final bool isAnonymous;
   final String? databaseName;
+  final NativeDbScope scope;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +54,8 @@ class NativeDatabaseErrorBox extends StatelessWidget {
                   style: StyleService.toolNormalTextStyle(isDark),
                 ),
               ),
+              const SizedBox(width: 10),
+              NativeDatabaseScopeBadge(scope: scope, isAnonymous: isAnonymous),
             ],
           ),
         ],

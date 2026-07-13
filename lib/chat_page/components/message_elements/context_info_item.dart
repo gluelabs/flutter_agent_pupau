@@ -16,8 +16,8 @@ class ContextInfoItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isTablet = DeviceService.isTablet;
-    double fontSize = isTablet ? 16 : 14;
+    final bool isTablet = DeviceService.isTablet;
+    final double fontSize = isTablet ? 16 : 14;
     return Wrap(
       children: [
         Text("$label: ",

@@ -16,11 +16,36 @@ enum NativeDbToolResultType {
   raw,
 }
 
+enum NativeDbScope {
+  user,
+  company,
+  conversation,
+}
+
+extension NativeDbScopeParsing on NativeDbScope {
+  static NativeDbScope fromApiValue(String? value) {
+    final String normalized = (value ?? '').trim().toUpperCase();
+    switch (normalized) {
+      case 'USER':
+        return NativeDbScope.user;
+      case 'COMPANY':
+        return NativeDbScope.company;
+      case 'CONVERSATION':
+        return NativeDbScope.conversation;
+      default:
+        return NativeDbScope.conversation;
+    }
+  }
+}
+
 class ToolUseNativeDatabaseData {
   final String toolName;
   final Map<String, dynamic> toolArgs;
 
   final NativeDbToolResultType resultType;
+
+  final NativeDbScope scope;
+  final int? scopeId;
 
   final String? errorMessage;
 
@@ -37,6 +62,8 @@ class ToolUseNativeDatabaseData {
     required this.toolName,
     required this.toolArgs,
     required this.resultType,
+    this.scope = NativeDbScope.conversation,
+    this.scopeId,
     this.errorMessage,
     this.databases = const [],
     this.searchResult,
@@ -57,6 +84,12 @@ class ToolUseNativeDatabaseData {
         typeDetails?['toolArgs'] is Map ? Map<String, dynamic>.from(typeDetails?['toolArgs'] as Map) : const {};
 
     final dynamic decoded = _extractDecodedResult(message);
+    final NativeDbScope scope = NativeDbScopeParsing.fromApiValue(
+      (message['scope'] ?? (decoded is Map ? decoded['scope'] : null))?.toString(),
+    );
+    final int? scopeId = _tryParseScopeId(
+      message['scopeId'] ?? (decoded is Map ? decoded['scopeId'] : null),
+    );
 
     // Error: `{ "error": "..." }`
     if (decoded is Map && decoded['error'] != null) {
@@ -64,6 +97,8 @@ class ToolUseNativeDatabaseData {
         toolName: toolName,
         toolArgs: toolArgs,
         resultType: NativeDbToolResultType.error,
+        scope: scope,
+        scopeId: scopeId,
         errorMessage: getString(decoded['error']).trim().isEmpty ? null : getString(decoded['error']),
         raw: decoded,
       );
@@ -88,6 +123,8 @@ class ToolUseNativeDatabaseData {
             toolName: toolName,
             toolArgs: toolArgs,
             resultType: NativeDbToolResultType.dbList,
+            scope: scope,
+            scopeId: scopeId,
             databases: parsed,
             raw: decoded,
           );
@@ -96,6 +133,8 @@ class ToolUseNativeDatabaseData {
           toolName: toolName,
           toolArgs: toolArgs,
           resultType: NativeDbToolResultType.raw,
+          scope: scope,
+          scopeId: scopeId,
           raw: decoded,
         );
 
@@ -110,6 +149,8 @@ class ToolUseNativeDatabaseData {
             toolName: toolName,
             toolArgs: toolArgs,
             resultType: NativeDbToolResultType.search,
+            scope: scope,
+            scopeId: scopeId,
             searchResult: search,
             raw: decoded,
           );
@@ -118,6 +159,8 @@ class ToolUseNativeDatabaseData {
           toolName: toolName,
           toolArgs: toolArgs,
           resultType: NativeDbToolResultType.raw,
+          scope: scope,
+          scopeId: scopeId,
           raw: decoded,
         );
 
@@ -131,6 +174,8 @@ class ToolUseNativeDatabaseData {
               toolName: toolName,
               toolArgs: toolArgs,
               resultType: NativeDbToolResultType.bulkInsert,
+              scope: scope,
+              scopeId: scopeId,
               bulkInsertResult: NativeDbBulkInsertResult.fromJson(
                 decodedMap,
               ),
@@ -143,6 +188,8 @@ class ToolUseNativeDatabaseData {
             resultType: toolName.trim() == 'native_db_bulk_insert'
                 ? NativeDbToolResultType.raw
                 : NativeDbToolResultType.rowCreated,
+            scope: scope,
+            scopeId: scopeId,
             row: decodedMap,
             raw: decodedMap,
           );
@@ -151,6 +198,8 @@ class ToolUseNativeDatabaseData {
           toolName: toolName,
           toolArgs: toolArgs,
           resultType: NativeDbToolResultType.raw,
+          scope: scope,
+          scopeId: scopeId,
           raw: decoded,
         );
 
@@ -160,6 +209,8 @@ class ToolUseNativeDatabaseData {
             toolName: toolName,
             toolArgs: toolArgs,
             resultType: NativeDbToolResultType.rowUpdated,
+            scope: scope,
+            scopeId: scopeId,
             row: Map<String, dynamic>.from(decoded),
             raw: decoded,
           );
@@ -168,6 +219,8 @@ class ToolUseNativeDatabaseData {
           toolName: toolName,
           toolArgs: toolArgs,
           resultType: NativeDbToolResultType.raw,
+          scope: scope,
+          scopeId: scopeId,
           raw: decoded,
         );
 
@@ -177,6 +230,8 @@ class ToolUseNativeDatabaseData {
             toolName: toolName,
             toolArgs: toolArgs,
             resultType: NativeDbToolResultType.rowDeleted,
+            scope: scope,
+            scopeId: scopeId,
             message: getString(decoded['message']).trim().isEmpty ? null : getString(decoded['message']),
             row: decoded.containsKey('id') ? Map<String, dynamic>.from(decoded) : null,
             raw: decoded,
@@ -186,6 +241,8 @@ class ToolUseNativeDatabaseData {
           toolName: toolName,
           toolArgs: toolArgs,
           resultType: NativeDbToolResultType.raw,
+          scope: scope,
+          scopeId: scopeId,
           raw: decoded,
         );
 
@@ -202,6 +259,8 @@ class ToolUseNativeDatabaseData {
             toolName: toolName,
             toolArgs: toolArgs,
             resultType: NativeDbToolResultType.dbCreated,
+            scope: scope,
+            scopeId: scopeId,
             createdDatabase: created,
             raw: decoded,
           );
@@ -210,6 +269,8 @@ class ToolUseNativeDatabaseData {
           toolName: toolName,
           toolArgs: toolArgs,
           resultType: NativeDbToolResultType.raw,
+          scope: scope,
+          scopeId: scopeId,
           raw: decoded,
         );
 
@@ -219,6 +280,8 @@ class ToolUseNativeDatabaseData {
             toolName: toolName,
             toolArgs: toolArgs,
             resultType: NativeDbToolResultType.columnAdded,
+            scope: scope,
+            scopeId: scopeId,
             addedColumn: NativeDbColumn.fromJson(Map<String, dynamic>.from(decoded)),
             raw: decoded,
           );
@@ -227,6 +290,8 @@ class ToolUseNativeDatabaseData {
           toolName: toolName,
           toolArgs: toolArgs,
           resultType: NativeDbToolResultType.raw,
+          scope: scope,
+          scopeId: scopeId,
           raw: decoded,
         );
 
@@ -235,6 +300,8 @@ class ToolUseNativeDatabaseData {
           toolName: toolName,
           toolArgs: toolArgs,
           resultType: NativeDbToolResultType.raw,
+          scope: scope,
+          scopeId: scopeId,
           raw: decoded,
         );
     }
@@ -276,6 +343,13 @@ class ToolUseNativeDatabaseData {
     final bool hasFailed = json.containsKey('failed');
     final dynamic rows = json['rows'];
     return hasInserted && hasFailed && rows is List;
+  }
+
+  static int? _tryParseScopeId(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    final int? parsed = int.tryParse(value.toString());
+    return parsed;
   }
 }
 

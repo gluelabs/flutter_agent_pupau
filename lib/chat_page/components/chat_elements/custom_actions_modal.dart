@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/custom_action_card.dart';
-import 'package:flutter_agent_pupau/chat_page/components/shared/close_icon.dart';
+import 'package:flutter_agent_pupau/chat_page/components/shared/modal_top_bar_title.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/chat_page/utils/modal_utils.dart';
 import 'package:flutter_agent_pupau/models/custom_action_model.dart';
@@ -15,82 +15,63 @@ void showCustomActionsModal(List<CustomAction> customActions) {
     bool isTablet = DeviceService.isTablet;
     PupauChatController controller = Get.find();
     return WoltModalSheetPage(
-        surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
-        backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
-        hasTopBarLayer: true,
-        topBarTitle: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
+      backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
+      hasTopBarLayer: true,
+      topBarTitle: ModalTopBarTitle(title: Strings.customActions.tr),
+      isTopBarLayerAlwaysVisible: true,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Column(
           children: [
-            const SizedBox(width: 48),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  Strings.customActions.tr,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      fontSize: isTablet ? 18 : 16,
-                      fontWeight: FontWeight.w600,
-                      color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue),
-                ),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: CloseIcon(),
-            )
-          ],
-        ),
-        isTopBarLayerAlwaysVisible: true,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 12),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-                child: Obx(() {
-                  bool canSendPrompt = !controller.stopIsActive();
-                  return Column(
-                    children: [
-                      if (!canSendPrompt)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 8, horizontal: 12),
-                          child: Text(
-                            Strings.customActionsDisabled.tr,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                color: MyStyles.pupauTheme(!Get.isDarkMode)
-                                    .darkBlue,
-                                fontSize: isTablet ? 16 : 14,
-                                fontWeight: FontWeight.w500),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: Obx(() {
+                bool canSendPrompt = !controller.stopIsActive();
+                return Column(
+                  children: [
+                    if (!canSendPrompt)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 12,
+                        ),
+                        child: Text(
+                          Strings.customActionsDisabled.tr,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: MyStyles.getTextTheme(
+                              isLightTheme: !Get.isDarkMode,
+                            ).bodyMedium?.color,
+                            fontSize: isTablet ? 16 : 14,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                      ListView.builder(
-                        itemCount: customActions.length,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemBuilder: (context, index) => CustomActionCard(
-                            customAction: customActions[index]),
                       ),
-                    ],
-                  );
-                }),
-              )
-            ],
-          ),
-        ));
+                    ListView.builder(
+                      itemCount: customActions.length,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemBuilder: (context, index) =>
+                          CustomActionCard(customAction: customActions[index]),
+                    ),
+                  ],
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   BuildContext? safeContext = getSafeModalContext();
   if (safeContext == null) return;
-  
+
   WoltModalSheet.show(
-      context: safeContext,
-      pageListBuilder: (modalSheetContext) {
-        return [
-          page(modalSheetContext),
-        ];
-      });
+    context: safeContext,
+    pageListBuilder: (modalSheetContext) {
+      return [page(modalSheetContext)];
+    },
+  );
 }

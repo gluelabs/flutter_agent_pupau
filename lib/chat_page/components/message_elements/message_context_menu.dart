@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
+import 'package:flutter_agent_pupau/chat_page/utils/message_grouping_utils.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
 import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -29,6 +30,16 @@ ContextMenu getContextMenu(
   final bool hasTrimmingContent = isFromAssistant &&
       (_hasTrimmingContent(message?.attachmentTrimming) ||
           _hasTrimmingContent(message?.emergencyTrimming));
+  final bool hasAnyMemories = (message?.alwaysMemories.isNotEmpty ?? false) ||
+      (message?.memoryReferences.isNotEmpty ?? false);
+
+  final bool showGroupExpandToggle = message != null &&
+      messageGroupHasExpandCollapse(message, controller.messages);
+  if (showGroupExpandToggle) {
+    controller.messageGroupExpandEpoch.value;
+  }
+  final bool groupExpanded = showGroupExpandToggle &&
+      controller.isMessageGroupExpanded(message.groupId);
 
   final List<ContextMenuEntry> messageMenuEntries = <ContextMenuEntry>[
     if (isFromAssistant)
@@ -68,6 +79,18 @@ ContextMenu getContextMenu(
         label: Strings.attachmentTrimmingTitle.tr,
         icon: Symbols.warning,
         value: 7,
+      ),
+    if (isFromAssistant && hasAnyMemories)
+      MyMenuItem(
+        label: Strings.memoriesUsed.tr,
+        icon: Symbols.psychology,
+        value: 9,
+      ),
+    if (showGroupExpandToggle)
+      MyMenuItem(
+        label: groupExpanded ? Strings.collapse.tr : Strings.expand.tr,
+        icon: groupExpanded ? Symbols.expand_less : Symbols.expand_more,
+        value: 10,
       ),
     if (isFromAssistant)
       MyMenuItem(

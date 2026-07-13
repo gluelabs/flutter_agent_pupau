@@ -51,7 +51,7 @@ class ModalOption extends StatelessWidget {
                       : 50,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(100),
-                color: MyStyles.pupauTheme(!Get.isDarkMode).blue,
+                color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
               ),
               child: Icon(
                 icon,
@@ -89,7 +89,7 @@ class ModalOption extends StatelessWidget {
                 padding: const EdgeInsets.only(right: 12),
                 child: Icon(Symbols.check,
                     size: isTablet ? 32 : 29,
-                    color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue),
+                    color: MyStyles.pupauTheme(!Get.isDarkMode).primary),
               )
           ],
         ),

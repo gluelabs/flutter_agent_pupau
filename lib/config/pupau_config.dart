@@ -252,6 +252,7 @@ class PupauConfig {
     List<String>? conversationStarters,
     AppBarConfig? appBarConfig,
     DrawerConfig? drawerConfig,
+    bool? resetChatOnOpen,
     String? initialWelcomeMessage,
   }) {
     if (apiKey != null) {
@@ -273,6 +274,7 @@ class PupauConfig {
         conversationStarters: conversationStarters ?? this.conversationStarters,
         appBarConfig: appBarConfig ?? this.appBarConfig,
         drawerConfig: drawerConfig ?? this.drawerConfig,
+        resetChatOnOpen: resetChatOnOpen ?? this.resetChatOnOpen,
         initialWelcomeMessage: initialWelcomeMessage ?? this.initialWelcomeMessage,
       );
     } else if (bearerToken != null) {
@@ -296,6 +298,7 @@ class PupauConfig {
         conversationStarters: conversationStarters ?? this.conversationStarters,
         appBarConfig: appBarConfig ?? this.appBarConfig,
         drawerConfig: drawerConfig ?? this.drawerConfig,
+        resetChatOnOpen: resetChatOnOpen ?? this.resetChatOnOpen,
         initialWelcomeMessage: initialWelcomeMessage ?? this.initialWelcomeMessage,
       );
     } else {

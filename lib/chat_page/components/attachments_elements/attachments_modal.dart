@@ -11,6 +11,7 @@ import 'package:flutter_agent_pupau/chat_page/components/attachments_elements/at
 import 'package:flutter_agent_pupau/chat_page/components/attachments_elements/attachments_search_bar.dart';
 import 'package:flutter_agent_pupau/chat_page/components/attachments_elements/attachments_tokens_info.dart';
 import 'package:flutter_agent_pupau/chat_page/components/attachments_elements/toggle_attachments_switch.dart';
+import 'package:flutter_agent_pupau/chat_page/components/shared/modal_top_bar_title.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/attachments_controller.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/custom_info_box.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/modal_option.dart';
@@ -22,54 +23,36 @@ import '../shared/close_icon.dart';
 
 void showAttachmentsModal() {
   WoltModalSheetPage page(BuildContext modalSheetContext) {
-    bool isTablet = DeviceService.isTablet;
-    PupauAttachmentsController controller = Get.find();
+    Theme.of(modalSheetContext);
+    final bool isTablet = DeviceService.isTablet;
+    final PupauAttachmentsController controller = Get.find();
     return WoltModalSheetPage(
       surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
       backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
       hasTopBarLayer: true,
-      topBarTitle: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const SizedBox(width: 48),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 12),
-                      child: Text(
-                        Strings.contextResources.tr,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: isTablet ? 18 : 16,
-                          fontWeight: FontWeight.w600,
-                          color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
-                        ),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Symbols.info,
-                      color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
-                      size: isTablet ? 22 : 20,
-                    ),
-                    tooltip: Strings.info.tr,
-                    onPressed: () => showInfoBox(
-                      Strings.contextResources.tr,
-                      Strings.contextResourcesInfo.tr,
-                    ),
-                  ),
-                ],
+      topBarTitle: ModalTopBarTitle(
+        title: Strings.contextResources.tr,
+        trailing: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: Icon(
+                  Symbols.info,
+                  color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
+                  size: isTablet ? 32 : 24,
+                ),
+                tooltip: Strings.info.tr,
+                onPressed: () => showInfoBox(
+                  Strings.contextResources.tr,
+                  Strings.contextResourcesInfo.tr,
+                ),
               ),
-            ),
+              const CloseIcon(),
+            ],
           ),
-          const Padding(padding: EdgeInsets.only(top: 8), child: CloseIcon()),
-        ],
+        ),
       ),
       isTopBarLayerAlwaysVisible: true,
       child: Obx(() {

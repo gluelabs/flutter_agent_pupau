@@ -38,9 +38,11 @@ class MessageCopyIcon extends GetView<PupauChatController> {
               child: Icon(
                 color: isAnonymous
                     ? Colors.white
-                    : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                    : MyStyles.pupauTheme(!Get.isDarkMode).primary,
                 Symbols.content_copy,
                 size: isTablet ? 24 : 20,
+                opticalSize: 1,
+                grade: 150,
               ),
             ),
           ),

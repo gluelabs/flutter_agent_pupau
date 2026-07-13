@@ -1,8 +1,11 @@
 import 'package:flutter_agent_pupau/models/assistant_model.dart';
 import 'package:flutter_agent_pupau/models/prompt_option_model.dart';
 import 'package:flutter_agent_pupau/models/prompt_reflection_model.dart';
+import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_thinking_data.dart';
+import 'package:flutter_agent_pupau/models/user_model.dart';
 import 'package:flutter_agent_pupau/services/assistant_service.dart';
 import 'package:flutter_agent_pupau/services/google_maps_service.dart';
+import 'package:flutter_agent_pupau/utils/pupau_shared_preferences.dart';
 import 'package:markdown/markdown.dart' as md;
 
 class TagService {
@@ -128,7 +131,9 @@ class TagService {
 
   // UserName Tag
 
-  static String addUserNameTag(String message, {String? userName}) {
+  static String addUserNameTag(String message) {
+    final User? user = PupauSharedPreferences.getUser();
+    final String? userName = user?.name;
     if (userName == null) return message.replaceAll(userNameTag, "");
     return message.replaceAll(userNameTag, userName);
   }
@@ -267,9 +272,8 @@ class TagService {
 
   // Thinking Tag
 
-  static bool hasLoadingThinkingTag(String message) =>
-      message.startsWith(thinkingOpeningTag) &&
-      !message.contains(thinkingClosingTag);
+  static bool hasThinkingTag(String message) =>
+      message.contains(thinkingOpeningTag);
 
   static String thinkingTagNewLinesRemover(String message) {
     if (!message.contains(thinkingOpeningTag) ||
@@ -280,6 +284,304 @@ class TagService {
       String content = match.group(1) ?? '';
       return '$thinkingOpeningTag${content.replaceAll(RegExp(r'\r\n|\r|\n'), '<line-break>')}$thinkingClosingTag';
     });
+  }
+
+  static final RegExp _closedThinkingBlockRegex = RegExp(
+    r'<thinking>[\s\S]*?</thinking>',
+    multiLine: true,
+  );
+
+  /// Each `<thinking>…</thinking>` block in order, plus a trailing open block during SSE.
+  ///
+  /// [ThinkingTagSegment.blockIndex] is 1-based (`_thinking_1`, `_thinking_2`, …).
+  static List<ThinkingTagSegment> enumerateThinkingTagSegments(String message) {
+    if (!hasThinkingTag(message)) {
+      return <ThinkingTagSegment>[];
+    }
+
+    final List<ThinkingTagSegment> segments = <ThinkingTagSegment>[];
+    int blockIndex = 0;
+    int searchEnd = 0;
+
+    for (final RegExpMatch match in _closedThinkingBlockRegex.allMatches(message)) {
+      blockIndex++;
+      segments.add(
+        ThinkingTagSegment(
+          blockIndex: blockIndex,
+          rawSegment: match.group(0) ?? '',
+        ),
+      );
+      searchEnd = match.end;
+    }
+
+    final String tail = message.substring(searchEnd);
+    final int openIndex = tail.indexOf(thinkingOpeningTag);
+    if (openIndex >= 0) {
+      blockIndex++;
+      segments.add(
+        ThinkingTagSegment(
+          blockIndex: blockIndex,
+          rawSegment: tail.substring(openIndex),
+          isOpen: true,
+        ),
+      );
+    }
+
+    return segments;
+  }
+
+  /// Adjacent `<thinking>` blocks (only whitespace between) merged into one segment.
+  ///
+  /// Used for inline-thinking tool rows: one bubble per consecutive run.
+  static List<ThinkingTagSegment> groupedConsecutiveThinkingTagSegments(
+    String message,
+  ) {
+    if (!hasThinkingTag(message)) {
+      return <ThinkingTagSegment>[];
+    }
+
+    final List<({int start, int end, String raw, bool isOpen})> blocks =
+        <({int start, int end, String raw, bool isOpen})>[];
+    int searchEnd = 0;
+
+    for (final RegExpMatch match in _closedThinkingBlockRegex.allMatches(message)) {
+      blocks.add((
+        start: match.start,
+        end: match.end,
+        raw: match.group(0) ?? '',
+        isOpen: false,
+      ));
+      searchEnd = match.end;
+    }
+
+    final String tail = message.substring(searchEnd);
+    final int openIndex = tail.indexOf(thinkingOpeningTag);
+    if (openIndex >= 0) {
+      blocks.add((
+        start: searchEnd + openIndex,
+        end: message.length,
+        raw: tail.substring(openIndex),
+        isOpen: true,
+      ));
+    }
+
+    if (blocks.isEmpty) {
+      return <ThinkingTagSegment>[];
+    }
+    if (blocks.length == 1) {
+      final ({int start, int end, String raw, bool isOpen}) only = blocks.first;
+      return <ThinkingTagSegment>[
+        ThinkingTagSegment(
+          blockIndex: 1,
+          rawSegment: only.raw,
+          isOpen: only.isOpen,
+        ),
+      ];
+    }
+
+    final List<List<({int start, int end, String raw, bool isOpen})>> groups =
+        <List<({int start, int end, String raw, bool isOpen})>>[];
+    List<({int start, int end, String raw, bool isOpen})> currentGroup =
+        <({int start, int end, String raw, bool isOpen})>[blocks.first];
+
+    for (int i = 1; i < blocks.length; i++) {
+      final ({int start, int end, String raw, bool isOpen}) previous =
+          blocks[i - 1];
+      final ({int start, int end, String raw, bool isOpen}) next = blocks[i];
+      final String between = message.substring(previous.end, next.start);
+      if (between.trim().isEmpty) {
+        currentGroup.add(next);
+      } else {
+        groups.add(currentGroup);
+        currentGroup = <({int start, int end, String raw, bool isOpen})>[next];
+      }
+    }
+    groups.add(currentGroup);
+
+    final List<ThinkingTagSegment> merged = <ThinkingTagSegment>[];
+    int blockIndex = 0;
+    for (final List<({int start, int end, String raw, bool isOpen})> group
+        in groups) {
+      blockIndex++;
+      final StringBuffer rawBuffer = StringBuffer();
+      for (final ({int start, int end, String raw, bool isOpen}) block in group) {
+        rawBuffer.write(block.raw);
+      }
+      merged.add(
+        ThinkingTagSegment(
+          blockIndex: blockIndex,
+          rawSegment: rawBuffer.toString(),
+          isOpen: group.last.isOpen,
+        ),
+      );
+    }
+    return merged;
+  }
+
+  /// Subject from the first block; thoughts from every block joined with blank lines.
+  static ToolUseThinkingData? extractThinkingDataFromMergedThinkingRaw(
+    String mergedRaw,
+  ) {
+    final List<ToolUseThinkingData> parts = <ToolUseThinkingData>[];
+    for (final RegExpMatch match in _closedThinkingBlockRegex.allMatches(mergedRaw)) {
+      final ToolUseThinkingData? data = extractThinkingDataFromSegment(
+        match.group(0) ?? '',
+      );
+      if (data != null) {
+        parts.add(data);
+      }
+    }
+
+    final int lastClosedEnd = _closedThinkingBlockRegex
+            .allMatches(mergedRaw)
+            .lastOrNull
+            ?.end ??
+        0;
+    final String tail = mergedRaw.substring(lastClosedEnd);
+    if (tail.contains(thinkingOpeningTag)) {
+      final ToolUseThinkingData? openData = extractThinkingDataFromSegment(tail);
+      if (openData != null) {
+        parts.add(openData);
+      }
+    }
+
+    if (parts.isEmpty) {
+      return null;
+    }
+
+    String subject = '';
+    final List<String> thoughts = <String>[];
+    for (final ToolUseThinkingData part in parts) {
+      if (subject.isEmpty && part.subject.isNotEmpty) {
+        subject = part.subject;
+      }
+      if (part.thought.isNotEmpty) {
+        thoughts.add(part.thought);
+      }
+    }
+    return ToolUseThinkingData(
+      subject: subject,
+      thought: thoughts.join('\n\n'),
+    );
+  }
+
+  /// Extracts subject/thought from a single `<thinking>…</thinking>` segment.
+  static ToolUseThinkingData? extractThinkingDataFromSegment(String segment) {
+    if (!segment.contains(thinkingOpeningTag)) {
+      return null;
+    }
+    final String subject = extractInlineThinkingSubject(segment);
+    final String thought = extractInlineThinkingThought(segment);
+    if (subject.isEmpty && thought.isEmpty) {
+      return null;
+    }
+    return ToolUseThinkingData(subject: subject, thought: thought);
+  }
+
+  /// Extracts `<thinking>` data from the first block in [message] (legacy helper).
+  static ToolUseThinkingData? extractThinkingDataFromLLMMessage(
+    String message,
+  ) {
+    final List<ThinkingTagSegment> segments = enumerateThinkingTagSegments(message);
+    if (segments.isEmpty) {
+      return null;
+    }
+    return extractThinkingDataFromSegment(segments.first.rawSegment);
+  }
+
+  /// Inner `<thinking>` text from a full LLM [message] or one segment.
+  static String thinkingBodyFromLLMMessage(String thinkingContent) {
+    String body = thinkingContent.replaceAll('<line-break>', '\n').trim();
+    final int openIndex = body.indexOf(thinkingOpeningTag);
+    if (openIndex >= 0) {
+      body = body.substring(openIndex + thinkingOpeningTag.length).trim();
+      final int closeIndex = body.indexOf(thinkingClosingTag);
+      if (closeIndex >= 0) {
+        body = body.substring(0, closeIndex).trim();
+      }
+    }
+    return body;
+  }
+
+  /// Inline `<thinking>` subject: first phrase, usually `**Title**` then two newlines.
+  ///
+  /// Accepts inner thinking text or a full LLM [message] (including an unclosed
+  /// `<thinking>` tag). Returns `''` when no subject line is detected yet.
+  static String extractInlineThinkingSubject(String thinkingContent) {
+    try {
+      final String body = thinkingBodyFromLLMMessage(thinkingContent);
+      if (body.isEmpty) return '';
+      final RegExpMatch? boldSubject = RegExp(
+        r'^\*\*(.+?)\*\*',
+      ).firstMatch(body);
+      if (boldSubject != null) return (boldSubject.group(1) ?? '').trim();
+
+      final List<String> lines = body.split('\n');
+      if (lines.length >= 3 &&
+          lines.first.trim().isNotEmpty &&
+          lines[1].trim().isEmpty) {
+        final String firstLine = lines.first.trim();
+        final RegExpMatch? bold = RegExp(
+          r'^\*\*(.+?)\*\*$',
+        ).firstMatch(firstLine);
+        if (bold != null) {
+          return (bold.group(1) ?? '').trim();
+        }
+        return firstLine;
+      }
+      return '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  /// Inline `<thinking>` thought: everything after the subject (rest of the block).
+  ///
+  /// Works while the tag is still open (SSE): once `**Title**` is present, all
+  /// following text is treated as thought, even with only one newline so far.
+  /// Returns `''` when only the subject line has arrived. If no subject is found
+  /// yet, returns the whole thinking inner body.
+  static String extractInlineThinkingThought(String thinkingContent) {
+    try {
+      final String body = thinkingBodyFromLLMMessage(thinkingContent);
+      if (body.isEmpty) return '';
+
+      final RegExpMatch? afterBoldSubject = RegExp(
+        r'^\*\*(.+?)\*\*(?:\r?\n)*([\s\S]*)$',
+      ).firstMatch(body);
+      if (afterBoldSubject != null) {
+        return (afterBoldSubject.group(2) ?? '').trim();
+      }
+
+      final List<String> lines = body.split('\n');
+      if (lines.length >= 3 &&
+          lines.first.trim().isNotEmpty &&
+          lines[1].trim().isEmpty) {
+        return lines.skip(2).join('\n').trim();
+      }
+
+      return body;
+    } catch (e) {
+      return '';
+    }
+  }
+
+  /// Removes all `<thinking>…</thinking>` content from [message] for markdown display.
+  ///
+  /// - No `<thinking>` opening tag → returns [message] unchanged.
+  /// - Open tag without `</thinking>` (SSE) → removes everything from `<thinking>` onward.
+  /// - Closed tag(s) → removes each block including the tags and inner content.
+  static String stripThinkingForMarkdown(String message) {
+    if (!hasThinkingTag(message)) return message;
+
+    String result = message.replaceAll(_closedThinkingBlockRegex, '');
+
+    final int openIndex = result.indexOf(thinkingOpeningTag);
+    if (openIndex >= 0) {
+      result = result.substring(0, openIndex);
+    }
+
+    return result;
   }
 
   /// Strips custom Pupau tags and Markdown formatting for clipboard / plain-text export.
@@ -310,7 +612,10 @@ class TagService {
     message = message.replaceAll(mapRegex, '');
     // Visual diagrams: omit source entirely from plain-text copy (like maps).
     message = message.replaceAll(mermaidRegex, '');
-    message = message.replaceAllMapped(downloadRegex, (m) => (m.group(3) ?? '').trim());
+    message = message.replaceAllMapped(
+      downloadRegex,
+      (m) => (m.group(3) ?? '').trim(),
+    );
     message = message.replaceAll(userNameTag, '');
     return message;
   }
@@ -335,7 +640,9 @@ class TagService {
   }
 
   static String _markdownAstToPlainText(String markdown) {
-    final md.Document doc = md.Document(extensionSet: md.ExtensionSet.gitHubFlavored);
+    final md.Document doc = md.Document(
+      extensionSet: md.ExtensionSet.gitHubFlavored,
+    );
     final List<md.Node> nodes = doc.parseLines(markdown.split('\n'));
     return _markdownBlocksToPlainText(nodes);
   }
@@ -408,4 +715,18 @@ class TagService {
     }
     return segments.where((String s) => s.isNotEmpty).join('\n');
   }
+}
+
+/// One inline `<thinking>` block or merged consecutive run ([TagService.groupedConsecutiveThinkingTagSegments]).
+class ThinkingTagSegment {
+  const ThinkingTagSegment({
+    required this.blockIndex,
+    required this.rawSegment,
+    this.isOpen = false,
+  });
+
+  /// 1-based index used for synthetic message ids (`{llmId}_thinking_1`, …).
+  final int blockIndex;
+  final String rawSegment;
+  final bool isOpen;
 }

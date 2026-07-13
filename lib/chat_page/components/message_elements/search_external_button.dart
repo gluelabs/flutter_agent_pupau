@@ -43,16 +43,16 @@ class SearchExternalButton extends GetView<PupauChatController> {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                       color: isAnonymous
-                          ? AnonymousThemeColors.accent
-                          : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue),
+                          ? AnonymousThemeColors.primary
+                          : MyStyles.pupauTheme(!Get.isDarkMode).primary),
                 ),
                 child: Text(Strings.searchExternalSource.tr,
                     style: TextStyle(
                         fontSize: isTablet ? 17 : 15,
                         fontWeight: FontWeight.w600,
                         color: isAnonymous
-                            ? AnonymousThemeColors.accent
-                            : MyStyles.pupauTheme(!Get.isDarkMode).accent)),
+                            ? AnonymousThemeColors.primary
+                            : MyStyles.pupauTheme(!Get.isDarkMode).primary)),
               ),
             ),
           ),

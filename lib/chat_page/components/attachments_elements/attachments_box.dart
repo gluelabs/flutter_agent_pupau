@@ -15,13 +15,17 @@ class AttachmentsBox extends GetView<PupauChatController> {
 
   @override
   Widget build(BuildContext context) {
-    bool isTablet = DeviceService.isTablet;
-    List<Attachment> attachments = this.attachments
+    Theme.of(context);
+    final bool isTablet = DeviceService.isTablet;
+    final List<Attachment> attachments = this.attachments
         .where((attachment) => attachment.link == "")
         .toList();
-
-    bool isAnonymous = controller.isAnonymous;
-    Color? itemsColor = isAnonymous || Get.isDarkMode ? Colors.black : null;
+    final bool isAnonymous = controller.isAnonymous;
+    final Color itemsColor = isAnonymous
+        ? AnonymousThemeColors.assistantText
+        : (MyStyles.getTextTheme(
+            isLightTheme: !Get.isDarkMode,
+          ).bodyMedium?.color)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Align(
@@ -30,11 +34,9 @@ class AttachmentsBox extends GetView<PupauChatController> {
           padding: const EdgeInsets.only(top: 12, left: 14, right: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            color: isAnonymous
-                ? AnonymousThemeColors.assistantText
-                : Get.isDarkMode
-                ? MyStyles.pupauTheme(false).lilacPressed
-                : MyStyles.pupauTheme(true).lilac,
+            border: Border.all(
+              color: MyStyles.pupauTheme(!Get.isDarkMode).grey.withValues(alpha: 0.5),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,

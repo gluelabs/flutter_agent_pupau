@@ -17,14 +17,14 @@ class KnowledgeBaseInfo extends GetView<PupauChatController> {
 
   @override
   Widget build(BuildContext context) {
-    bool isTablet = DeviceService.isTablet;
-    double fontSize = isTablet ? 16 : 13;
+    final bool isTablet = DeviceService.isTablet;
+    final double fontSize = isTablet ? 16 : 13;
     return Obx(() {
-      bool isAnonymous = controller.isAnonymous;
-      KBSettings? kbSettings = controller.assistant.value?.kbSettings;
-      bool showKbChip = kbSettings?.showKbChip ?? false;
-      bool showKbResources = kbSettings?.showKbResources ?? false;
-      bool hasKb = message.kbReferences.isNotEmpty;
+      final bool isAnonymous = controller.isAnonymous;
+      final KBSettings? kbSettings = controller.assistant.value?.kbSettings;
+      final bool showKbChip = kbSettings?.showKbChip ?? false;
+      final bool showKbResources = kbSettings?.showKbResources ?? false;
+      final bool hasKb = message.kbReferences.isNotEmpty;
       return Visibility(
         visible: hasKb && message.status != MessageStatus.loading,
         child: Padding(
@@ -42,18 +42,18 @@ class KnowledgeBaseInfo extends GetView<PupauChatController> {
                       borderRadius: BorderRadius.circular(100),
                       color: isAnonymous
                           ? Colors.black
-                          : MyStyles.pupauTheme(!Get.isDarkMode).blue),
+                          : MyStyles.pupauTheme(!Get.isDarkMode).primary),
                   child: Row(
                     children: [
                       Text("KB",
                           style: TextStyle(
                               fontSize: fontSize,
                               fontWeight: FontWeight.w500,
-                              color: MyStyles.pupauTheme(!Get.isDarkMode).white)),
+                              color: MyStyles.pupauTheme(true).white)),
                       const SizedBox(width: 2),
                       Icon(Symbols.check,
                           size: isTablet ? 20 : 16,
-                          color: MyStyles.pupauTheme(!Get.isDarkMode).white),
+                          color: MyStyles.pupauTheme(true).white),
                     ],
                   ),
                 ),
@@ -70,7 +70,6 @@ class KnowledgeBaseInfo extends GetView<PupauChatController> {
                       style: TextStyle(
                         decoration: TextDecoration.underline,
                         fontSize: fontSize,
-                        fontWeight: FontWeight.w300,
                         color: isAnonymous ? Colors.white : null,
                       ),
                     ),

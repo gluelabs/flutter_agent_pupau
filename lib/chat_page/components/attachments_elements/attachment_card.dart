@@ -18,11 +18,12 @@ class AttachmentCard extends GetView<PupauAttachmentsController> {
 
   @override
   Widget build(BuildContext context) {
-    bool isTablet = DeviceService.isTablet;
-    bool isActive = attachment.selected;
-    bool isLink = attachment.link != "";
-    bool isNote = attachment.type == "NOTE";
-    bool isLoadingContent = attachment.isLoadingContent;
+    Theme.of(context);
+    final bool isTablet = DeviceService.isTablet;
+    final bool isActive = attachment.selected;
+    final bool isLink = attachment.link != "";
+    final bool isNote = attachment.isEditable;
+    final bool isLoadingContent = attachment.isLoadingContent;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6.5),
       child: InkWell(
@@ -38,45 +39,52 @@ class AttachmentCard extends GetView<PupauAttachmentsController> {
                 child: Row(
                   children: [
                     Icon(
-                        isNote
-                            ? Symbols.edit_note
-                            : isLink
-                                ? Symbols.link
-                                : FileService.getFileIcon(
-                                    extension(attachment.fileName)),
-                        size: isTablet ? 42 : 36),
+                      isNote
+                          ? Symbols.edit_note
+                          : isLink
+                          ? Symbols.link
+                          : FileService.getFileIcon(
+                              extension(attachment.fileName),
+                            ),
+                      size: isTablet ? 42 : 36,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                              isLink
-                                  ? attachment.link
-                                  : basename(attachment.fileName),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  fontSize: isTablet ? 16 : 14,
-                                  fontWeight: FontWeight.w500)),
+                            isLink
+                                ? attachment.link
+                                : basename(attachment.fileName),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: isTablet ? 16 : 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                           Text(
                             "${Strings.costs.tr}: ${attachment.tokens} tokens",
                             style: TextStyle(
-                                fontSize: isTablet ? 14 : 12,
-                                fontWeight: isActive
-                                    ? FontWeight.normal
-                                    : FontWeight.w100),
-                          )
+                              fontSize: isTablet ? 14 : 12,
+                              fontWeight: isActive
+                                  ? FontWeight.normal
+                                  : FontWeight.w100,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                     SizedBox(width: 4),
                     Transform.scale(
-                        scale: 0.7,
-                        child: CustomSwitch(
-                            isActive: isActive,
-                            onChanged: (bool active) => controller
-                                .toggleAttachment(attachment, active))),
+                      scale: 0.7,
+                      child: CustomSwitch(
+                        isActive: isActive,
+                        onChanged: (bool active) =>
+                            controller.toggleAttachment(attachment, active),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -92,12 +100,16 @@ class AttachmentCard extends GetView<PupauAttachmentsController> {
                   )
                 : IconButton(
                     onPressed: () => showDeleteConfirmDialog(
-                        Strings.resourceDeleteConfirm.tr,
-                        () => controller.deleteAttachment(attachment.id)),
+                      Strings.resourceDeleteConfirm.tr,
+                      () => controller.deleteAttachment(attachment.id),
+                    ),
                     tooltip: Strings.delete.tr,
-                    icon: Icon(Symbols.delete,
-                        size: isTablet ? 28 : 24,
-                        color: MyStyles.pupauTheme(!Get.isDarkMode).redAlarm))
+                    icon: Icon(
+                      Symbols.delete,
+                      size: isTablet ? 28 : 24,
+                      color: MyStyles.pupauTheme(!Get.isDarkMode).redAlarm,
+                    ),
+                  ),
           ],
         ),
       ),

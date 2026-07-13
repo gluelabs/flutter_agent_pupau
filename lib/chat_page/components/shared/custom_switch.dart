@@ -23,11 +23,11 @@ class CustomSwitch extends StatelessWidget {
           isDoubleOption ? MyStyles.pupauTheme(!Get.isDarkMode).white : null,
       trackOutlineColor: isDoubleOption
           ? WidgetStateProperty.all<Color>(
-              MyStyles.pupauTheme(!Get.isDarkMode).accent)
+              MyStyles.pupauTheme(!Get.isDarkMode).primary)
           : null,
-      activeTrackColor: MyStyles.pupauTheme(!Get.isDarkMode).accent,
+      activeTrackColor: MyStyles.pupauTheme(!Get.isDarkMode).primary,
       inactiveTrackColor: isDoubleOption
-          ? MyStyles.pupauTheme(!Get.isDarkMode).accent
+          ? MyStyles.pupauTheme(!Get.isDarkMode).primary
           : !Get.isDarkMode
               ? MyStyles.pupauTheme(!Get.isDarkMode).grey.withValues(alpha: 0.5)
               : null,

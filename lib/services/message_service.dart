@@ -2,6 +2,7 @@ import 'package:flutter_agent_pupau/chat_page/components/shared/error_snackbar.d
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/models/assistant_model.dart';
 import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
+import 'package:flutter_agent_pupau/models/voice_session_model.dart';
 import 'package:flutter_agent_pupau/services/pupau_event_service.dart';
 import 'package:flutter_agent_pupau/services/tag_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
@@ -35,6 +36,7 @@ class MessageService {
             : MessageStatus.received,
         createdAt: message.createdAt,
         kbReferences: message.kbReferences,
+        grounding: message.grounding,
         reaction: message.reaction,
         webBased: message.webBased,
         contextInfo: message.contextInfo,
@@ -48,7 +50,6 @@ class MessageService {
         sourceType: message.sourceType,
         uiToolMessage: message.uiToolMessage,
         type: message.type,
-        isInitialMessage: message.isInitialMessage,
         isExternalSearch: message.isExternalSearch,
         isCancelled: message.isCancelled,
         isNarrating: message.isNarrating,
@@ -56,6 +57,10 @@ class MessageService {
         attachments: message.attachments,
         attachmentTrimming: message.attachmentTrimming,
         emergencyTrimming: message.emergencyTrimming,
+        alwaysMemories: message.alwaysMemories,
+        memoryReferences: message.memoryReferences,
+        skillsLoaded: message.skillsLoaded,
+        skillEventDetail: message.skillEventDetail,
       );
 
   static void checkSSEErrors(PupauMessage message) {
@@ -117,4 +122,6 @@ class MessageService {
     }
     return message;
   }
+
+  static bool isVoiceAudioEvent(VoiceSseEventType type) => type.isAudioEvent;
 }

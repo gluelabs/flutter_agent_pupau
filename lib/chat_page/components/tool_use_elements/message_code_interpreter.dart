@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/custom_selectable_text.dart';
 import 'package:flutter_agent_pupau/models/tool_use_message_model.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
+import 'package:flutter_agent_pupau/services/style_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
@@ -81,7 +82,7 @@ class MessageCodeInterpreter extends StatelessWidget {
         ],
         const SizedBox(height: 4),
         Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          data: StyleService.expansionTileThemeData(context, isAnonymous),
           child: ExpansionTile(
             tilePadding: EdgeInsets.zero,
             childrenPadding: EdgeInsets.zero,
@@ -105,7 +106,7 @@ class MessageCodeInterpreter extends StatelessWidget {
           ),
         ),
         Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          data: StyleService.expansionTileThemeData(context, isAnonymous),
           child: ExpansionTile(
             tilePadding: EdgeInsets.zero,
             childrenPadding: EdgeInsets.zero,

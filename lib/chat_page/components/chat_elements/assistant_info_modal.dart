@@ -72,7 +72,7 @@ void showAssistantInfoModal(Assistant assistant) {
                                     fontWeight: FontWeight.w500,
                                     color: MyStyles.pupauTheme(
                                       !Get.isDarkMode,
-                                    ).darkBlue,
+                                    ).primary,
                                   ),
                                 ),
                               ),

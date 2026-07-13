@@ -40,7 +40,7 @@ class ToggleAttachmentsSwitch extends GetView<PupauAttachmentsController> {
                                 fontSize: isTablet ? 16 : 14,
                                 fontWeight: FontWeight.w500,
                                 color: MyStyles.pupauTheme(!Get.isDarkMode)
-                                    .darkBlue)),
+                                    .primary)),
                         Transform.scale(
                           scale: 0.7,
                           child: CustomSwitch(

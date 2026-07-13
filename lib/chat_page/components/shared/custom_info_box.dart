@@ -18,7 +18,7 @@ Future<void> showInfoBox(String title, String subtitle) {
           style: TextStyle(
             fontSize: isTablet ? 18 : 16,
             fontWeight: FontWeight.w600,
-            color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+            color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
           ),
         ),
         content: Text(subtitle, style: TextStyle(fontSize: isTablet ? 16 : 14)),
@@ -29,7 +29,7 @@ Future<void> showInfoBox(String title, String subtitle) {
               'OK',
               style: TextStyle(
                 fontSize: isTablet ? 16 : 14,
-                color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
               ),
             ),
             onPressed: () {

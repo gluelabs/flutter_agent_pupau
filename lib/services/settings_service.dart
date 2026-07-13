@@ -14,6 +14,13 @@ class SettingsService {
           {String? assistantId, bool isMarketplace = false}) =>
       "${ApiUrls.settingsUrl(isMarketplace)}?settingGroupId=$groupSettingId${assistantId != null ? "&assistantId=$assistantId" : ""}";
 
+  static String getUserSettingById({
+    required String settingId,
+    required String assistantId,
+    bool isMarketplace = false,
+  }) =>
+      "${ApiUrls.settingsUserUrl(isMarketplace: isMarketplace)}?availableSettingId=$settingId&assistantId=$assistantId";
+
   static String generateSettingData(Setting setting) {
     String valueContent = "";
     for (int i = 0; i < setting.settingValues.length; i++) {
@@ -92,6 +99,55 @@ class SettingsService {
         assistantId: assistantId));
     if (response != null) return response[Settings.settingEnableName] ?? true;
     return false;
+  }
+
+  static Future<Map<String, dynamic>?> readUserSettingById({
+    required String settingId,
+    required String assistantId,
+    bool isMarketplace = false,
+  }) async {
+    Map<String, dynamic>? settingData;
+    await ApiService.call(
+      getUserSettingById(
+        settingId: settingId,
+        assistantId: assistantId,
+        isMarketplace: isMarketplace,
+      ),
+      RequestType.get,
+      onSuccess: (response) {
+        if (response.data is Map<String, dynamic>) {
+          settingData = Map<String, dynamic>.from(response.data);
+        }
+      },
+      onError: (_) {},
+    );
+    return settingData;
+  }
+
+  static Future<void> setUserSettings({
+    required List<Setting> settings,
+    bool isMarketplace = false,
+  }) async {
+    final List<Map<String, dynamic>> payload = settings
+        .map(
+          (Setting setting) => <String, dynamic>{
+            "availableSettingId": setting.id,
+            "value": <String, dynamic>{
+              for (SettingValue v in setting.settingValues)
+                v.settingName: v.settingData,
+            },
+            if (setting.assistantId != null) "assistantId": setting.assistantId,
+          },
+        )
+        .toList();
+
+    await ApiService.call(
+      "${ApiUrls.settingsUserUrl(isMarketplace: false)}${isMarketplace ? "?isMarketplace=true" : ""}",
+      RequestType.put,
+      data: payload,
+      onSuccess: (_) {},
+      onError: (_) {},
+    );
   }
 
 }

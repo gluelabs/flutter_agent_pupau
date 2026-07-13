@@ -179,7 +179,7 @@ class _MermaidContainerState extends State<MermaidContainer>
                 right: 10,
                 bottom: 10,
                 child: Material(
-                  color: MyStyles.pupauTheme(!Get.isDarkMode).accent,
+                  color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
                   shape: const CircleBorder(),
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(

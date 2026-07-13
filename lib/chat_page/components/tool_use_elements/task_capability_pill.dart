@@ -23,7 +23,7 @@ class TaskCapabilityPill extends StatelessWidget {
     final bool isTablet = DeviceService.isTablet;
     final double fontSize = isTablet ? 16.0 : 14.0;
     final PupauThemeData theme = MyStyles.pupauTheme(!Get.isDarkMode);
-    final Color activeColor = isAnonymous ? Colors.white : theme.darkBlue;
+    final Color activeColor = isAnonymous ? Colors.white : theme.primary;
     final Color inactiveColor = theme.grey.withValues(alpha: 0.5);
 
     return Container(

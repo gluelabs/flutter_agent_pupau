@@ -55,7 +55,7 @@ class CustomSelectableText extends StatelessWidget {
               ).copyWith(
                 a: openLinks
                     ? TextStyle(
-                        color: MyStyles.pupauTheme(!Get.isDarkMode).blue,
+                        color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
                         fontWeight: FontWeight.w500,
                       )
                     : TextStyle(
@@ -68,7 +68,7 @@ class CustomSelectableText extends StatelessWidget {
                 blockquoteDecoration: BoxDecoration(
                   color: MyStyles.pupauTheme(
                     !Get.isDarkMode,
-                  ).lilacHover.withValues(alpha: Get.isDarkMode ? 0.4 : 1),
+                  ).primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 blockquotePadding: const EdgeInsets.all(12),

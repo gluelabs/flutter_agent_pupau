@@ -22,24 +22,24 @@ class MessageAskUser extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isTablet = DeviceService.isTablet;
-    ToolUseAskUserData? askUserData = toolUseMessage?.askUserData;
-    String question = askUserData?.question ?? "";
-    AskUserChoiceType choiceType =
+    final bool isTablet = DeviceService.isTablet;
+    final ToolUseAskUserData? askUserData = toolUseMessage?.askUserData;
+    final String question = askUserData?.question ?? "";
+    final AskUserChoiceType choiceType =
         askUserData?.choiceType ?? AskUserChoiceType.choice;
-    bool hasSubmit = choiceType == AskUserChoiceType.text ||
+    final bool hasSubmit = choiceType == AskUserChoiceType.text ||
         (choiceType == AskUserChoiceType.choice &&
             (askUserData?.isMultiselect ?? false));
-    PupauToolAskUserController controller =
+    final PupauToolAskUserController controller =
         Get.put(PupauToolAskUserController(), tag: toolUseMessage?.id);
-    PupauChatController chatController = Get.find();
+    final PupauChatController chatController = Get.find();
     controller.setAskUserData(toolUseMessage);
     return Obx(() {
-      bool canSubmit = controller.canSubmit();
-      bool isMultiselect = askUserData?.isMultiselect ?? false;
-      bool isActive =
+      final bool canSubmit = controller.canSubmit();
+      final bool isMultiselect = askUserData?.isMultiselect ?? false;
+      final bool isActive =
           chatController.messages.first.id == toolUseMessage?.messageId;
-      List<AskUserChoice> selectedOptions = controller.selectedOptions;
+      final List<AskUserChoice> selectedOptions = controller.selectedOptions;
       return AbsorbPointer(
         absorbing: !isActive,
         child: Opacity(

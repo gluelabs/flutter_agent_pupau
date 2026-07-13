@@ -11,8 +11,9 @@ class LoadingText extends GetView<PupauChatController> {
 
   @override
   Widget build(BuildContext context) {
-    bool isTablet = DeviceService.isTablet;
-    bool isAnonymous = controller.isAnonymous;
+    Theme.of(context);
+    final bool isTablet = DeviceService.isTablet;
+    final bool isAnonymous = controller.isAnonymous;
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
@@ -41,7 +42,7 @@ class LoadingText extends GetView<PupauChatController> {
                     numberOfDots: 3,
                     color: isAnonymous
                         ? AnonymousThemeColors.assistantText
-                        : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                        : MyStyles.pupauTheme(!Get.isDarkMode).primary,
                     animationDuration: const Duration(milliseconds: 200),
                   ),
                 ],

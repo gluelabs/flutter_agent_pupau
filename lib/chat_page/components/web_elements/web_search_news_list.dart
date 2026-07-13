@@ -27,29 +27,37 @@ class WebSearchNewsList extends GetView<PupauChatController> {
     return Padding(
       padding: const EdgeInsets.only(top: 10, right: 10, left: 10, bottom: 18),
       child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 16,
-          children: [
-            if (!hideHeader)
-              Row(
-                children: [
-                  Icon(Symbols.news,
-                      size: isTablet ? 26 : 24,
-                      color: isAnonymous
-                          ? AnonymousThemeColors.assistantText
-                          : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue),
-                  const SizedBox(width: 6),
-                  Text(Strings.news.tr,
-                      style: TextStyle(
-                          fontSize: isTablet ? 16 : 14,
-                          fontWeight: FontWeight.w500,
-                          color: isAnonymous
-                              ? AnonymousThemeColors.assistantText
-                              : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue)),
-                ],
-              ),
-            ...news.map((news) => NewsContainer(news: news))
-          ]),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 16,
+        children: [
+          if (!hideHeader)
+            Row(
+              children: [
+                Icon(
+                  Symbols.news,
+                  size: isTablet ? 26 : 24,
+                  color: isAnonymous
+                      ? AnonymousThemeColors.assistantText
+                      : MyStyles.pupauTheme(!Get.isDarkMode).primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  Strings.news.tr,
+                  style: TextStyle(
+                    fontSize: isTablet ? 16 : 14,
+                    fontWeight: FontWeight.w500,
+                    color: isAnonymous
+                        ? AnonymousThemeColors.assistantText
+                        : MyStyles.getTextTheme(
+                            isLightTheme: !Get.isDarkMode,
+                          ).bodyMedium?.color,
+                  ),
+                ),
+              ],
+            ),
+          ...news.map((news) => NewsContainer(news: news)),
+        ],
+      ),
     );
   }
 }

@@ -230,6 +230,8 @@ class ConversationService {
     switch (messageType.toLowerCase()) {
       case "kb":
         return MessageType.kb;
+      case "memory":
+        return MessageType.memory;
       case "error":
         return MessageType.error;
       case "forbidden":
@@ -275,6 +277,12 @@ class ConversationService {
         return MessageType.attachmentTrimming;
       case "heartbeat":
         return MessageType.heartbeat;
+      case "skill_loaded":
+        return MessageType.skillLoaded;
+      case "skill_unloaded":
+        return MessageType.skillUnloaded;
+      case "grounding_verification":
+        return MessageType.groundingVerification;
       default:
         return null;
     }

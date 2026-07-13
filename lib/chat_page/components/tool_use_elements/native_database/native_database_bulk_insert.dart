@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/custom_button.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/native_database/native_database_shared_widgets.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_native_database_data.dart';
 import 'package:flutter_agent_pupau/services/style_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
@@ -14,12 +15,14 @@ class NativeDatabaseBulkInsertCard extends StatelessWidget {
     required this.toolArgs,
     required this.isAnonymous,
     required this.databaseName,
+    required this.scope,
   });
 
   final NativeDbBulkInsertResult? result;
   final Map<String, dynamic> toolArgs;
   final bool isAnonymous;
   final String? databaseName;
+  final NativeDbScope scope;
 
   @override
   Widget build(BuildContext context) {
@@ -32,20 +35,34 @@ class NativeDatabaseBulkInsertCard extends StatelessWidget {
     final Color green = MyStyles.pupauTheme(!Get.isDarkMode).green;
     final Color red = MyStyles.pupauTheme(!Get.isDarkMode).redAlarm;
     final bool hasErrors = failed > 0 || errors.isNotEmpty;
+    final bool hasDatabaseName = (databaseName ?? '').trim().isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.only(top: 2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if ((databaseName ?? '').trim().isNotEmpty) ...[
-            Text(
-              databaseName!.trim(),
-              style: StyleService.toolHeaderTextStyle(isDark),
+          if (hasDatabaseName) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    databaseName!.trim(),
+                    style: StyleService.toolHeaderTextStyle(isDark),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                NativeDatabaseScopeBadge(
+                  scope: scope,
+                  isAnonymous: isAnonymous,
+                ),
+              ],
             ),
             const SizedBox(height: 12),
           ],
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(
                 hasErrors ? Symbols.error : Symbols.check_circle,
@@ -59,6 +76,13 @@ class NativeDatabaseBulkInsertCard extends StatelessWidget {
                   style: StyleService.toolHeaderTextStyle(isDark),
                 ),
               ),
+              if (!hasDatabaseName) ...[
+                const SizedBox(width: 10),
+                NativeDatabaseScopeBadge(
+                  scope: scope,
+                  isAnonymous: isAnonymous,
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 8),
@@ -84,9 +108,7 @@ class NativeDatabaseBulkInsertCard extends StatelessWidget {
           if (insertedRows.isNotEmpty) ...[
             const SizedBox(height: 4),
             Theme(
-              data: Theme.of(
-                context,
-              ).copyWith(dividerColor: Colors.transparent),
+              data: StyleService.expansionTileThemeData(context, isAnonymous),
               child: ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 childrenPadding: EdgeInsets.zero,
@@ -107,9 +129,7 @@ class NativeDatabaseBulkInsertCard extends StatelessWidget {
           if (errors.isNotEmpty) ...[
             const SizedBox(height: 10),
             Theme(
-              data: Theme.of(
-                context,
-              ).copyWith(dividerColor: Colors.transparent),
+              data: StyleService.expansionTileThemeData(context, isAnonymous),
               child: ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 childrenPadding: EdgeInsets.zero,
@@ -203,8 +223,10 @@ class _PagedInsertedRowsState extends State<_PagedInsertedRows> {
   @override
   Widget build(BuildContext context) {
     final bool isDark = Get.isDarkMode || widget.isAnonymous;
-    final int visibleCount =
-        widget.insertedRows.length.clamp(0, (_page + 1) * _pageSize);
+    final int visibleCount = widget.insertedRows.length.clamp(
+      0,
+      (_page + 1) * _pageSize,
+    );
     final visible = widget.insertedRows.take(visibleCount).toList();
     final bool hasMore = widget.insertedRows.length > visibleCount;
 

@@ -14,4 +14,7 @@ class Settings {
       "ASSISTANT_ANONYMOUS_SESSIONS";
   static const String settingChatVisibilityId = "ASSISTANT_CHAT_VISIBILITY";
   static const String settingChatVisibilityName = "visibility";
+  static const String assistantThinkingEnabledId = "ASSISTANT_THINKING_ENABLED";
+  static const String assistantThinkingEffortId = "ASSISTANT_THINKING_EFFORT";
+  static const String assistantThinkingEffortName = "effort";
 }

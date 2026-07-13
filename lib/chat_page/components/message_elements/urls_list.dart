@@ -40,8 +40,10 @@ class UrlsList extends StatelessWidget {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                  color: MyStyles.pupauTheme(!Get.isDarkMode)
-                                      .lilacPressed),
+                                color: MyStyles.pupauTheme(
+                                  !Get.isDarkMode,
+                                ).grey,
+                              ),
                               color: MyStyles.pupauTheme(!Get.isDarkMode).white,
                             ),
                             child: Padding(

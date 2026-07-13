@@ -195,7 +195,7 @@ class _ChatMermaidFullState extends State<ChatMermaidFull> {
                 child: SafeArea(
                   child: Center(
                     child: CircularProgressIndicator(
-                      color: MyStyles.pupauTheme(!Get.isDarkMode).accent,
+                      color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
                     ),
                   ),
                 ),

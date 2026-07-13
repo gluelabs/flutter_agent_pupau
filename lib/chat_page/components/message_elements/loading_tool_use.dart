@@ -53,26 +53,59 @@ class LoadingToolUse extends GetView<PupauChatController> {
       case 'spreadsheet_insert':
         return Strings.spreadsheetLoadingInsert.tr;
       case 'spreadsheet_update':
-        return Strings.spreadsheetLoadingUpdate.tr;
+        return Strings.nativeDbLoadingUpdate.tr;
       case 'spreadsheet_delete':
-        return Strings.spreadsheetLoadingDelete.tr;
+        return Strings.nativeDbLoadingDelete.tr;
       case 'spreadsheet_summary':
         return Strings.spreadsheetLoadingSummary.tr;
       case 'spreadsheet_distinct':
         return Strings.spreadsheetLoadingDistinct.tr;
     }
 
+    // Attachment (JIT) tools — generic fallback until toolArgs are known.
+    switch (t) {
+      case 'list_attachments':
+        return Strings.attachmentToolLoadingList.tr;
+      case 'attachment_outline':
+        return Strings.attachmentToolLoadingOutline.tr;
+      case 'attachment_read':
+        return Strings.attachmentToolLoadingRead.tr;
+      case 'attachment_grep':
+        return Strings.attachmentToolLoadingGrep.tr;
+      case 'attachment_search':
+        return Strings.attachmentToolLoadingSearch.tr;
+    }
+
     // Fallback: show nothing (keeps UI compact).
     return '';
   }
 
+  static IconData? _overrideIconForToolKey(String toolKey) {
+    final String toolKeyTrimmed = toolKey.trim().toLowerCase();
+    switch (toolKeyTrimmed) {
+      case 'memory_create':
+        return Symbols.bookmark_add;
+      case 'memory_update':
+        return Symbols.edit;
+      case 'memory_delete':
+        return Symbols.delete;
+      default:
+        return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    bool isTablet = DeviceService.isTablet;
-    bool isAnonymous = controller.isAnonymous;
-    IconData? toolUseIcon = ToolUseService.getToolUseIcon(toolUseType);
+    Theme.of(context);
+    final bool isTablet = DeviceService.isTablet;
+    final bool isAnonymous = controller.isAnonymous;
+    final IconData? toolUseIcon =
+        _overrideIconForToolKey(toolKey) ??
+        ToolUseService.getToolUseIcon(toolUseType);
     final bool canShowPreview = controller.hasToolArgsPreview(toolKey);
-    final String loadingLabel = _loadingLabelForTool(toolKey);
+    final String loadingLabel =
+        controller.getAttachmentToolLoadingLabel(toolKey) ??
+        _loadingLabelForTool(toolKey);
     return Container(
       padding: const EdgeInsets.only(top: 4),
       margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -90,21 +123,23 @@ class LoadingToolUse extends GetView<PupauChatController> {
               onTap: () => controller.toggleLoadingToolExpanded(toolKey),
               borderRadius: BorderRadius.circular(6),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
                     color: isAnonymous
                         ? Colors.white70
-                        : MyStyles.pupauTheme(!Get.isDarkMode).lilacPressed,
+                        : MyStyles.pupauTheme(!Get.isDarkMode).grey,
                   ),
                 ),
                 child: Obx(() {
-                  final bool isExpanded =
-                      controller.isLoadingToolExpanded(
-                        toolKey,
-                        toolUseType: toolUseType,
-                      );
+                  final bool isExpanded = controller.isLoadingToolExpanded(
+                    toolKey,
+                    toolUseType: toolUseType,
+                  );
                   final bool isUserToggled = controller.userToggledLoadingTools
                       .contains(toolKey.trim());
                   final String elapsedLabel =
@@ -127,7 +162,9 @@ class LoadingToolUse extends GetView<PupauChatController> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      toolName.replaceAll("_", " ").capitalize ??
+                                      toolName
+                                              .replaceAll("_", " ")
+                                              .capitalize ??
                                           toolName,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -136,8 +173,9 @@ class LoadingToolUse extends GetView<PupauChatController> {
                                         fontSize: isTablet ? 16 : 14,
                                         color: Get.isDarkMode || isAnonymous
                                             ? Colors.white
-                                            : MyStyles.pupauTheme(!Get.isDarkMode)
-                                                .accent,
+                                            : MyStyles.pupauTheme(
+                                                !Get.isDarkMode,
+                                              ).primary,
                                       ),
                                     ),
                                   ),
@@ -150,8 +188,9 @@ class LoadingToolUse extends GetView<PupauChatController> {
                                         strokeWidth: 2,
                                         color: Get.isDarkMode || isAnonymous
                                             ? Colors.white
-                                            : MyStyles.pupauTheme(!Get.isDarkMode)
-                                                .accent,
+                                            : MyStyles.pupauTheme(
+                                                !Get.isDarkMode,
+                                              ).primary,
                                       ),
                                     ),
                                   ),
@@ -163,10 +202,12 @@ class LoadingToolUse extends GetView<PupauChatController> {
                                         fontSize: isTablet ? 15 : 13,
                                         fontWeight: FontWeight.w600,
                                         color: Get.isDarkMode || isAnonymous
-                                            ? Colors.white.withValues(alpha: 0.7)
-                                            : MyStyles.pupauTheme(!Get.isDarkMode)
-                                                .accent
-                                                .withValues(alpha: 0.7),
+                                            ? Colors.white.withValues(
+                                                alpha: 0.7,
+                                              )
+                                            : MyStyles.pupauTheme(
+                                                !Get.isDarkMode,
+                                              ).primary.withValues(alpha: 0.7),
                                       ),
                                     ),
                                   ),
@@ -187,9 +228,9 @@ class LoadingToolUse extends GetView<PupauChatController> {
                                 Symbols.chevron_forward,
                                 color: Get.isDarkMode || isAnonymous
                                     ? Colors.white.withValues(alpha: 0.7)
-                                    : MyStyles.pupauTheme(!Get.isDarkMode)
-                                        .accent
-                                        .withValues(alpha: 0.7),
+                                    : MyStyles.pupauTheme(
+                                        !Get.isDarkMode,
+                                      ).primary.withValues(alpha: 0.7),
                                 size: 24,
                               ),
                             ),

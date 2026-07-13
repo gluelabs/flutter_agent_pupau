@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_agent_pupau/chat_page/components/chat_elements/chat_bottom_button.dart';
 import 'package:get/get.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/chat_app_bar.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/chat_input_field.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/chat_tools_fab.dart';
+import 'package:flutter_agent_pupau/chat_page/components/chat_elements/empty_conversation_view.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/messages_list.dart';
-import 'package:flutter_agent_pupau/chat_page/components/chat_elements/scroll_button.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/api_error_widget.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
@@ -18,13 +20,70 @@ class PupauAgentChat extends StatefulWidget {
   final PupauConfig? config;
   final VoidCallback? onCollapse;
 
-  const PupauAgentChat({super.key, this.config, this.onCollapse});
+  /// When true, [initState] does not call [PupauChatController.openChatWithConfig]
+  /// (the host already did, e.g. [PupauChatUtils.openChat] before [Navigator.push]).
+  /// [State.activate] still re-opens after [deactivate] so the same assistant can
+  /// be reset when returning to a kept-alive route.
+  final bool skipOpenChatOnAttach;
+
+  const PupauAgentChat({
+    super.key,
+    this.config,
+    this.onCollapse,
+    this.skipOpenChatOnAttach = false,
+  });
 
   @override
   State<PupauAgentChat> createState() => _PupauAgentChatState();
 }
 
 class _PupauAgentChatState extends State<PupauAgentChat> {
+  bool _wasDeactivated = false;
+
+  Future<void> _openChatAndSetCollapse() async {
+    if (!mounted) return;
+    if (!Get.isRegistered<PupauChatController>()) return;
+    try {
+      final PupauChatController controller = Get.find<PupauChatController>();
+      if (widget.config != null) {
+        await controller.openChatWithConfig(widget.config);
+      }
+      final WidgetMode widgetMode =
+          widget.config?.widgetMode ?? WidgetMode.full;
+      if (widgetMode == WidgetMode.sized || widgetMode == WidgetMode.floating) {
+        controller.setCollapseCallback(widget.onCollapse);
+      }
+    } catch (_) {}
+  }
+
+  void _scheduleCollapseOnly() {
+    Future<void>.microtask(() async {
+      if (!mounted) return;
+      if (!Get.isRegistered<PupauChatController>()) return;
+      try {
+        final PupauChatController controller = Get.find<PupauChatController>();
+        final WidgetMode widgetMode =
+            widget.config?.widgetMode ?? WidgetMode.full;
+        if (widgetMode == WidgetMode.sized ||
+            widgetMode == WidgetMode.floating) {
+          controller.setCollapseCallback(widget.onCollapse);
+        }
+      } catch (_) {}
+    });
+  }
+
+  void _scheduleOpenChatAndCollapse({required bool fromInitState}) {
+    if (widget.config == null) return;
+    if (fromInitState && widget.skipOpenChatOnAttach) {
+      _scheduleCollapseOnly();
+      return;
+    }
+    Future<void>.microtask(() async {
+      if (!mounted) return;
+      await _openChatAndSetCollapse();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -34,32 +93,36 @@ class _PupauAgentChatState extends State<PupauAgentChat> {
     } else {
       ChatBinding().dependencies();
     }
-    
-    // Ensure config is updated when switching agents
-    // This is critical for supporting multiple agents in the same app
-    // Use postFrameCallback to ensure controller is ready (either newly created or reused)
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (Get.isRegistered<PupauChatController>()) {
-        try {
-          final controller = Get.find<PupauChatController>();
-          // Always update config if provided - controller will wait for any ongoing initialization
-          // This ensures that when switching agents, the config is properly updated after previous init completes
-          if (widget.config != null) {
-            await controller.openChatWithConfig(widget.config);
-          }
-          
-          WidgetMode widgetMode = widget.config?.widgetMode ?? WidgetMode.full;
-          if (widgetMode == WidgetMode.sized ||
-              widgetMode == WidgetMode.floating) {
-            controller.setCollapseCallback(widget.onCollapse);
-          }
-        } catch (_) {
-          // Controller will be created on first access
-        }
-      }
-    });
+
+    // Run as early as possible after binding (not post-frame) so the controller
+    // resets before the first paint when the host does not pre-call [openChatWithConfig].
+    _scheduleOpenChatAndCollapse(fromInitState: true);
   }
-  
+
+  @override
+  void activate() {
+    super.activate();
+    if (!_wasDeactivated) {
+      // First insertion: [initState] already scheduled [openChatWithConfig] when needed.
+      if (widget.skipOpenChatOnAttach) {
+        _scheduleCollapseOnly();
+      }
+      return;
+    }
+    _scheduleOpenChatAndCollapse(fromInitState: false);
+  }
+
+  @override
+  void deactivate() {
+    _wasDeactivated = true;
+    if (Get.isRegistered<PupauChatController>()) {
+      try {
+        Get.find<PupauChatController>().exitVoiceModeIfActive();
+      } catch (_) {}
+    }
+    super.deactivate();
+  }
+
   @override
   void didUpdateWidget(PupauAgentChat oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -99,114 +162,149 @@ class _PupauAgentChatView extends GetView<PupauChatController> {
     bool isTablet = DeviceService.isTablet;
     DrawerConfig? drawerConfig = config?.drawerConfig;
     controller.setModalContext(context);
-    
-    return PopScope(
-      canPop: true,
-      onPopInvokedWithResult: (didPop, result) =>
-          () {
-        controller.stopActiveStreams();
-        controller.ttsService.stopReading();
-      },
-      child: NotificationListener(
-        onNotification: (notification) {
-          if (notification is ScrollStartNotification &&
-              notification.dragDetails != null) {
-            controller.stopAutoScroll();
+
+    return Obx(() {
+      final bool embeddedDashboardOpen =
+          controller.isEmbeddedChatDashboardOpen.value;
+      return PopScope(
+        canPop: !embeddedDashboardOpen,
+        onPopInvokedWithResult: (bool didPop, Object? result) {
+          if (!didPop && controller.tryCloseEmbeddedChatDashboard()) {
+            return;
           }
-          return true;
+          if (didPop) {
+            controller.stopActiveStreams();
+            controller.ttsService.stopReading();
+          }
         },
-        child: Obx(() {
-          bool isAnonymous = controller.isAnonymous;
-          bool hasApiError = controller.hasApiError.value;
-          bool hasUserMessage = controller.messages.length > 1;
-          bool scrollButtonVisible =
-              hasUserMessage && !controller.isAtBottom.value;
-          bool isAdvanced = controller.isAdvanced();
-          return Theme(
-            data: ThemeData(
-              brightness: isAnonymous || Get.isDarkMode
-                  ? Brightness.dark
-                  : Brightness.light,
-            ),
-            child: MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                padding: MediaQuery.of(context).padding.copyWith(top: config?.widgetMode == WidgetMode.full ? 48 : 20),
+        child: NotificationListener(
+          onNotification: (notification) {
+            if (notification is UserScrollNotification) {
+              if (notification.direction != ScrollDirection.idle) {
+                controller.suspendAutoScroll();
+              } else if (controller.isAtBottom.value) {
+                controller.clearAutoScrollSuspension();
+              }
+            } else if (notification is ScrollStartNotification &&
+                notification.dragDetails != null) {
+              controller.suspendAutoScroll();
+            }
+            return true;
+          },
+          child: Obx(() {
+            final bool isAnonymous = controller.isAnonymous;
+            final bool hasApiError = controller.hasApiError.value;
+            final bool isAdvanced = controller.isAdvanced();
+            return Theme(
+              data: ThemeData(
+                brightness: isAnonymous || Get.isDarkMode
+                    ? Brightness.dark
+                    : Brightness.light,
+                iconTheme: const IconThemeData(weight: 600),
               ),
-              child: Scaffold(
-                key: drawerConfig?.scaffoldKey,
-                backgroundColor: isAnonymous
-                    ? AnonymousThemeColors.background
-                    : MyStyles.pupauTheme(!Get.isDarkMode).white,
-                appBar: ChatAppBar(
-                  isAnonymous: isAnonymous,
-                  onBackPressed: () {
-                    controller.stopActiveStreams();
-                    onCollapse?.call();
-                  },
-                  config: config,
+              child: MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  padding: MediaQuery.of(context).padding.copyWith(
+                    top: config?.widgetMode == WidgetMode.full ? 48 : 20,
+                  ),
                 ),
-                drawer: drawerConfig?.drawer,
-                endDrawer: drawerConfig?.endDrawer,
-                onDrawerChanged: drawerConfig?.onDrawerChanged,
-                onEndDrawerChanged: drawerConfig?.onEndDrawerChanged,
-                body: Builder(
-                  builder: (scaffoldBodyContext) {
-                    controller.setScaffoldContext(scaffoldBodyContext);                    
-                    return Padding(
-                      padding: EdgeInsets.only(bottom: controller.widgetMode == WidgetMode.full ? 12 : 15),
-                      child: SafeArea(
-                        top: false,
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Column(
-                              children: [
-                                Expanded(
-                                  child: hasApiError
-                                      ? ApiErrorWidget(
-                                          message: Strings.apiErrorGeneric.tr,
-                                          retryAction: () =>
-                                              controller.initChatController(),
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 60,
-                                          ),
-                                        )
-                                      : const MessagesList(),
-                                ),
-                                const ChatInputField(),
-                              ],
-                            ),
-                            Transform.translate(
-                              offset: Offset(
-                                -12,
-                                -controller.messageInputFieldHeight.value,
-                              ),
-                              child: ScrollButton(
-                                toBottom: true,
-                                isVisible: scrollButtonVisible,
-                                onTap: () => controller.scrollToBottomChat(
-                                  withAnimation: true,
-                                ),
-                                isAnonymous: isAnonymous,
-                              ),
-                            ),
-                            if (isAdvanced)
-                              Positioned(
-                                left: 12.5,
-                                bottom: isTablet ? 12 : 4,
-                                child: ChatToolsFAB(),
-                              ),
-                          ],
+                child: Scaffold(
+                  key: drawerConfig?.scaffoldKey,
+                  backgroundColor: isAnonymous
+                      ? AnonymousThemeColors.background
+                      : MyStyles.pupauTheme(!Get.isDarkMode).white,
+                  appBar: ChatAppBar(
+                    isAnonymous: isAnonymous,
+                    onBackPressed: () {
+                      if (controller.tryCloseEmbeddedChatDashboard()) return;
+                      controller.stopActiveStreams();
+                      onCollapse?.call();
+                    },
+                    config: config,
+                  ),
+                  drawer: drawerConfig?.drawer,
+                  endDrawer: drawerConfig?.endDrawer,
+                  onDrawerChanged: drawerConfig?.onDrawerChanged,
+                  onEndDrawerChanged: drawerConfig?.onEndDrawerChanged,
+                  body: Builder(
+                    builder: (scaffoldBodyContext) {
+                      controller.setScaffoldContext(scaffoldBodyContext);
+                      final WidgetMode shellMode = controller.widgetMode;
+                      final Widget chatStack = Padding(
+                        padding: EdgeInsets.only(
+                          bottom: shellMode == WidgetMode.full ? 12 : 15,
                         ),
-                      ),
-                    );
-                  },
+                        child: SafeArea(
+                          top: false,
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: <Widget>[
+                              Column(
+                                children: <Widget>[
+                                  Expanded(
+                                    child: hasApiError
+                                        ? ApiErrorWidget(
+                                            message: Strings.apiErrorGeneric.tr,
+                                            retryAction: () =>
+                                                controller.initChatController(),
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 60,
+                                            ),
+                                          )
+                                        : Obx(() {
+                                            final bool messagesEmpty =
+                                                controller.messages.isEmpty;
+                                            final bool conversationLoading =
+                                                controller
+                                                    .isLoadingConversation
+                                                    .value;
+                                            final bool entryResolving =
+                                                controller
+                                                    .isChatEntryResolving
+                                                    .value;
+                                            if (messagesEmpty &&
+                                                !conversationLoading &&
+                                                !entryResolving) {
+                                              return const EmptyConversationView();
+                                            }
+                                            return const MessagesList();
+                                          }),
+                                  ),
+                                  const ChatInputField(),
+                                ],
+                              ),
+                              const ChatBottomButton(),
+                              if (isAdvanced && !controller.isVoiceMode.value)
+                                Positioned(
+                                  left: 12.5,
+                                  bottom: isTablet ? 12 : 4,
+                                  child: ChatToolsFAB(),
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                      if (shellMode == WidgetMode.full) {
+                        return chatStack;
+                      }
+                      return Navigator(
+                        key: controller.chatShellNavigatorKey,
+                        initialRoute: '/',
+                        onGenerateRoute: (RouteSettings settings) {
+                          return MaterialPageRoute<void>(
+                            settings: settings,
+                            builder: (BuildContext context) => chatStack,
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
-          );
-        }),
-      ),
-    );
+            );
+          }),
+        ),
+      );
+    });
   }
 }

@@ -86,8 +86,17 @@ class ApiUrls {
   }) =>
       '$apiUrl/${chatBotsBasePath(isMarketplace)}/$idAssistant/conversations/$idConversation/queries/$idQuery';
 
+  /// On-demand cited-chunk snippet (§2.2 of the citations spec).
+  static String groundingChunkUrl(
+    String embeddingId, {
+    required String queryId,
+  }) => '$apiUrl/grounding/chunks/$embeddingId?queryId=$queryId';
+
   static String settingsUrl(bool isMarketplace) =>
       '$apiUrl/settings/company${isMarketplace ? '?isMarketplace=true' : ''}';
+
+  static String settingsUserUrl({bool isMarketplace = false}) =>
+      '$apiUrl/settings/user${isMarketplace ? '?isMarketplace=true' : ''}';
 
   static String reactionUrl(
     String idAssistant,
@@ -166,4 +175,48 @@ class ApiUrls {
     bool isMarketplace = false,
   }) =>
       '$apiUrl/${chatBotsBasePath(isMarketplace)}/$idAssistant/conversations/$idConversation/queries/audio?sse=true';
+
+  static String get profileUrl => '$apiUrl/auth/profile';
+
+  // ── Voice sessions ────────────────────────────────────────────────────────
+
+  static String voiceSessionsUrl(
+    String idAssistant,
+    String idConversation, {
+    bool isMarketplace = false,
+  }) =>
+      '$apiUrl/${chatBotsBasePath(isMarketplace)}/$idAssistant/conversations/$idConversation/voice-sessions';
+
+  static String voiceSessionUrl(
+    String idAssistant,
+    String idConversation,
+    String vsid, {
+    bool isMarketplace = false,
+  }) =>
+      '${voiceSessionsUrl(idAssistant, idConversation, isMarketplace: isMarketplace)}/$vsid';
+
+  static String voiceSessionEventsUrl(
+    String idAssistant,
+    String idConversation,
+    String vsid,
+    String vst, {
+    bool isMarketplace = false,
+  }) =>
+      '${voiceSessionUrl(idAssistant, idConversation, vsid, isMarketplace: isMarketplace)}/events?vst=$vst';
+
+  static String voiceSessionAudioChunksUrl(
+    String idAssistant,
+    String idConversation,
+    String vsid, {
+    bool isMarketplace = false,
+  }) =>
+      '${voiceSessionUrl(idAssistant, idConversation, vsid, isMarketplace: isMarketplace)}/audio-chunks';
+
+  static String voiceSessionBargeInUrl(
+    String idAssistant,
+    String idConversation,
+    String vsid, {
+    bool isMarketplace = false,
+  }) =>
+      '${voiceSessionUrl(idAssistant, idConversation, vsid, isMarketplace: isMarketplace)}/barge-in';
 }

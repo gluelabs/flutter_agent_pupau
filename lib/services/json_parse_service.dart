@@ -80,6 +80,16 @@ bool getBool(dynamic value, {bool defaultValue = false}) {
   }
 }
 
+/// Null-preserving variants of [getString]/[getInt]/[getDouble] — for
+/// optional fields where a missing key should stay `null` rather than
+/// collapse to `""`/`0`/`0.0`.
+String? getStringOrNull(dynamic value) => value == null ? null : getString(value);
+
+int? getIntOrNull(dynamic value) => value == null ? null : getInt(value);
+
+double? getDoubleOrNull(dynamic value) =>
+    value == null ? null : getDouble(value);
+
 DateTime getDateTime(dynamic value) {
   try {
     if (value == null) return DateTime.now();

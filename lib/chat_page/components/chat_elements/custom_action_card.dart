@@ -57,7 +57,7 @@ class CustomActionCard extends GetView<PupauChatController> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: MyStyles.pupauTheme(!Get.isDarkMode).lilacHover,
+                      color: MyStyles.pupauTheme(!Get.isDarkMode).grey,
                     ),
                   ),
                   child: Row(
@@ -65,7 +65,7 @@ class CustomActionCard extends GetView<PupauChatController> {
                       Icon(
                         customAction.icon,
                         size: isTablet ? 26 : 24,
-                        color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                        color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -81,9 +81,9 @@ class CustomActionCard extends GetView<PupauChatController> {
                                 maxLines: 1,
                                 style: TextStyle(
                                   fontSize: isTablet ? 16 : 14,
-                                  color: MyStyles.pupauTheme(
-                                    !Get.isDarkMode,
-                                  ).darkBlue,
+                                  color: MyStyles.getTextTheme(
+                                    isLightTheme: !Get.isDarkMode,
+                                  ).bodyMedium?.color,
                                 ),
                               ),
                               if (customAction.userDescription

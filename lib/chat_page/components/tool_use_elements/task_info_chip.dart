@@ -19,18 +19,16 @@ class TaskInfoChip extends StatelessWidget {
     final fontSize = isTablet ? 15.0 : 13.0;
     final Color? textColor = isAnonymous
         ? Colors.white
-        : MyStyles.getTextTheme(isLightTheme: !Get.isDarkMode)
-            .bodyMedium
-            ?.color;
+        : MyStyles.getTextTheme(
+            isLightTheme: !Get.isDarkMode,
+          ).bodyMedium?.color;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         color: textColor?.withValues(alpha: 0.06) ?? Colors.transparent,
-        border: Border.all(
-          color: MyStyles.pupauTheme(!Get.isDarkMode).lilacHover,
-        ),
+        border: Border.all(color: MyStyles.pupauTheme(!Get.isDarkMode).grey),
       ),
       child: Text(
         value,

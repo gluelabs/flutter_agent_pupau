@@ -6,15 +6,19 @@ import 'package:flutter_agent_pupau/services/style_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:get/get.dart';
 
+import 'native_database_shared_widgets.dart';
+
 class NativeDatabaseSearchResults extends StatefulWidget {
   const NativeDatabaseSearchResults({
     super.key,
     required this.result,
     required this.isAnonymous,
+    required this.scope,
   });
 
   final NativeDbSearchResult result;
   final bool isAnonymous;
+  final NativeDbScope scope;
 
   @override
   State<NativeDatabaseSearchResults> createState() =>
@@ -49,15 +53,23 @@ class _NativeDatabaseSearchResultsState extends State<NativeDatabaseSearchResult
           Row(
             spacing: 6,
             children: [
-              if (hasDatabaseName)
-                Text(result.databaseName.trim(), style: headerStyle),
-              if (hasTotal)
-                Text(
-                  hasDatabaseName
-                      ? '- $total ${Strings.results.tr}'
-                      : '$total ${Strings.results.tr}',
-                  style: metaStyle,
+              Expanded(
+                child: Row(
+                  spacing: 6,
+                  children: [
+                    if (hasDatabaseName)
+                      Text(result.databaseName.trim(), style: headerStyle),
+                    if (hasTotal)
+                      Text(
+                        hasDatabaseName
+                            ? '- $total ${Strings.results.tr}'
+                            : '$total ${Strings.results.tr}',
+                        style: metaStyle,
+                      ),
+                  ],
                 ),
+              ),
+              NativeDatabaseScopeBadge(scope: widget.scope, isAnonymous: isAnonymous),
             ],
           ),
 

@@ -1,6 +1,10 @@
 import 'dart:convert';
 import 'package:flutter_agent_pupau/models/assistant_model.dart';
 import 'package:flutter_agent_pupau/models/attachment_model.dart';
+import 'package:flutter_agent_pupau/models/grounding_model.dart';
+import 'package:flutter_agent_pupau/models/memory_always_model.dart';
+import 'package:flutter_agent_pupau/models/memory_reference_model.dart';
+import 'package:flutter_agent_pupau/models/skill_loaded_info.dart';
 import 'package:flutter_agent_pupau/models/tool_use_message_model.dart';
 import 'package:flutter_agent_pupau/models/ui_tool_message_model.dart';
 import 'package:flutter_agent_pupau/services/assistant_service.dart';
@@ -23,11 +27,22 @@ class PupauMessage {
   MessageType? type;
   DateTime createdAt;
   MessageStatus status;
-  bool isInitialMessage = false;
   List<Attachment> attachments =
       <Attachment>[]; //Frontend only - Assigned via api
   List<KbReference> kbReferences;
+  List<MemoryReference> memoryReferences;
+  List<MemoryAlways> alwaysMemories;
   ContextInfo? contextInfo;
+  /// RAG grounding block (`extraInfo.grounding`) — null when the assistant's
+  /// `A_GROUNDING_MODE` is OFF (the default), or a live partial version
+  /// (IMPLICIT sources only) before the authoritative one lands. See
+  /// `GroundingInfo.sourceForMarker`.
+  GroundingInfo? grounding;
+  /// Raw `groundingSources[]` off the `kb` frame (SSE only, §1.2) — IMPLICIT
+  /// sources known live, before the turn closes. Forward-filled onto
+  /// [grounding] the same way `kbReferences` is, see
+  /// `PupauChatController.handleKbMessage`.
+  List<GroundingSource> liveGroundingSources = const [];
   List<UrlInfo> urls = [];
   List<OrganicInfo> organicInfo = [];
   List<WebSearchImage> images = [];
@@ -59,6 +74,10 @@ class PupauMessage {
   bool? showTool;
   String? toolMessage;
   String? title;
+  /// Persisted on assistant query [extraInfo.skillsLoaded] (history).
+  List<SkillLoadedInfo> skillsLoaded = const [];
+  /// Inline SSE row: compact skill load/unload bubble (not persisted separately).
+  SkillEventDetail? skillEventDetail;
 
   PupauMessage({
     required this.id,
@@ -70,9 +89,12 @@ class PupauMessage {
     required this.createdAt,
     required this.status,
     this.type,
-    this.isInitialMessage = false,
     this.kbReferences = const [],
+    this.memoryReferences = const [],
+    this.alwaysMemories = const [],
     this.contextInfo,
+    this.grounding,
+    this.liveGroundingSources = const [],
     this.urls = const [],
     this.organicInfo = const [],
     this.images = const [],
@@ -104,6 +126,8 @@ class PupauMessage {
     this.attachments = const [],
     this.isAudioInput = false,
     this.transcription,
+    this.skillsLoaded = const [],
+    this.skillEventDetail,
   });
 
   bool get isMessageFromAssistant => status != MessageStatus.sent;
@@ -122,7 +146,9 @@ class PupauMessage {
       uiToolMessage == null &&
       transcription == null &&
       attachmentTrimming == null &&
-      emergencyTrimming == null;
+      emergencyTrimming == null &&
+      skillEventDetail == null &&
+      skillsLoaded.isEmpty;
 
   factory PupauMessage.fromSseStream(Map<String, dynamic> json) {
     try {
@@ -151,6 +177,32 @@ class PupauMessage {
         kbReferences: json["kbReferences"] != null
             ? List<KbReference>.from(
                 json["kbReferences"].map((x) => KbReference.fromMap(x)),
+              )
+            : [],
+        liveGroundingSources: json["groundingSources"] != null
+            ? List<GroundingSource>.from(
+                (json["groundingSources"] as List).map(
+                  (dynamic x) =>
+                      GroundingSource.fromMap(Map<String, dynamic>.from(x)),
+                ),
+              )
+            : const [],
+        memoryReferences: json["memoryReferences"] != null
+            ? List<MemoryReference>.from(
+                json["memoryReferences"].map(
+                  (x) => MemoryReference.fromMap(
+                    Map<String, dynamic>.from(x as Map),
+                  ),
+                ),
+              )
+            : [],
+        alwaysMemories: json["alwaysMemories"] != null
+            ? List<MemoryAlways>.from(
+                json["alwaysMemories"].map(
+                  (x) => MemoryAlways.fromMap(
+                    Map<String, dynamic>.from(x as Map),
+                  ),
+                ),
               )
             : [],
         urls: json["urls"].runtimeType != Null
@@ -213,6 +265,11 @@ class PupauMessage {
                 json["data"] is Map
             ? AttachmentTrimmingInfo.fromSseData(json["data"])
             : null,
+        skillEventDetail: messageType == MessageType.skillLoaded
+            ? SkillEventDetail.fromSsePayload(json, isUnload: false)
+            : messageType == MessageType.skillUnloaded
+            ? SkillEventDetail.fromSsePayload(json, isUnload: true)
+            : null,
       );
     } catch (e) {
       return PupauMessage(
@@ -229,22 +286,46 @@ class PupauMessage {
     }
   }
 
+  /// Resolves the query-group id from a history API payload (REST or SSE).
+  static String queryGroupIdFromLoadedJson(Map<String, dynamic> json) {
+    final List<String> candidates = <String>[
+      getString(json['queryGroupId']),
+      getString(json['questionGroupId']),
+      getString(json['groupId']),
+      getString(json['queryId']),
+    ];
+    final Object? extraInfo = json['extraInfo'];
+    if (extraInfo is Map<String, dynamic>) {
+      candidates.add(getString(extraInfo['queryGroupId']));
+      candidates.add(getString(extraInfo['queryId']));
+    } else if (extraInfo is Map) {
+      final Map<dynamic, dynamic> extra = extraInfo;
+      candidates.add(getString(extra['queryGroupId']));
+      candidates.add(getString(extra['queryId']));
+    }
+    for (final String candidate in candidates) {
+      if (candidate.trim().isNotEmpty) {
+        return candidate.trim();
+      }
+    }
+    return '';
+  }
+
   factory PupauMessage.fromLoadedChat(Map<String, dynamic> json) {
     try {
+      final bool isSkillItem =
+          json["extraInfo"]?["typeDetails"]?["toolType"] == "NATIVE_TOOLS" &&
+          json["extraInfo"]?["typeDetails"]?["nativeTool"]?["id"] == "SKILL";
       return PupauMessage(
         id: getString(json["id"]),
-        answer: getString(json["answer"]),
+        answer: isSkillItem ? '' : getString(json["answer"]),
         // REST history uses `query`; SSE history can use `question`.
         query: getString(json["query"] ?? json["question"]),
         assistantId: getString(json["chatBotId"] ?? json["marketplaceId"]),
         assistantType: json["marketplaceId"] != null
             ? AssistantType.marketplace
             : AssistantType.assistant,
-        groupId: getString(
-          json["queryGroupId"] ??
-              json["questionGroupId"] ??
-              json["groupId"],
-        ),
+        groupId: queryGroupIdFromLoadedJson(json),
         status: MessageStatus.loading,
         createdAt: getDateTime(json["createdAt"]),
         kbReferences: json["extraInfo"]?["kbReferences"] != null
@@ -256,6 +337,11 @@ class PupauMessage {
             : [],
         contextInfo: json["extraInfo"]?["contextInfo"] != null
             ? ContextInfo.fromMap(json["extraInfo"]["contextInfo"])
+            : null,
+        grounding: json["extraInfo"]?["grounding"] != null
+            ? GroundingInfo.fromMap(
+                Map<String, dynamic>.from(json["extraInfo"]["grounding"]),
+              ).withQueryId(getString(json["id"]))
             : null,
         attachmentTrimming: AttachmentTrimmingInfo.fromMap(
           json["extraInfo"]?["contextInfo"]?["contextEngineering"]?["attachmentTrimming"] !=
@@ -310,12 +396,20 @@ class PupauMessage {
             : [],
         reaction: ConversationService.getReactionEnum(json["reaction"] ?? ""),
         webBased: getBool(json["webBased"]),
-        sourceType: json["type"] != null
-            ? ConversationService.getSourceTypeEnum(json["type"])
-            : SourceType.llm,
+        sourceType: isSkillItem
+            ? SourceType.event
+            : (json["type"] != null
+                ? ConversationService.getSourceTypeEnum(json["type"])
+                : SourceType.llm),
+        type: isSkillItem
+            ? (json["extraInfo"]?["typeDetails"]?["toolName"] == 'skill_unload'
+                ? MessageType.skillUnloaded
+                : MessageType.skillLoaded)
+            : null,
         toolUseMessage:
-            ConversationService.getSourceTypeEnum(json["type"]) ==
-                SourceType.toolUse
+            !isSkillItem &&
+                ConversationService.getSourceTypeEnum(json["type"]) ==
+                    SourceType.toolUse
             ? ToolUseMessage.fromJson(json)
             : null,
         uiToolMessage:
@@ -324,6 +418,16 @@ class PupauMessage {
             ? UiToolMessage.fromJson(json)
             : null,
         isAudioInput: json["extraInfo"]?["inputType"] == "audio",
+        skillsLoaded: json["extraInfo"]?["skillsLoaded"] != null
+            ? List<SkillLoadedInfo>.from(
+                (json["extraInfo"]["skillsLoaded"] as List).map(
+                  (dynamic x) => SkillLoadedInfo.fromJson(x),
+                ),
+              )
+            : const [],
+        skillEventDetail: isSkillItem
+            ? SkillEventDetail.fromHistoryNativeToolItem(json)
+            : null,
       );
     } catch (e) {
       return PupauMessage(
@@ -334,7 +438,7 @@ class PupauMessage {
         assistantType: json["marketplaceId"] != null
             ? AssistantType.marketplace
             : AssistantType.assistant,
-        groupId: getString(json["queryGroupId"] ?? ""),
+        groupId: queryGroupIdFromLoadedJson(json),
         createdAt: getDateTime(json["createdAt"] ?? DateTime.now()),
         status: MessageStatus.error,
       );
@@ -360,6 +464,9 @@ class PupauMessage {
     answer += messageFromSse.answer;
     if (messageFromSse.contextInfo != null) {
       contextInfo = messageFromSse.contextInfo;
+    }
+    if (messageFromSse.grounding != null) {
+      grounding = messageFromSse.grounding;
     }
     if (messageFromSse.attachmentTrimming != null) {
       attachmentTrimming = messageFromSse.attachmentTrimming;
@@ -396,6 +503,18 @@ class PupauMessage {
       newKbReferences.addAll(messageFromSse.kbReferences);
       kbReferences = newKbReferences;
     }
+    if (messageFromSse.memoryReferences.isNotEmpty) {
+      List<MemoryReference> newReferences =
+          List<MemoryReference>.from(memoryReferences);
+      newReferences.addAll(messageFromSse.memoryReferences);
+      memoryReferences = newReferences;
+    }
+    if (messageFromSse.alwaysMemories.isNotEmpty) {
+      List<MemoryAlways> newAlways =
+          List<MemoryAlways>.from(alwaysMemories);
+      newAlways.addAll(messageFromSse.alwaysMemories);
+      alwaysMemories = newAlways;
+    }
     if (messageFromSse.forbidden != null) {
       forbidden = messageFromSse.forbidden;
     }
@@ -410,6 +529,9 @@ class PupauMessage {
     }
     sourceType = messageFromSse.sourceType;
     isLast = messageFromSse.isLast;
+    if (messageFromSse.skillsLoaded.isNotEmpty) {
+      skillsLoaded = List<SkillLoadedInfo>.from(messageFromSse.skillsLoaded);
+    }
   }
 }
 
@@ -790,6 +912,7 @@ enum SourceType { llm, toolUse, uiTool, event }
 
 enum MessageType {
   kb,
+  memory,
   error,
   forbidden,
   noDocument,
@@ -811,7 +934,10 @@ enum MessageType {
   conversationTitleGenerated,
   audioInputTranscription,
   attachmentTrimming,
+  skillLoaded,
+  skillUnloaded,
   heartbeat,
+  groundingVerification,
   //message,
   //contextInfo,
   //contextExceeded,

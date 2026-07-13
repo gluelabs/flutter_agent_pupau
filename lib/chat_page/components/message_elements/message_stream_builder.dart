@@ -38,6 +38,7 @@ class MessageStreamBuilder extends GetView<PupauChatController> {
                 isAnonymous: isAnonymous,
                 assistant: assistant,
                 contextInfo: message.contextInfo,
+                grounding: message.grounding,
                 isAudioInput: message.isAudioInput,
               );
       },

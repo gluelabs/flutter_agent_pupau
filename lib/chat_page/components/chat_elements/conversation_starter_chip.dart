@@ -15,7 +15,7 @@ class ConversationStarterChip extends GetView<PupauChatController> {
     bool isAnonymous = controller.isAnonymous;
     Color darkBlue = isAnonymous
         ? Colors.black
-        : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue;
+        : MyStyles.pupauTheme(!Get.isDarkMode).primary;
     Color white = isAnonymous
         ? Colors.white
         : MyStyles.pupauTheme(!Get.isDarkMode).white;

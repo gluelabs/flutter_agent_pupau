@@ -12,7 +12,7 @@ class StyleService {
     borderSide: BorderSide(
       color: Get.isDarkMode
           ? Colors.transparent
-          : MyStyles.pupauTheme(false).lilacHover,
+          : MyStyles.pupauTheme(true).grey,
     ),
   );
 
@@ -21,7 +21,7 @@ class StyleService {
     borderSide: BorderSide(
       color: Get.isDarkMode
           ? Colors.transparent
-          : MyStyles.pupauTheme(false).lilacPressed,
+          : MyStyles.pupauTheme(false).primary,
     ),
   );
 
@@ -34,12 +34,8 @@ class StyleService {
       : isAnonymous
       ? AnonymousThemeColors.userBubble.withValues(alpha: isCancelled ? 0.4 : 1)
       : Get.isDarkMode
-      ? MyStyles.pupauTheme(
-          false,
-        ).lilac.withValues(alpha: isCancelled ? 0.4 : 1)
-      : MyStyles.pupauTheme(
-          true,
-        ).darkBlue.withValues(alpha: isCancelled ? 0.4 : 1);
+      ? const Color(0xFF60A5FA).withValues(alpha: isCancelled ? 0.4 : 1)
+      : const Color(0xFFEFF6FF).withValues(alpha: isCancelled ? 0.4 : 1);
 
   static BubbleStyle getBubbleStyle(
     bool isAnonymous,
@@ -63,7 +59,7 @@ class StyleService {
   );
 
   static TextStyle fieldLabelStyle(bool isDarkMode) => TextStyle(
-    color: MyStyles.pupauTheme(!isDarkMode).darkBlue,
+    color: MyStyles.getTextTheme(isLightTheme: !isDarkMode).bodyMedium?.color,
     fontSize: DeviceService.isTablet ? 16 : 14,
     fontWeight: FontWeight.w500,
   );
@@ -71,7 +67,7 @@ class StyleService {
   static TextStyle appbarTextStyle(bool isDarkMode) => TextStyle(
     fontSize: DeviceService.isTablet ? 24 : 22,
     fontWeight: FontWeight.w600,
-    color: MyStyles.pupauTheme(!isDarkMode).darkBlue,
+    color: MyStyles.pupauTheme(!isDarkMode).primary,
     height: DeviceService.isTablet ? 1.25 : 1,
   );
 
@@ -81,7 +77,7 @@ class StyleService {
     color: isDarkMode ? Colors.white : Colors.black87,
   );
 
-   static TextStyle toolCellHeaderTextStyle(bool isDarkMode) => TextStyle(
+  static TextStyle toolCellHeaderTextStyle(bool isDarkMode) => TextStyle(
     fontSize: DeviceService.isTablet ? 14 : 13,
     fontWeight: FontWeight.w600,
     color: isDarkMode ? Colors.white : Colors.black87,
@@ -91,4 +87,31 @@ class StyleService {
     fontSize: DeviceService.isTablet ? 14 : 13,
     color: isDarkMode ? Colors.white70 : Colors.black87,
   );
+
+  static ThemeData expansionTileThemeData(
+    BuildContext context,
+    bool isAnonymous,
+  ) {
+    final bool isTablet = DeviceService.isTablet;
+    final TextStyle labelStyle = TextStyle(
+      fontSize: isTablet ? 15 : 14,
+      fontWeight: FontWeight.w600,
+      color: Get.isDarkMode || isAnonymous ? Colors.white : Colors.black87,
+    );
+    return Theme.of(context).copyWith(
+      dividerColor: Colors.transparent,
+      listTileTheme: const ListTileThemeData(
+        tileColor: Colors.transparent,
+        selectedTileColor: Colors.transparent,
+      ),
+      expansionTileTheme: ExpansionTileThemeData(
+        backgroundColor: Colors.transparent,
+        collapsedBackgroundColor: Colors.transparent,
+        iconColor: labelStyle.color,
+        collapsedIconColor: labelStyle.color,
+        textColor: labelStyle.color,
+        collapsedTextColor: labelStyle.color,
+      ),
+    );
+  }
 }

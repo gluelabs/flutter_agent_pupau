@@ -62,7 +62,7 @@ class BrowserUseBottomInfo extends StatelessWidget {
                           controller.openBrowserInspectorModal(browserUseData!);
                         },
                         iconSize: isTablet ? 30 : 28,
-                        color: isAnonymous ? Colors.white : MyStyles.pupauTheme(!Get.isDarkMode).accent,
+                        color: isAnonymous ? Colors.white : MyStyles.pupauTheme(!Get.isDarkMode).primary,
                         tooltip: Strings.inspectBrowser.tr,
                         icon: Icon(Symbols.troubleshoot)),
                   )

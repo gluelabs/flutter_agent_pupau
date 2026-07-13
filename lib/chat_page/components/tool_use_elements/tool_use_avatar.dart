@@ -25,7 +25,7 @@ class ToolUseAvatar extends StatelessWidget {
         toolUseIcon,
         color: isAnonymous
             ? Colors.white
-            : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+            : MyStyles.pupauTheme(!Get.isDarkMode).primary,
         size: size,
       ),
     );

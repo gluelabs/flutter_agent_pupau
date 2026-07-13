@@ -41,7 +41,8 @@ class AudioConvertingInfo extends StatelessWidget {
                 fontSize: isTablet ? 16 : 14,
                 color: isAnonymous
                     ? AnonymousThemeColors.userText
-                    : MyStyles.pupauTheme(!Get.isDarkMode).white,
+                    : MyStyles.getTextTheme(isLightTheme: true).bodyMedium?.color,
+               
               ),
             ),
           ],

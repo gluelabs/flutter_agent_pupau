@@ -9,6 +9,7 @@ class ToolUseWebSearchData {
   List<OrganicInfo> organicInfo;
   List<WebSearchImage> images;
   List<WebSearchNews> news;
+  GraphInfo? graphInfo;
 
   ToolUseWebSearchData({
     required this.query,
@@ -19,6 +20,7 @@ class ToolUseWebSearchData {
     required this.organicInfo,
     required this.images,
     required this.news,
+    required this.graphInfo,
   });
   factory ToolUseWebSearchData.fromJson(Map<String, dynamic> json) {
     List info = json['info'] ?? [];
@@ -32,7 +34,8 @@ class ToolUseWebSearchData {
           language: "",
           organicInfo: [],
           images: [],
-          news: []);
+          news: [],
+          graphInfo: null);
     }
     final searchParams = firstInfo["webSearchResponse"]?["webSearchLinksInfo"]
         ?["searchParameters"];
@@ -62,6 +65,9 @@ class ToolUseWebSearchData {
                       ?["webSearchLinksInfo"]?["news"]
                   .map((x) => WebSearchNews.fromMap(x)))
               : [],
+      graphInfo: firstInfo["webSearchResponse"]?["webSearchLinksInfo"]?["graph"] != null
+          ? GraphInfo.fromMap(firstInfo["webSearchResponse"]?["webSearchLinksInfo"]?["graph"])
+          : null,
     );
   }
 }

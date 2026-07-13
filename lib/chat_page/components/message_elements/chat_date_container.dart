@@ -23,13 +23,21 @@ class ChatDateContainer extends GetView<PupauChatController> {
           formatDate(
             date,
             [d, " ", MM, " ", yyyy],
-            locale: LocalizationService.getDateLocale(controller.pupauConfig != null ? LocalizationService.getLanguageFromConfig(controller.pupauConfig!) : Language.english),
+            locale: LocalizationService.getDateLocale(
+              controller.pupauConfig != null
+                  ? LocalizationService.getLanguageFromConfig(
+                      controller.pupauConfig!,
+                    )
+                  : Language.english,
+            ),
           ),
           style: TextStyle(
             fontSize: isTablet ? 16 : 14,
             color: isAnonymous
                 ? AnonymousThemeColors.assistantText
-                : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                : MyStyles.getTextTheme(
+                    isLightTheme: !Get.isDarkMode,
+                  ).bodyMedium?.color,
           ),
         ),
       ),

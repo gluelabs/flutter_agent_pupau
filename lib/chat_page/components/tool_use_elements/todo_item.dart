@@ -33,12 +33,12 @@ class ToDoItem extends StatelessWidget {
               border: Border.all(
                   color: isAnonymous
                       ? AnonymousThemeColors.userBubble
-                      : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue),
+                      : MyStyles.pupauTheme(!Get.isDarkMode).primary),
               borderRadius: BorderRadius.circular(6),
               color: isDone
                   ? isAnonymous
                       ? AnonymousThemeColors.userBubble
-                      : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue
+                      : MyStyles.pupauTheme(!Get.isDarkMode).primary
                   : isAnonymous
                       ? Colors.transparent
                       : MyStyles.pupauTheme(!Get.isDarkMode).white,

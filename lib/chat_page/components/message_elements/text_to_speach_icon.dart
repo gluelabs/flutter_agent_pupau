@@ -38,9 +38,11 @@ class TextToSpeachIcon extends GetView<PupauChatController> {
               child: Icon(
                 color: isAnonymous
                     ? Colors.white
-                    : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                    : MyStyles.pupauTheme(!Get.isDarkMode).primary,
                 isNarrating ? Symbols.volume_off : Symbols.volume_up,
                 size: isTablet ? 24 : 20,
+                opticalSize: 1,
+                grade: 150,
               ),
             ),
           ),

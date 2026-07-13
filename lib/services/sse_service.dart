@@ -67,7 +67,7 @@ class SSEService {
           "Conversation-Token": conversationToken,
           "Content-type": "Application/json",
         },
-        body: generateBody(message),
+        body: generateBody(message, chatController: chatController),
       );
     } catch (e) {
       return null;
@@ -158,6 +158,7 @@ class SSEService {
     String conversationToken,
     File audioFile, {
     bool isWebSearch = false,
+    bool isVoiceMode = false,
     PupauChatController? chatController,
   }) async {
     // Getting authentication credentials from the config
@@ -179,6 +180,12 @@ class SSEService {
       params.add(
         "customProperties=${jsonEncode(chatController?.pupauConfig?.customProperties)}",
       );
+    }
+    if (isVoiceMode) {
+      params.add("voiceResponse=true");
+      params.add("ttsFormat=pcm16");
+      params.add("ttsSampleRate=24000");
+      params.add("ttsAlignment=true");
     }
     if (params.isNotEmpty) {
       queryParams = "&${params.join('&')}";
@@ -207,7 +214,9 @@ class SSEService {
         .then((response) async {
           if (response.statusCode < 200 || response.statusCode >= 300) {
             controller.addError(
-              Exception("Audio SSE request failed: HTTP ${response.statusCode}"),
+              Exception(
+                "Audio SSE request failed: HTTP ${response.statusCode}",
+              ),
             );
             controller.close();
             return;
@@ -343,20 +352,33 @@ class SSEService {
     }
   }
 
-  static Map<String, dynamic> generateBody(String message) {
+  static Map<String, dynamic> generateBody(
+    String message, {
+    PupauChatController? chatController,
+  }) {
     List<Attachment> attachments = Get.find<PupauAttachmentsController>()
         .attachments
         .where((Attachment attachment) => attachment.selected)
         .toList();
-    if (attachments.isEmpty) {
-      return {"request": message};
-    } else {
-      return {
-        "request": message,
+    final Map<String, dynamic> body = {
+      "request": message,
+      if (attachments.isNotEmpty)
         "attachments": attachments
             .map((attachment) => {"id": attachment.id, "mode": "STANDARD"})
             .toList(),
-      };
+    };
+
+    // Optional "thinking" params: only when the current model supports it and user enabled it.
+    if (chatController != null &&
+        chatController.isThinkingSupported() &&
+        chatController.thinkingEnabled.value) {
+      body["thinkingEnabled"] = true;
+      final String? effort = chatController.thinkingEffortToSend();
+      if (effort != null) {
+        body["thinkingEffort"] = effort;
+      }
     }
+
+    return body;
   }
 }

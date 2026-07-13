@@ -65,9 +65,9 @@ class ReflectionTagContainer extends GetView<PupauChatController> {
                           ),
                         ).copyWith(
                           blockquoteDecoration: BoxDecoration(
-                            color: MyStyles.pupauTheme(!Get.isDarkMode)
-                                .lilacHover
-                                .withValues(alpha: Get.isDarkMode ? 0.4 : 1),
+                            color: MyStyles.pupauTheme(
+                              !Get.isDarkMode,
+                            ).primary.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           blockquotePadding: const EdgeInsets.all(12),

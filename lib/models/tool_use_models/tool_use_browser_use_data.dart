@@ -192,7 +192,7 @@ class NetworkItem {
     } else if (status.startsWith("4") || status.startsWith("5")) {
       return MyStyles.pupauTheme(!Get.isDarkMode).redAlarm;
     } else if (status.startsWith("1")) {
-      return MyStyles.pupauTheme(!Get.isDarkMode).blueInfo;
+      return MyStyles.pupauTheme(!Get.isDarkMode).primary;
     } else {
       return MyStyles.pupauTheme(!Get.isDarkMode).grey;
     }

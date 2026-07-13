@@ -1,3 +1,4 @@
+import 'package:flutter_agent_pupau/models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PupauSharedPreferences {
@@ -15,6 +16,8 @@ class PupauSharedPreferences {
       'pupau_attachment_trimming_opened_ids';
 
   static const String _lastEventIdKeyPrefix = 'pupau_last_event_id_';
+
+  static const String _userKey = 'pupau_user_key';
 
   static String _lastEventIdKey(String conversationId) =>
       '$_lastEventIdKeyPrefix$conversationId';
@@ -79,5 +82,22 @@ class PupauSharedPreferences {
       _lastEventIdKey(conversationId),
       lastEventId,
     );
+  }
+
+  /// Set Pupau user
+  static Future<void> setUser(User user) =>
+      _sharedPreferences.setString(_userKey, userToMap(user));
+
+  /// Get Pupau user from local cache, or `null` when missing or invalid.
+  static User? getUser() {
+    final String? raw = _sharedPreferences.getString(_userKey);
+    if (raw == null || raw.trim().isEmpty) return null;
+
+    try {
+      return userFromMap(raw);
+    } catch (_) {
+      _sharedPreferences.remove(_userKey);
+      return null;
+    }
   }
 }

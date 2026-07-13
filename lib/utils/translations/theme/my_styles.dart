@@ -9,25 +9,12 @@ class MyStyles {
   // Pupau Theme
   static PupauThemeData pupauTheme(bool isLightTheme) {
     return PupauThemeData(
-      accent: isLightTheme ? LightThemeColors.accent : DarkThemeColors.accent,
-      blue: isLightTheme ? LightThemeColors.blue : DarkThemeColors.blue,
-      darkBlue: isLightTheme
-          ? LightThemeColors.darkBlue
-          : DarkThemeColors.darkBlue,
+      primary: isLightTheme
+          ? LightThemeColors.primary
+          : DarkThemeColors.primary,
       white: isLightTheme ? LightThemeColors.white : DarkThemeColors.white,
       black: isLightTheme ? LightThemeColors.black : DarkThemeColors.black,
       grey: isLightTheme ? LightThemeColors.grey : DarkThemeColors.grey,
-      magenta: isLightTheme ? LightThemeColors.magenta : DarkThemeColors.magenta,
-      lilac: isLightTheme ? LightThemeColors.lilac : DarkThemeColors.lilac,
-      lilacHover: isLightTheme
-          ? LightThemeColors.lilacHover
-          : DarkThemeColors.lilacHover,
-      lilacPressed: isLightTheme
-          ? LightThemeColors.lilacPressed
-          : DarkThemeColors.lilacPressed,
-      blueInfo: isLightTheme
-          ? LightThemeColors.blueInfo
-          : DarkThemeColors.blueInfo,
       yellowWarning: isLightTheme
           ? LightThemeColors.yellowWarning
           : DarkThemeColors.yellowWarning,
@@ -35,10 +22,12 @@ class MyStyles {
           ? LightThemeColors.redAlarm
           : DarkThemeColors.redAlarm,
       green: isLightTheme ? LightThemeColors.green : DarkThemeColors.green,
-
       codeBackground: isLightTheme
           ? LightThemeColors.codeBackground
           : DarkThemeColors.codeBackground,
+      assistantCardBackground: isLightTheme
+          ? LightThemeColors.assistantCardBackground
+          : DarkThemeColors.assistantCardBackground,
       betaPreviewChipBackground: isLightTheme
           ? LightThemeColors.betaPreviewChipBackground
           : DarkThemeColors.betaPreviewChipBackground,
@@ -61,6 +50,7 @@ class MyStyles {
         color: isLightTheme
             ? LightThemeColors.iconColor
             : DarkThemeColors.iconColor,
+        weight: 600,
       );
 
   ///text theme
@@ -189,16 +179,16 @@ class MyStyles {
       ) {
         if (states.contains(WidgetState.pressed)) {
           return isLightTheme
-              ? LightThemeColors.buttonColor.withValues(alpha: 0.5)
-              : DarkThemeColors.buttonColor.withValues(alpha: 0.5);
+              ? LightThemeColors.primary
+              : DarkThemeColors.primary;
         } else if (states.contains(WidgetState.disabled)) {
           return isLightTheme
               ? LightThemeColors.buttonDisabledColor
               : DarkThemeColors.buttonDisabledColor;
         }
         return isLightTheme
-            ? LightThemeColors.buttonColor
-            : DarkThemeColors.buttonColor; // Use the component's default.
+            ? LightThemeColors.primary
+            : DarkThemeColors.primary; // Use the component's default.
       }),
     ),
   );

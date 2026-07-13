@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AnonymousThemeColors {
-  static const Color accent = Color(0xff34BFC0);
+  static const Color primary = Color(0xff3B82F6);
   static const Color background = Color(0xff282828);
   static const Color assistantText = Color(0xffCBCED3);
   static const Color assistantBubble = Colors.black;

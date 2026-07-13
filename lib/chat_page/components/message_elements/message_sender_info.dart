@@ -38,19 +38,26 @@ class MessageSenderInfo extends GetView<PupauChatController> {
                 ),
                 SizedBox(width: 10),
                 Flexible(
-                  child: m.Text(assistant?.name ?? "",
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: fontSize,
-                          color: Get.isDarkMode || isAnonymous
-                              ? Colors.white
-                              : MyStyles.pupauTheme(!Get.isDarkMode).accent)),
+                  child: m.Text(
+                    assistant?.name ?? "",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: fontSize,
+                      color: Get.isDarkMode || isAnonymous
+                          ? Colors.white
+                          : MyStyles.getTextTheme(
+                              isLightTheme: !Get.isDarkMode,
+                            ).bodyMedium?.color,
+                    ),
+                  ),
                 ),
                 if (isMarketplace)
                   Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: MarketplaceIcon(
-                          color: isAnonymous ? Colors.white : null))
+                    padding: const EdgeInsets.only(left: 8),
+                    child: MarketplaceIcon(
+                      color: isAnonymous ? Colors.white : null,
+                    ),
+                  ),
               ],
             ),
           ),

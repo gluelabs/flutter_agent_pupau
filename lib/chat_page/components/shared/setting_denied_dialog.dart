@@ -26,7 +26,7 @@ Future<void> showSettingDeniedDialog(String message) {
               textAlign: TextAlign.center,
               style: TextStyle(
                   fontSize: isTablet ? 20 : 16,
-                  color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue)),
+                  color: MyStyles.pupauTheme(!Get.isDarkMode).primary)),
         ),
         shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(25))),

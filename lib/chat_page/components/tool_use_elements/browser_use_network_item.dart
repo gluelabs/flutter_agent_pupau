@@ -6,10 +6,7 @@ import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 
 class BrowserUseNetworkItem extends StatelessWidget {
-  const BrowserUseNetworkItem({
-    super.key,
-    required this.networkItem,
-  });
+  const BrowserUseNetworkItem({super.key, required this.networkItem});
 
   final NetworkItem networkItem;
 
@@ -25,28 +22,57 @@ class BrowserUseNetworkItem extends StatelessWidget {
           Row(
             spacing: 8,
             children: [
-              Text(networkItem.method,
-                  style: TextStyle(
-                      fontSize: isTablet ? 16 : 14,
-                      fontWeight: FontWeight.w600,
-                      color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue)),
-              Text(networkItem.status,
-                  style: TextStyle(
-                      fontSize: isTablet ? 16 : 14,
-                      fontWeight: FontWeight.w600,
-                      color: networkItem.getStatusColor())),
-              Text(networkItem.resourceType,
-                  style: TextStyle(
-                      fontSize: isTablet ? 14 : 12,
-                      fontWeight: FontWeight.w300,
-                      color:
-                          MyStyles.getTextTheme(isLightTheme: !Get.isDarkMode)
-                              .bodyMedium
-                              ?.color)),
+              Text(
+                networkItem.method,
+                style: TextStyle(
+                  fontSize: isTablet ? 16 : 14,
+                  fontWeight: FontWeight.w600,
+                  color: MyStyles.getTextTheme(
+                    isLightTheme: !Get.isDarkMode,
+                  ).bodyMedium?.color,
+                ),
+              ),
+              Text(
+                networkItem.status,
+                style: TextStyle(
+                  fontSize: isTablet ? 16 : 14,
+                  fontWeight: FontWeight.w600,
+                  color: networkItem.getStatusColor(),
+                ),
+              ),
+              Text(
+                networkItem.resourceType,
+                style: TextStyle(
+                  fontSize: isTablet ? 14 : 12,
+                  fontWeight: FontWeight.w300,
+                  color: MyStyles.getTextTheme(
+                    isLightTheme: !Get.isDarkMode,
+                  ).bodyMedium?.color,
+                ),
+              ),
             ],
           ),
-          CustomSelectableText(text: networkItem.url, textStyle: TextStyle(fontSize: isTablet ? 16 : 14, color: MyStyles.getTextTheme(isLightTheme: !Get.isDarkMode).bodyMedium?.color), openLinks: false,),
-          CustomSelectableText(text: networkItem.host, textStyle: TextStyle(fontSize: isTablet ? 14 : 12, fontWeight: FontWeight.w300, color: MyStyles.getTextTheme(isLightTheme: !Get.isDarkMode).bodyMedium?.color), openLinks: false,),
+          CustomSelectableText(
+            text: networkItem.url,
+            textStyle: TextStyle(
+              fontSize: isTablet ? 16 : 14,
+              color: MyStyles.getTextTheme(
+                isLightTheme: !Get.isDarkMode,
+              ).bodyMedium?.color,
+            ),
+            openLinks: false,
+          ),
+          CustomSelectableText(
+            text: networkItem.host,
+            textStyle: TextStyle(
+              fontSize: isTablet ? 14 : 12,
+              fontWeight: FontWeight.w300,
+              color: MyStyles.getTextTheme(
+                isLightTheme: !Get.isDarkMode,
+              ).bodyMedium?.color,
+            ),
+            openLinks: false,
+          ),
         ],
       ),
     );

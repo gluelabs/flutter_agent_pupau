@@ -96,9 +96,9 @@ class NewsContainer extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: isTablet ? 16 : 14,
-                    color: MyStyles.pupauTheme(!Get.isDarkMode).blue,
+                    color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
                     decoration: TextDecoration.underline,
-                    decorationColor: MyStyles.pupauTheme(!Get.isDarkMode).blue,
+                    decorationColor: MyStyles.pupauTheme(!Get.isDarkMode).primary,
                   )),
             ),
           ],

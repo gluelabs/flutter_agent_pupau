@@ -13,7 +13,7 @@ import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
 import 'package:flutter_agent_pupau/services/style_service.dart';
 import 'package:flutter_agent_pupau/utils/pupau_shared_preferences.dart';
 
-class MessageBubble extends GetView<PupauChatController> {
+class MessageBubble extends StatefulWidget {
   const MessageBubble({
     super.key,
     required this.assistant,
@@ -28,71 +28,116 @@ class MessageBubble extends GetView<PupauChatController> {
   Key get messageKey => ValueKey('${message.id}_${message.isCancelled}');
 
   @override
+  State<MessageBubble> createState() => _MessageBubbleState();
+}
+
+class _MessageBubbleState extends State<MessageBubble> {
+  VoidCallback? _userBubbleToggle;
+
+  void _registerUserBubbleToggle(VoidCallback? fn) {
+    if (!mounted) return;
+
+    final bool hadHandler = _userBubbleToggle != null;
+    final bool hasHandler = fn != null;
+    _userBubbleToggle = fn;
+    if (hadHandler != hasHandler) {
+      setState(() {});
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    bool isAssistant = message.isMessageFromAssistant;
-    Reaction reaction = message.reaction ?? Reaction.none;
-    bool isLoadingMessage = message.status == MessageStatus.loading;
-    bool isLoadingAssistantMessage = isLoadingMessage && isAssistant;
-    bool isImageSearch =
-        message.images.isNotEmpty && isAssistant && message.answer.isEmpty;
+    Theme.of(context);
+    final PupauChatController controller = Get.find<PupauChatController>();
+    final bool isAssistant = widget.message.isMessageFromAssistant;
+    final Reaction reaction = widget.message.reaction ?? Reaction.none;
+    final bool isLoadingMessage =
+        widget.message.status == MessageStatus.loading;
+    final bool isLoadingAssistantMessage = isLoadingMessage && isAssistant;
+    final bool isImageSearch =
+        widget.message.images.isNotEmpty &&
+        isAssistant &&
+        widget.message.answer.isEmpty;
     return Obx(() {
-      bool isLastMessage = message == controller.messages.firstOrNull;
-      bool isAnonymous = controller.isAnonymous;
-      bool showMenuTip = isAssistant &&
+      final bool isLastMessage =
+          widget.message == controller.messages.firstOrNull;
+      final bool isAnonymous = controller.isAnonymous;
+      final bool showMenuTip =
+          isAssistant &&
           isLastMessage &&
           !controller.stopIsActive() &&
           !PupauSharedPreferences.getTutorialMessageMenuDone();
-      String messageText = isAssistant ? message.answer : message.query;
+      final String messageText = isAssistant
+          ? widget.message.answer
+          : widget.message.query;
+
+      Widget bubbleChild = Bubble(
+        key: widget.messageKey,
+        radius: const Radius.circular(20),
+        elevation: 0,
+        style: StyleService.getBubbleStyle(
+          isAnonymous,
+          isAssistant,
+          widget.message.isCancelled,
+        ),
+        nip: isAssistant ? BubbleNip.no : BubbleNip.rightTop,
+        padding: isAssistant ? BubbleEdges.all(0) : null,
+        child: Column(
+          crossAxisAlignment: isAssistant
+              ? CrossAxisAlignment.start
+              : CrossAxisAlignment.end,
+          children: <Widget>[
+            if (widget.message.status == MessageStatus.error)
+              MessageLoadErrorInfo(),
+            isLoadingAssistantMessage
+                ? MessageStreamBuilder(
+                    message: widget.message,
+                    assistant: widget.assistant,
+                  )
+                : MessageContent(
+                    messageId: widget.message.id,
+                    message: messageText,
+                    status: widget.message.status,
+                    createdAt: widget.message.createdAt,
+                    isAssistant: isAssistant,
+                    isAnonymous: isAnonymous,
+                    assistant: widget.assistant,
+                    contextInfo: widget.message.contextInfo,
+                    grounding: widget.message.grounding,
+                    isAudioInput: widget.message.isAudioInput,
+                    onRegisterUserBubbleToggle: isAssistant
+                        ? null
+                        : _registerUserBubbleToggle,
+                    userBubbleExpandTap: isAssistant ? null : _userBubbleToggle,
+                  ),
+            if (showMenuTip) MessageMenuTip(),
+          ],
+        ),
+      );
+
       return AbsorbPointer(
-        absorbing: controller.stopIsActive() ||
-            message.isInitialMessage ||
-            isReadOnly ||
-            (isAssistant && message.status == MessageStatus.loading),
+        absorbing:
+            controller.stopIsActive() ||
+            widget.isReadOnly ||
+            (isAssistant && widget.message.status == MessageStatus.loading),
         child: MyContextMenuRegion(
-          contextMenu: getContextMenu(isAssistant, reaction, controller.hideInputBox.value, message: message),
-          onItemSelected: isReadOnly
+          contextMenu: getContextMenu(
+            isAssistant,
+            reaction,
+            controller.hideInputBox.value,
+            message: widget.message,
+          ),
+          onItemSelected: widget.isReadOnly
               ? null
-              : (selectedOption) {
+              : (dynamic selectedOption) {
                   if (selectedOption != null) {
                     controller.manageMessageContextMenu(
-                        selectedOption, message);
+                      selectedOption,
+                      widget.message,
+                    );
                   }
                 },
-          child: isImageSearch
-              ? const SizedBox()
-              : Bubble(
-                  key:
-                      messageKey, // Use the reactive key to force rebuild when updating isCancelled
-                  radius: const Radius.circular(20),
-                  elevation: 0,
-                  style: StyleService.getBubbleStyle(
-                      isAnonymous, isAssistant, message.isCancelled),
-                  nip: isAssistant ? BubbleNip.no : BubbleNip.rightTop,
-                  padding: isAssistant ? BubbleEdges.all(0) : null,
-                  child: Column(
-                    crossAxisAlignment: isAssistant
-                        ? CrossAxisAlignment.start
-                        : CrossAxisAlignment.end,
-                    children: [
-                      if (message.status == MessageStatus.error)
-                        MessageLoadErrorInfo(),
-                      isLoadingAssistantMessage
-                          ? MessageStreamBuilder(
-                              message: message, assistant: assistant)
-                          : MessageContent(
-                              messageId: message.id,
-                              message: messageText,
-                              status: message.status,
-                              createdAt: message.createdAt,
-                              isAssistant: isAssistant,
-                              isAnonymous: isAnonymous,
-                              assistant: assistant,
-                              contextInfo: message.contextInfo,
-                              isAudioInput: message.isAudioInput),
-                      if (showMenuTip) MessageMenuTip()
-                    ],
-                  ),
-                ),
+          child: isImageSearch ? const SizedBox() : bubbleChild,
         ),
       );
     });

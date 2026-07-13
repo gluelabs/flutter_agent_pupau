@@ -24,7 +24,7 @@ class CloseIcon extends StatelessWidget {
           child: IconButton(
             icon: const Icon(Symbols.close),
             iconSize: isTablet ? 32 : 24,
-            color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+            color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
             tooltip: Strings.back.tr,
             onPressed: () {
               onPressed?.call();

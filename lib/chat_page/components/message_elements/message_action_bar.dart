@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/warning_action_bar_icon.dart';
 import 'package:get/get.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/fork_conversation_icon.dart';
+import 'package:flutter_agent_pupau/chat_page/components/message_elements/memory_info_icon.dart';
+import 'package:flutter_agent_pupau/chat_page/components/message_elements/memory_references_modal.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/message_copy_icon.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/reaction_icon.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/text_to_speach_icon.dart';
@@ -83,6 +85,16 @@ class MessageActionBar extends GetView<PupauChatController> {
               ForkConversationIcon(message: message, isAnonymous: isAnonymous),
             if (hasTrimmingContent)
               WarningActionBarIcon(message: message, isAnonymous: isAnonymous),
+            MemoryInfoIcon(
+              message: message,
+              onTap: () {
+                FocusScope.of(context).unfocus();
+                showMemoryReferencesModal(
+                  alwaysMemories: message.alwaysMemories,
+                  references: message.memoryReferences,
+                );
+              },
+            ),
           ],
         ),
       ),

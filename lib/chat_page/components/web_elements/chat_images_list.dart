@@ -41,7 +41,7 @@ class ChatImagesList extends GetView<PupauChatController> {
                     size: isTablet ? 26 : 24,
                     color: isAnonymous
                         ? AnonymousThemeColors.assistantText
-                        : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                        : MyStyles.pupauTheme(!Get.isDarkMode).primary,
                   ),
                   const SizedBox(width: 6),
                   Text(
@@ -51,7 +51,9 @@ class ChatImagesList extends GetView<PupauChatController> {
                       fontWeight: FontWeight.w500,
                       color: isAnonymous
                           ? AnonymousThemeColors.assistantText
-                          : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                          : MyStyles.getTextTheme(
+                              isLightTheme: !Get.isDarkMode,
+                            ).bodyMedium?.color,
                     ),
                   ),
                 ],
@@ -90,9 +92,7 @@ class ChatImagesList extends GetView<PupauChatController> {
                                   fit: BoxFit.cover,
                                   errorListener: (error) {},
                                   errorWidget: (context, url, error) =>
-                                      Image.asset(
-                                        Constants.missingImage,
-                                      ),
+                                      Image.asset(Constants.missingImage),
                                 ),
                         ),
                       ),

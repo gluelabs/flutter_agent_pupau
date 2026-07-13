@@ -38,9 +38,11 @@ class WarningActionBarIcon extends GetView<PupauChatController> {
                 Icon(
                   color: isAnonymous
                       ? Colors.white
-                      : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+                      : MyStyles.pupauTheme(!Get.isDarkMode).primary,
                   Symbols.warning,
                   size: DeviceService.isTablet ? 24 : 20,
+                  opticalSize: 1,
+                  grade: 150,
                 ),
                 if (!opened)
                   Positioned(

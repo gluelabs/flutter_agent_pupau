@@ -11,7 +11,7 @@ void showFeedbackSnackbar(
   bool isInfo = false,
 }) {
   final Color backgroundColor = isInfo
-      ? MyStyles.pupauTheme(!Get.isDarkMode).blueInfo
+      ? MyStyles.pupauTheme(!Get.isDarkMode).primary
       : MyStyles.pupauTheme(!Get.isDarkMode).green;
 
   // Prefer the original GetX snackbar when the overlay is available (e.g. host

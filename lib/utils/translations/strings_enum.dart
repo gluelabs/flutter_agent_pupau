@@ -12,6 +12,7 @@ class Strings {
   static const String save = 'Save';
   static const String user = "User";
   static const String search = 'Search';
+  static const String list = 'List';
   static const String description = 'Description';
   static const String noSearchFound = 'Nothing found...';
   static const String thanksFeedback = 'Thanks for your feedback!';
@@ -56,6 +57,16 @@ class Strings {
   static const String deleted = 'Deleted';
   static const String message = 'Message';
   static const String references = 'References';
+  static const String memoriesUsed = 'Memories used';
+  static const String memoriesAlwaysActive = 'Always active';
+  static const String memoriesRelevantForThisResponse =
+      'Relevant for this response';
+  static const String memorySourceUser = 'User';
+  static const String memorySourceSystem = 'System';
+  static const String always = 'Always';
+  static const String memorySaved = 'Memory saved';
+  static const String memoryUpdated = 'Memory updated';
+  static const String memoryRemoved = 'Memory removed';
   static const String like = 'Like';
   static const String dislike = 'Dislike';
   static const String copy = 'Copy';
@@ -152,8 +163,19 @@ class Strings {
       "Edit this message and keep all messages before it.";
   static const String forkDescription =
       "You will create a copy of this conversation ending with this message. This conversation will remain untouched. Do you want to continue?";
+  static const String skillEventLoaded = "Skill loaded";
+  static const String skillEventUnloaded = "Skill unloaded";
+  /// Use @count placeholder for the number of skills.
+  static const String skillsActiveCount = "@count active skills";
+  static const String activeSkills = "Active Skills";
+  static const String activeSkillsInfo =
+      "Skills currently loaded in this conversation for the agent.";
+  static const String agent = "Agent";
+  static const String skillLoadedBy = "Loaded by";
   static const String newConversationTitle = "New conversation title";
   static const String newConversationCreated = "New conversation created!";
+  static const String conversationStoppedCorrectly =
+      "Conversation stopped correctly!";
   static const String resourceDeletedSuccess = "Resource deleted successfully!";
   static const String resourceDeleteConfirm =
       "Are you sure you want to delete this resource: ";
@@ -173,6 +195,12 @@ class Strings {
       "This agent has no Vision Capabilities, you can Tag an agent that has vision capabilities like Pixtral or Claude Sonnet 3.7";
   static const String retryWith = "Retry with";
   static const String whatDoYouSee = "What do you see?";
+  static const String scrollToBottom = "Scroll to bottom";
+  static const String scrollToTop = "Scroll to top";
+  static const String autoScrollMagnetOnTapToTurnOff =
+      "Auto-scroll magnet is ON. Tap to turn OFF.";
+  static const String autoScrollMagnetOffTapToTurnOn =
+      "Auto-scroll magnet is OFF. Tap to turn ON.";
   static const String doubleTapToShowMoreOptions =
       "Double tap to show more options!";
   static const String customActions = "Custom actions";
@@ -255,24 +283,57 @@ class Strings {
   static const String nativeDbAction = "Action";
   static const String nativeDbInserted = "Inserted";
   static const String nativeDbInsertedRows = "Inserted rows";
+  static const String nativeDbScopePrivate = "Private";
+  static const String nativeDbScopeCompany = "Company";
+  static const String nativeDbScopeConversation = "Conversation";
   // Loading labels (keys must be unique across all Strings.* constants)
-  static const String nativeDbLoadingList = "native_db_loading_list";
-  static const String nativeDbLoadingSearch = "native_db_loading_search";
-  static const String nativeDbLoadingInsert = "native_db_loading_insert";
-  static const String nativeDbLoadingUpdate = "native_db_loading_update";
-  static const String nativeDbLoadingDelete = "native_db_loading_delete";
+  static const String nativeDbLoadingList = "Loading databases...";
+  static const String nativeDbLoadingSearch = "Searching...";
+  static const String nativeDbLoadingInsert = "Inserting row...";
+  static const String nativeDbLoadingUpdate = "Updating row...";
+  static const String nativeDbLoadingDelete = "Deleting row...";
   static const String nativeDbLoadingCreateDatabase =
-      "native_db_loading_create_database";
-  static const String nativeDbLoadingAddColumn = "native_db_loading_add_column";
+      "Creating database...";
+  static const String nativeDbLoadingAddColumn = "Adding column...";
+
+  // ATTACHMENT (JIT) TOOLS
+  static const String attachmentToolLoadingList = "Listing attachments...";
+  static const String attachmentToolLoadingOutline =
+      "Reading attachment structure...";
+  static const String attachmentToolLoadingRead = "Reading attachment...";
+  static const String attachmentToolLoadingGrep = "Searching attachment...";
+  static const String attachmentToolLoadingSearch =
+      "Searching attachments...";
+  static const String attachmentToolReadLabel = 'Reading "@fileName"';
+  static const String attachmentToolReadRangeLabel =
+      'Reading "@fileName" (lines @fromLine-@toLine)';
+  static const String attachmentToolGrepLabel =
+      'Searching for "@pattern" in @fileName';
+  static const String attachmentToolGrepAllLabel =
+      'Searching for "@pattern" in attachments';
+  static const String attachmentToolSearchLabel =
+      'Searching attachments for "@searchText"';
+  static const String attachmentToolOutlineLabel =
+      'Reading structure of "@fileName"';
+  static const String attachmentToolTruncatedNote = "Result truncated";
+  static const String attachmentToolSoftNoteTitle = "Note";
+
+  // RAG GROUNDING CITATIONS
+  // Note: panel title and attachment-origin label reuse the existing
+  // `sources`/`attachment` keys above instead of duplicating their value.
+  static const String citationOriginKnowledgeBase = "Knowledge base";
+  static const String citationOriginWebSearch = "Web search";
+  static const String citationOpenAttachment = "Open attachment";
+  static const String citationPreviewUnavailable = "Preview unavailable";
+  static const String citationVerificationPending = "Verifying…";
+  static const String citationVerificationGrounded = "grounded";
   static const String exportCsv = "Export CSV";
-  static const String spreadsheetLoadingInfo = "spreadsheet_loading_info";
-  static const String spreadsheetLoadingSample = "spreadsheet_loading_sample";
-  static const String spreadsheetLoadingSearch = "spreadsheet_loading_search";
-  static const String spreadsheetLoadingInsert = "spreadsheet_loading_insert";
-  static const String spreadsheetLoadingUpdate = "spreadsheet_loading_update";
-  static const String spreadsheetLoadingDelete = "spreadsheet_loading_delete";
-  static const String spreadsheetLoadingSummary = "spreadsheet_loading_summary";
-  static const String spreadsheetLoadingDistinct = "spreadsheet_loading_distinct";
+  static const String spreadsheetLoadingInfo = "Reading spreadsheet structure...";
+  static const String spreadsheetLoadingSample = "Loading sample rows...";
+  static const String spreadsheetLoadingSearch = "Searching spreadsheet...";
+  static const String spreadsheetLoadingInsert = "Adding row to spreadsheet...";
+  static const String spreadsheetLoadingSummary = "Calculating statistics...";
+  static const String spreadsheetLoadingDistinct = "Analyzing distinct values...";
   static const String spreadsheetResultsSummary =
       'Results from "@fileName" — @rowCount rows found';
   static const String spreadsheetRowAdded = 'Row added to spreadsheet';
@@ -302,6 +363,7 @@ class Strings {
   static const String identifyToContinue = "Identify to continue";
   static const String authRequired = "You must authenticate to use this tool";
   static const String authenticate = "Authenticate";
+  static const String promptSuggestionsForYou = "Prompt suggestions for you";
   //MARKETPLACE
   static const String marketplace = "Marketplace";
   static const String messageLoadError =
@@ -337,6 +399,397 @@ class Strings {
   static const String audioMessage = "Voice message";
   static const String recordAudio = "Record voice message";
   static const String sendVoiceMessage = "Send voice message";
+  static const String voiceModeTooltip = "Voice mode";
+  static const String voiceIdle = "Say something…";
+  static const String voiceListening = "Listening…";
+  static const String voiceThinking = "Thinking…";
+  static const String voiceSpeaking = "Speaking…";
   static const String microphoneAccessDenied =
       "Microphone access denied, please grant microphone permission to the app in your device settings";
+  static const String noItemsFound = "No items found...";
+
+  // THINKING SETTINGS
+  static const String thinkingNotSupported = "This model does not support thinking.";
+  static const String enableThinking = "Enable thinking";
+  static const String effort = "Effort";
+  static const String notSelected = "Not selected";
+
+  // DASHBOARD
+  static const String chatDashboard = "Chat Dashboard";
+  static const String generating1 = "Accomplishing";
+  static const String generating2 = "Actioning";
+  static const String generating3 = "Actualizing";
+  static const String generating4 = "Architecting";
+  static const String generating5 = "Baking";
+  static const String generating6 = "Beaming";
+  static const String generating7 = "Beboppin'";
+  static const String generating8 = "Befuddling";
+  static const String generating9 = "Billowing";
+  static const String generating10 = "Blanching";
+  static const String generating11 = "Bloviating";
+  static const String generating12 = "Boogieing";
+  static const String generating13 = "Boondoggling";
+  static const String generating14 = "Booping";
+  static const String generating15 = "Bootstrapping";
+  static const String generating16 = "Brewing";
+  static const String generating17 = "Bunning";
+  static const String generating18 = "Burrowing";
+  static const String generating19 = "Calculating";
+  static const String generating20 = "Canoodling";
+  static const String generating21 = "Caramelizing";
+  static const String generating22 = "Cascading";
+  static const String generating23 = "Catapulting";
+  static const String generating24 = "Cerebrating";
+  static const String generating25 = "Channeling";
+  static const String generating26 = "Channelling";
+  static const String generating27 = "Choreographing";
+  static const String generating28 = "Churning";
+  static const String generating29 = "Coalescing";
+  static const String generating30 = "Cogitating";
+  static const String generating31 = "Combobulating";
+  static const String generating32 = "Composing";
+  static const String generating33 = "Computing";
+  static const String generating34 = "Concocting";
+  static const String generating35 = "Considering";
+  static const String generating36 = "Contemplating";
+  static const String generating37 = "Cooking";
+  static const String generating38 = "Crafting";
+  static const String generating39 = "Creating";
+  static const String generating40 = "Crunching";
+  static const String generating41 = "Crystallizing";
+  static const String generating42 = "Cultivating";
+  static const String generating43 = "Deciphering";
+  static const String generating44 = "Deliberating";
+  static const String generating45 = "Determining";
+  static const String generating46 = "Dilly-dallying";
+  static const String generating47 = "Discombobulating";
+  static const String generating48 = "Doing";
+  static const String generating49 = "Doodling";
+  static const String generating50 = "Drizzling";
+  static const String generating51 = "Ebbing";
+  static const String generating52 = "Effecting";
+  static const String generating53 = "Elucidating";
+  static const String generating54 = "Embellishing";
+  static const String generating55 = "Enchanting";
+  static const String generating56 = "Envisioning";
+  static const String generating57 = "Evaporating";
+  static const String generating58 = "Fermenting";
+  static const String generating59 = "Fiddle-faddling";
+  static const String generating60 = "Finagling";
+  static const String generating61 = "Flambéing";
+  static const String generating62 = "Flibbertigibbeting";
+  static const String generating63 = "Flowing";
+  static const String generating64 = "Flummoxing";
+  static const String generating65 = "Fluttering";
+  static const String generating66 = "Forging";
+  static const String generating67 = "Forming";
+  static const String generating68 = "Frolicking";
+  static const String generating69 = "Frosting";
+  static const String generating70 = "Gallivanting";
+  static const String generating71 = "Galloping";
+  static const String generating72 = "Garnishing";
+  static const String generating73 = "Generating";
+  static const String generating74 = "Gesticulating";
+  static const String generating75 = "Germinating";
+  static const String generating76 = "Gitifying";
+  static const String generating77 = "Grooving";
+  static const String generating78 = "Gusting";
+  static const String generating79 = "Harmonizing";
+  static const String generating80 = "Hashing";
+  static const String generating81 = "Hatching";
+  static const String generating82 = "Herding";
+  static const String generating83 = "Honking";
+  static const String generating84 = "Hullaballooing";
+  static const String generating85 = "Hyperspacing";
+  static const String generating86 = "Ideating";
+  static const String generating87 = "Imagining";
+  static const String generating88 = "Improvising";
+  static const String generating89 = "Incubating";
+  static const String generating90 = "Inferring";
+  static const String generating91 = "Infusing";
+  static const String generating92 = "Ionizing";
+  static const String generating93 = "Jitterbugging";
+  static const String generating94 = "Julienning";
+  static const String generating95 = "Kneading";
+  static const String generating96 = "Leavening";
+  static const String generating97 = "Levitating";
+  static const String generating98 = "Lollygagging";
+  static const String generating99 = "Manifesting";
+  static const String generating100 = "Marinating";
+  static const String generating101 = "Meandering";
+  static const String generating102 = "Metamorphosing";
+  static const String generating103 = "Misting";
+  static const String generating104 = "Moonwalking";
+  static const String generating105 = "Moseying";
+  static const String generating106 = "Mulling";
+  static const String generating107 = "Mustering";
+  static const String generating108 = "Musing";
+  static const String generating109 = "Nebulizing";
+  static const String generating110 = "Nesting";
+  static const String generating111 = "Newspapering";
+  static const String generating112 = "Noodling";
+  static const String generating113 = "Nucleating";
+  static const String generating114 = "Orbiting";
+  static const String generating115 = "Orchestrating";
+  static const String generating116 = "Osmosing";
+  static const String generating117 = "Perambulating";
+  static const String generating118 = "Percolating";
+  static const String generating119 = "Perusing";
+  static const String generating120 = "Philosophising";
+  static const String generating121 = "Photosynthesizing";
+  static const String generating122 = "Pollinating";
+  static const String generating123 = "Pondering";
+  static const String generating124 = "Pontificating";
+  static const String generating125 = "Pouncing";
+  static const String generating126 = "Precipitating";
+  static const String generating127 = "Prestidigitating";
+  static const String generating128 = "Processing";
+  static const String generating129 = "Proofing";
+  static const String generating130 = "Propagating";
+  static const String generating131 = "Puttering";
+  static const String generating132 = "Puzzling";
+  static const String generating133 = "Quantumizing";
+  static const String generating134 = "Razzle-dazzling";
+  static const String generating135 = "Razzmatazzing";
+  static const String generating136 = "Recombobulating";
+  static const String generating137 = "Reticulating";
+  static const String generating138 = "Roosting";
+  static const String generating139 = "Ruminating";
+  static const String generating140 = "Sautéing";
+  static const String generating141 = "Scampering";
+  static const String generating142 = "Schlepping";
+  static const String generating143 = "Scurrying";
+  static const String generating144 = "Seasoning";
+  static const String generating145 = "Shenaniganing";
+  static const String generating146 = "Shimmying";
+  static const String generating147 = "Simmering";
+  static const String generating148 = "Skedaddling";
+  static const String generating149 = "Sketching";
+  static const String generating150 = "Slithering";
+  static const String generating151 = "Smooshing";
+  static const String generating152 = "Sock-hopping";
+  static const String generating153 = "Spelunking";
+  static const String generating154 = "Spinning";
+  static const String generating155 = "Sprouting";
+  static const String generating156 = "Stewing";
+  static const String generating157 = "Sublimating";
+  static const String generating158 = "Swirling";
+  static const String generating159 = "Swooping";
+  static const String generating160 = "Symbioting";
+  static const String generating161 = "Synthesizing";
+  static const String generating162 = "Tempering";
+  static const String generating163 = "Thinking";
+  static const String generating164 = "Thundering";
+  static const String generating165 = "Tinkering";
+  static const String generating166 = "Tomfoolering";
+  static const String generating167 = "Topsy-turvying";
+  static const String generating168 = "Transfiguring";
+  static const String generating169 = "Transmuting";
+  static const String generating170 = "Twisting";
+  static const String generating171 = "Undulating";
+  static const String generating172 = "Unfurling";
+  static const String generating173 = "Unravelling";
+  static const String generating174 = "Vibing";
+  static const String generating175 = "Waddling";
+  static const String generating176 = "Wandering";
+  static const String generating177 = "Warping";
+  static const String generating178 = "Whatchamacalliting";
+  static const String generating179 = "Whirlpooling";
+  static const String generating180 = "Whirring";
+  static const String generating181 = "Whisking";
+  static const String generating182 = "Wibbling";
+  static const String generating183 = "Working";
+  static const String generating184 = "Wrangling";
+  static const String generating185 = "Zesting";
+  static const String generating186 = "Zigzagging";
+
+  static const List<String> generatingPhrases = <String>[
+    generating1,
+    generating2,
+    generating3,
+    generating4,
+    generating5,
+    generating6,
+    generating7,
+    generating8,
+    generating9,
+    generating10,
+    generating11,
+    generating12,
+    generating13,
+    generating14,
+    generating15,
+    generating16,
+    generating17,
+    generating18,
+    generating19,
+    generating20,
+    generating21,
+    generating22,
+    generating23,
+    generating24,
+    generating25,
+    generating26,
+    generating27,
+    generating28,
+    generating29,
+    generating30,
+    generating31,
+    generating32,
+    generating33,
+    generating34,
+    generating35,
+    generating36,
+    generating37,
+    generating38,
+    generating39,
+    generating40,
+    generating41,
+    generating42,
+    generating43,
+    generating44,
+    generating45,
+    generating46,
+    generating47,
+    generating48,
+    generating49,
+    generating50,
+    generating51,
+    generating52,
+    generating53,
+    generating54,
+    generating55,
+    generating56,
+    generating57,
+    generating58,
+    generating59,
+    generating60,
+    generating61,
+    generating62,
+    generating63,
+    generating64,
+    generating65,
+    generating66,
+    generating67,
+    generating68,
+    generating69,
+    generating70,
+    generating71,
+    generating72,
+    generating73,
+    generating74,
+    generating75,
+    generating76,
+    generating77,
+    generating78,
+    generating79,
+    generating80,
+    generating81,
+    generating82,
+    generating83,
+    generating84,
+    generating85,
+    generating86,
+    generating87,
+    generating88,
+    generating89,
+    generating90,
+    generating91,
+    generating92,
+    generating93,
+    generating94,
+    generating95,
+    generating96,
+    generating97,
+    generating98,
+    generating99,
+    generating100,
+    generating101,
+    generating102,
+    generating103,
+    generating104,
+    generating105,
+    generating106,
+    generating107,
+    generating108,
+    generating109,
+    generating110,
+    generating111,
+    generating112,
+    generating113,
+    generating114,
+    generating115,
+    generating116,
+    generating117,
+    generating118,
+    generating119,
+    generating120,
+    generating121,
+    generating122,
+    generating123,
+    generating124,
+    generating125,
+    generating126,
+    generating127,
+    generating128,
+    generating129,
+    generating130,
+    generating131,
+    generating132,
+    generating133,
+    generating134,
+    generating135,
+    generating136,
+    generating137,
+    generating138,
+    generating139,
+    generating140,
+    generating141,
+    generating142,
+    generating143,
+    generating144,
+    generating145,
+    generating146,
+    generating147,
+    generating148,
+    generating149,
+    generating150,
+    generating151,
+    generating152,
+    generating153,
+    generating154,
+    generating155,
+    generating156,
+    generating157,
+    generating158,
+    generating159,
+    generating160,
+    generating161,
+    generating162,
+    generating163,
+    generating164,
+    generating165,
+    generating166,
+    generating167,
+    generating168,
+    generating169,
+    generating170,
+    generating171,
+    generating172,
+    generating173,
+    generating174,
+    generating175,
+    generating176,
+    generating177,
+    generating178,
+    generating179,
+    generating180,
+    generating181,
+    generating182,
+    generating183,
+    generating184,
+    generating185,
+    generating186,
+  ];
+
 }

@@ -24,7 +24,7 @@ Future<void> showDeleteConfirmDialog(String title, Function() onConfirm) {
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: isTablet ? 20 : 16,
-            color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+            color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
           ),
         ),
         shape: const RoundedRectangleBorder(

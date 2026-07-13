@@ -18,6 +18,7 @@ class ChatSkeleton extends StatelessWidget {
         brightness: isAnonymous || Get.isDarkMode
             ? Brightness.dark
             : Brightness.light,
+        iconTheme: const IconThemeData(weight: 600),
       ),
       child: MediaQuery(
         data: MediaQuery.of(context).copyWith(
@@ -29,10 +30,7 @@ class ChatSkeleton extends StatelessWidget {
           backgroundColor: isAnonymous
               ? AnonymousThemeColors.background
               : MyStyles.pupauTheme(!Get.isDarkMode).white,
-          appBar: ChatAppBar(
-            isAnonymous: isAnonymous,
-            config: config,
-          ),
+          appBar: ChatAppBar(isAnonymous: isAnonymous, config: config),
           body: SafeArea(
             top: false,
             child: const Column(children: [Expanded(child: SizedBox())]),

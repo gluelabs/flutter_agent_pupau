@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter_agent_pupau/chat_page/components/shared/setting_denied_dialog.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
@@ -90,4 +91,43 @@ class AudioRecordingService {
   }
 
   static Future<bool> get isRecording => recorder.isRecording();
+
+  /// Returns normalized amplitude [0.0, 1.0] from the current recording.
+  /// -60 dBFS → 0.0, 0 dBFS → 1.0. Returns 0.0 if not recording.
+  static Future<double> getAmplitudeNormalized() async {
+    if (!await recorder.isRecording()) return 0.0;
+    try {
+      final amp = await recorder.getAmplitude();
+      return ((amp.current + 60) / 60).clamp(0.0, 1.0);
+    } catch (_) {
+      return 0.0;
+    }
+  }
+
+  /// Starts a live PCM16 LE mono stream at 16 kHz for live voice sessions.
+  /// Returns a [Stream<Uint8List>] of raw PCM bytes, or null if permission
+  /// is denied or another recording is already active.
+  static Future<Stream<Uint8List>?> startPcmStream() async {
+    if (!await requestPermission()) return null;
+    if (await recorder.isRecording()) return null;
+    try {
+      final stream = await recorder.startStream(
+        const RecordConfig(
+          encoder: AudioEncoder.pcm16bits,
+          sampleRate: 16000,
+          numChannels: 1,
+        ),
+      );
+      return stream;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Stops any active recording / stream without saving a file.
+  static Future<void> stopStream() async {
+    try {
+      if (await recorder.isRecording()) await recorder.stop();
+    } catch (_) {}
+  }
 }

@@ -29,7 +29,8 @@ class _AttachmentTrimmingContainerState
 
   @override
   Widget build(BuildContext context) {
-    final bool hasCounts = widget.attachmentTrimming.truncatedCount > 0 ||
+    final bool hasCounts =
+        widget.attachmentTrimming.truncatedCount > 0 ||
         widget.attachmentTrimming.removedCount > 0;
     if (!widget.attachmentTrimming.applied ||
         (!hasCounts && widget.attachmentTrimming.items.isEmpty)) {
@@ -48,14 +49,14 @@ class _AttachmentTrimmingContainerState
             'removed': removed.toString(),
           })
         : truncated > 0
-            ? Strings.attachmentTrimmingDetailTruncated.trParams({
-                'truncated': truncated.toString(),
-              })
-            : Strings.attachmentTrimmingDetailRemoved.trParams({
-                'removed': removed.toString(),
-              });
+        ? Strings.attachmentTrimmingDetailTruncated.trParams({
+            'truncated': truncated.toString(),
+          })
+        : Strings.attachmentTrimmingDetailRemoved.trParams({
+            'removed': removed.toString(),
+          });
 
-    final Color borderColor = isAnonymous ? Colors.white70 : theme.lilacPressed;
+    final Color borderColor = isAnonymous ? Colors.white70 : theme.grey;
     return Padding(
       padding: const EdgeInsets.only(bottom: 4, top: 8),
       child: Align(
@@ -104,9 +105,9 @@ class _AttachmentTrimmingContainerState
                                   fontSize: isTablet ? 16 : 14,
                                   color: Get.isDarkMode || isAnonymous
                                       ? Colors.white
-                                      : MyStyles.pupauTheme(
-                                          !Get.isDarkMode,
-                                        ).accent,
+                                      : MyStyles.getTextTheme(
+                                          isLightTheme: !Get.isDarkMode,
+                                        ).bodyMedium?.color,
                                 ),
                               ),
                               Text(
@@ -128,7 +129,7 @@ class _AttachmentTrimmingContainerState
                             Symbols.expand_more,
                             color: Get.isDarkMode || isAnonymous
                                 ? Colors.white
-                                : MyStyles.pupauTheme(!Get.isDarkMode).accent,
+                                : MyStyles.pupauTheme(!Get.isDarkMode).primary,
                             size: 24,
                           ),
                         ),

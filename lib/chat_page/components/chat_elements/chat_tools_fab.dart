@@ -3,13 +3,16 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/custom_info_box.dart';
+import 'package:flutter_agent_pupau/chat_page/components/shared/custom_switch.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/attachments_controller.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
+import 'package:flutter_agent_pupau/chat_page/components/chat_elements/thinking_modal.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/constants.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
+import 'package:flutter_agent_pupau/chat_page/components/chat_elements/active_skills_modal.dart';
 
 class ChatToolsFAB extends GetView<PupauChatController> {
   const ChatToolsFAB({super.key});
@@ -17,39 +20,54 @@ class ChatToolsFAB extends GetView<PupauChatController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      if(controller.hideInputBox.value) return const SizedBox();
-      
-      bool isAnonymous = controller.isAnonymous;
-      bool isTablet = DeviceService.isTablet;
-      PupauAttachmentsController attachmentsController =
+      if (controller.hideInputBox.value) return const SizedBox();
+      if (controller.isVoiceMode.value) return const SizedBox();
+      if (!controller.toolsFabExpanded.value) return const SizedBox();
+
+      final bool isAnonymous = controller.isAnonymous;
+      final PupauAttachmentsController attachmentsController =
           Get.find<PupauAttachmentsController>();
-      bool isEnabled = !controller.hasApiError.value;
-      bool isExpanded = controller.toolsFabExpanded.value;
-      bool isAttachmentAvailable = controller.isAttachmentAvailable();
-      bool isWebSearchAvailable = controller.isWebSearchAvailable();
-      bool isCustomActionsAvailable =
+      final bool isEnabled = !controller.hasApiError.value;
+      final bool isAttachmentAvailable = controller.isAttachmentAvailable();
+      final bool isWebSearchAvailable = controller.isWebSearchAvailable();
+      final bool isCustomActionsAvailable =
           controller.assistant.value?.customActions.isNotEmpty ?? false;
-      int attachmentNumberEnabled = attachmentsController.attachments
+      final bool isThinkingAvailable = controller.isThinkingSupported();
+      final int attachmentNumberEnabled = attachmentsController.attachments
           .where((element) => element.selected)
           .length;
-      bool isSendingAttachment =
+      final bool isSendingAttachment =
           attachmentsController.sendingAttachments.value > 0;
-      bool isDarkMode = Get.isDarkMode;
-      bool isFocused = controller.isMessageInputFieldFocused.value;
       return SizedBox(
         height: DeviceService.height,
         width: DeviceService.width,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            if (isExpanded) ...[
-              Positioned(
-                bottom: 48,
-                left: 0,
-                child: AbsorbPointer(
-                  absorbing: !isEnabled,
-                  child: Opacity(
-                    opacity: isEnabled ? 1 : 0.5,
+            Positioned(
+              bottom: 54,
+              left: 0,
+              child: AbsorbPointer(
+                absorbing: !isEnabled,
+                child: Opacity(
+                  opacity: isEnabled ? 1 : 0.5,
+                  child: Container(
+                    constraints: const BoxConstraints(minWidth: 80),
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      color: isAnonymous
+                          ? AnonymousThemeColors.userBubble
+                          : MyStyles.pupauTheme(!Get.isDarkMode).white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,32 +80,38 @@ class ChatToolsFAB extends GetView<PupauChatController> {
                             tooltip: Strings.attachments.tr,
                             iconPath:
                                 '${Constants.assetPath}/images/attachments_tool.svg',
-                            color: isAnonymous
-                                ? Colors.black
-                                : isDarkMode
-                                ? MyStyles.pupauTheme(false).darkBlue
-                                : null,
                             fabInfo: attachmentNumberEnabled != 0
                                 ? attachmentNumberEnabled.toString()
                                 : null,
                             fabInfoLoading: isSendingAttachment,
                           ),
+                        if (controller.conversationActiveSkills.isNotEmpty)
+                          ChatToolMiniFab(
+                            onTap: () => showActiveSkillsModal(),
+                            label: Strings.activeSkills.tr,
+                            tooltip: Strings.activeSkills.tr,
+                            materialIcon: Constants.skillIcon,
+                            fabInfo: controller.conversationActiveSkills.length
+                                .toString(),
+                          ),
                         if (isWebSearchAvailable)
                           ChatToolMiniFab(
                             onTap: () => controller.toggleWebSearch(),
                             label: Strings.webSearch.tr,
-                            isEnabled: controller.isWebSearchActive(),
+                            closesMenuOnTap: false,
                             onLongPress: () => showInfoBox(
                               Strings.webSearch.tr,
                               Strings.webSearchInfoShort.tr,
                             ),
-                            color: isAnonymous
-                                ? Colors.black
-                                : isDarkMode
-                                ? MyStyles.pupauTheme(false).green
-                                : null,
                             iconPath:
                                 '${Constants.assetPath}/images/web_search_tool.svg',
+                            trailing: Transform.scale(
+                              scale: 0.5,
+                              child: CustomSwitch(
+                                isActive: controller.isWebSearchActive(),
+                                onChanged: (_) => controller.toggleWebSearch(),
+                              ),
+                            ),
                           ),
                         if (isCustomActionsAvailable)
                           ChatToolMiniFab(
@@ -96,87 +120,15 @@ class ChatToolsFAB extends GetView<PupauChatController> {
                             tooltip: Strings.customActions.tr,
                             iconPath:
                                 '${Constants.assetPath}/images/custom_actions_tool.svg',
-                            color: isAnonymous
-                                ? Colors.black
-                                : isDarkMode
-                                ? MyStyles.pupauTheme(true).magenta
-                                : null,
+                          ),
+                        if (isThinkingAvailable)
+                          ChatToolMiniFab(
+                            onTap: () => showThinkingModal(),
+                            label: "Thinking Effort",
+                            tooltip: "Thinking Effort",
+                            materialIcon: Symbols.psychology,
                           ),
                       ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            Align(
-              alignment: Alignment.bottomLeft,
-              child: AbsorbPointer(
-                absorbing: !isEnabled,
-                child: Opacity(
-                  opacity: isEnabled ? 1 : 0.5,
-                  child: Material(
-                    color: isAnonymous
-                        ? AnonymousThemeColors.userBubble
-                        : MyStyles.pupauTheme(!Get.isDarkMode).lilac,
-                    borderRadius: BorderRadius.horizontal(
-                      left: Radius.circular(8),
-                    ),
-                    child: InkWell(
-                      onTap: () => controller.toggleToolsFab(),
-                      borderRadius: BorderRadius.horizontal(
-                        left: Radius.circular(8),
-                      ),
-                      child: Container(
-                        height: 50,
-                        width: 48,
-                        decoration: BoxDecoration(
-                          border: Border(
-                            left: BorderSide(
-                              color: isAnonymous
-                                  ? Colors.transparent
-                                  : isFocused
-                                  ? MyStyles.pupauTheme(
-                                      !Get.isDarkMode,
-                                    ).lilacPressed
-                                  : MyStyles.pupauTheme(
-                                      !Get.isDarkMode,
-                                    ).lilacHover,
-                            ),
-                            top: BorderSide(
-                              color: isAnonymous
-                                  ? Colors.transparent
-                                  : isFocused
-                                  ? MyStyles.pupauTheme(
-                                      !Get.isDarkMode,
-                                    ).lilacPressed
-                                  : MyStyles.pupauTheme(
-                                      !Get.isDarkMode,
-                                    ).lilacHover,
-                            ),
-                            bottom: BorderSide(
-                              color: isAnonymous
-                                  ? Colors.transparent
-                                  : isFocused
-                                  ? MyStyles.pupauTheme(
-                                      !Get.isDarkMode,
-                                    ).lilacPressed
-                                  : MyStyles.pupauTheme(
-                                      !Get.isDarkMode,
-                                    ).lilacHover,
-                            ),
-                          ),
-                          borderRadius: BorderRadius.horizontal(
-                            left: Radius.circular(8),
-                          ),
-                        ),
-                        child: Icon(
-                          isExpanded ? Symbols.remove : Symbols.add,
-                          size: isTablet ? 26 : 24,
-                          color: isAnonymous
-                              ? Colors.black
-                              : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
-                        ),
-                      ),
                     ),
                   ),
                 ),
@@ -192,79 +144,79 @@ class ChatToolsFAB extends GetView<PupauChatController> {
 class ChatToolMiniFab extends GetView<PupauChatController> {
   const ChatToolMiniFab({
     super.key,
-    required this.iconPath,
+    this.iconPath,
+    this.materialIcon,
     required this.onTap,
     required this.label,
     this.tooltip,
     this.onLongPress,
-    this.color,
-    this.isEnabled = true,
     this.fabInfo,
     this.fabInfoLoading = false,
+    this.trailing,
+    this.closesMenuOnTap = true,
   });
 
-  final String iconPath;
+  final String? iconPath;
+  final IconData? materialIcon;
   final String label;
   final Function() onTap;
   final String? tooltip;
-  final Color? color;
   final Function()? onLongPress;
-  final bool isEnabled;
   final String? fabInfo;
   final bool fabInfoLoading;
+  final Widget? trailing;
+  final bool closesMenuOnTap;
 
   @override
   Widget build(BuildContext context) {
-    bool isAnonymous = controller.isAnonymous;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Material(
-        borderRadius: BorderRadius.circular(24),
-        color: isAnonymous
-            ? AnonymousThemeColors.userBubble
-            : MyStyles.pupauTheme(!Get.isDarkMode).lilac,
-        elevation: 0,
-        child: InkWell(
-          onTap: () {
-            controller.toggleToolsFab(value: false);
-            onTap();
-          },
-          onLongPress: onLongPress,
-          borderRadius: BorderRadius.circular(24),
-          child: Tooltip(
-            message: tooltip ?? "",
-            triggerMode: tooltip == null ? TooltipTriggerMode.manual : null,
-            child: Container(
-              padding: const EdgeInsets.only(
-                top: 2,
-                bottom: 2,
-                left: 4,
-                right: 10,
-              ),
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: MyStyles.pupauTheme(!Get.isDarkMode).lilacPressed,
+    // [trailing] (the web-search switch) is kept OUTSIDE the InkWell below on
+    // purpose: nesting it inside would make tapping the switch also trigger
+    // the row's onTap depending on how the gesture arena resolves the tap —
+    // unreliable. As a plain sibling, tapping it can never hit the InkWell.
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          child: InkWell(
+            onTap: () {
+              if (closesMenuOnTap) controller.toggleToolsFab(value: false);
+              onTap();
+            },
+            borderRadius: BorderRadius.circular(8),
+            onLongPress: onLongPress,
+            child: Tooltip(
+              message: tooltip ?? "",
+              triggerMode: tooltip == null ? TooltipTriggerMode.manual : null,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 12,
+                  top: 12,
+                  bottom: 12,
+                  right: trailing != null ? 8 : 12,
                 ),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Row(
-                children: [
-                  ToolIcon(
-                    isEnabled: isEnabled,
-                    iconPath: iconPath,
-                    color: color,
-                    fabInfo: fabInfo,
-                    fabInfoLoading: fabInfoLoading,
-                    onTap: onTap,
-                  ),
-                  ToolLabel(label: label),
-                ],
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ToolIcon(
+                      iconPath: iconPath,
+                      materialIcon: materialIcon,
+                      fabInfo: fabInfo,
+                      fabInfoLoading: fabInfoLoading,
+                      onTap: onTap,
+                    ),
+                    const SizedBox(width: 8),
+                    ToolLabel(label: label),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ),
+        if (trailing != null)
+          Padding(padding: const EdgeInsets.only(right: 12), child: trailing!),
+      ],
     );
   }
 }
@@ -272,17 +224,15 @@ class ChatToolMiniFab extends GetView<PupauChatController> {
 class ToolIcon extends GetView<PupauChatController> {
   const ToolIcon({
     super.key,
-    required this.isEnabled,
-    required this.iconPath,
-    required this.color,
+    this.iconPath,
+    this.materialIcon,
     required this.fabInfo,
     required this.fabInfoLoading,
     required this.onTap,
   });
 
-  final bool isEnabled;
-  final String iconPath;
-  final Color? color;
+  final String? iconPath;
+  final IconData? materialIcon;
   final String? fabInfo;
   final bool fabInfoLoading;
   final Function() onTap;
@@ -290,22 +240,26 @@ class ToolIcon extends GetView<PupauChatController> {
   @override
   Widget build(BuildContext context) {
     bool isAnonymous = controller.isAnonymous;
+    final Color basicColor = isAnonymous
+        ? Colors.black
+        : (MyStyles.getTextTheme(
+            isLightTheme: !Get.isDarkMode,
+          ).bodyMedium?.color)!;
     return Stack(
       clipBehavior: Clip.none,
       children: [
         SizedBox(
-          height: 36,
-          width: 36,
+          height: 28,
+          width: 28,
           child: Center(
-            child: Opacity(
-              opacity: isEnabled ? 1 : 0.5,
-              child: SvgPicture.asset(
-                iconPath,
-                colorFilter: color != null
-                    ? ColorFilter.mode(color!, BlendMode.srcIn)
-                    : null,
-              ),
-            ),
+            child: materialIcon != null
+                ? Icon(materialIcon, color: basicColor)
+                : iconPath != null
+                ? SvgPicture.asset(
+                    iconPath!,
+                    colorFilter: ColorFilter.mode(basicColor, BlendMode.srcIn),
+                  )
+                : const SizedBox(),
           ),
         ),
         if (fabInfo != null || fabInfoLoading)
@@ -323,18 +277,16 @@ class ToolIcon extends GetView<PupauChatController> {
                       ? Colors.black
                       : MyStyles.pupauTheme(
                           !Get.isDarkMode,
-                        ).blue.withValues(alpha: 0.9),
+                        ).primary.withValues(alpha: 0.9),
                   shape: BoxShape.circle,
                 ),
                 child: !fabInfoLoading
                     ? Center(
                         child: Text(
                           fabInfo ?? "",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12,
-                            color: isAnonymous
-                                ? Colors.white
-                                : MyStyles.pupauTheme(!Get.isDarkMode).white,
+                            color: Colors.white,
                           ),
                         ),
                       )
@@ -371,7 +323,11 @@ class ToolLabel extends GetView<PupauChatController> {
       style: TextStyle(
         fontSize: isTablet ? 14 : 12,
         fontWeight: FontWeight.w500,
-        color: isAnonymous ? Colors.black : null,
+        color: isAnonymous
+            ? Colors.black
+            : MyStyles.getTextTheme(
+                isLightTheme: !Get.isDarkMode,
+              ).bodyMedium?.color,
       ),
     );
   }

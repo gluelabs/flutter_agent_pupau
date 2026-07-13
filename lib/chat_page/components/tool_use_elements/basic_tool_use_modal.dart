@@ -4,7 +4,7 @@ import 'package:flutter_agent_pupau/models/tool_use_message_model.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/services/tool_use_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
-import 'package:flutter_agent_pupau/chat_page/components/shared/close_icon.dart';
+import 'package:flutter_agent_pupau/chat_page/components/shared/modal_top_bar_title.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/tool_use_info_list.dart';
 import 'package:flutter_agent_pupau/chat_page/utils/modal_utils.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
@@ -21,56 +21,34 @@ void showBasicToolUseModal(ToolUseMessage toolUseMessage, bool isAnonymous) {
     }
 
     return WoltModalSheetPage(
-        surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
-        backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
-        hasTopBarLayer: true,
-        topBarTitle: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
+      backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
+      hasTopBarLayer: true,
+      topBarTitle: ModalTopBarTitle(title: toolUseName),
+      isTopBarLayerAlwaysVisible: true,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        child: Column(
           children: [
-            const SizedBox(width: 48),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(toolUseName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        fontSize: isTablet ? 18 : 16,
-                        fontWeight: FontWeight.w600,
-                        color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue)),
-              ),
+            ToolUseInfoList(
+              infoList: infoList,
+              isAnonymous: isAnonymous,
+              forceExpanded: true,
             ),
-            isTablet
-                ? const Padding(
-                    padding: EdgeInsets.only(top: 8),
-                    child: CloseIcon(),
-                  )
-                : const SizedBox(width: 48),
+            if (isTablet) const SizedBox(height: 24),
           ],
         ),
-        isTopBarLayerAlwaysVisible: true,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-          child: Column(
-            children: [
-              ToolUseInfoList(
-                  infoList: infoList,
-                  isAnonymous: isAnonymous,
-                  forceExpanded: true),
-              if (isTablet) const SizedBox(height: 24),
-            ],
-          ),
-        ));
+      ),
+    );
   }
 
   BuildContext? safeContext = getSafeModalContext();
   if (safeContext == null) return;
-  
+
   WoltModalSheet.show(
-      context: safeContext,
-      pageListBuilder: (modalSheetContext) {
-        return [
-          page(modalSheetContext),
-        ];
-      });
+    context: safeContext,
+    pageListBuilder: (modalSheetContext) {
+      return [page(modalSheetContext)];
+    },
+  );
 }

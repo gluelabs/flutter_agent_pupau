@@ -6,8 +6,11 @@ import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:flutter_agent_pupau/chat_page/components/attachments_elements/attachment_card.dart';
 
 class AttachmentsList extends StatelessWidget {
-  const AttachmentsList(
-      {super.key, required this.attachments, required this.category});
+  const AttachmentsList({
+    super.key,
+    required this.attachments,
+    required this.category,
+  });
 
   final List<Attachment> attachments;
   final String category;
@@ -23,13 +26,18 @@ class AttachmentsList extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 6, bottom: 4),
                   child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(category,
-                          style: TextStyle(
-                              fontSize: isTablet ? 17 : 15,
-                              color:
-                                  MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
-                              fontWeight: FontWeight.w500))),
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      category,
+                      style: TextStyle(
+                        fontSize: isTablet ? 17 : 15,
+                        color: MyStyles.getTextTheme(
+                          isLightTheme: !Get.isDarkMode,
+                        ).bodyMedium?.color,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
                 ),
                 ListView.builder(
                   itemCount: attachments.length,

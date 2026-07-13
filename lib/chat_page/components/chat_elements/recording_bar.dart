@@ -30,7 +30,7 @@ class RecordingBar extends StatelessWidget {
     final bool isTablet = DeviceService.isTablet;
     final color = isAnonymous
         ? Colors.black
-        : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue;
+        : MyStyles.pupauTheme(!Get.isDarkMode).primary;
     return Row(
       children: [
         const SizedBox(width: 2),

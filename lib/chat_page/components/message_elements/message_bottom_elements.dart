@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_agent_pupau/chat_page/components/message_elements/grounding_verification_badge.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/kb_references_modal.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/knowledge_base_info.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/message_time_info.dart';
@@ -16,11 +17,14 @@ class MessageBottomElements extends GetView<PupauChatController> {
 
   @override
   Widget build(BuildContext context) {
-    Reaction reaction = message.reaction ?? Reaction.none;
-    bool isTablet = DeviceService.isTablet;
+    Theme.of(context);
+    final Reaction reaction = message.reaction ?? Reaction.none;
+    final bool isTablet = DeviceService.isTablet;
+    final bool isEmpty = message.status == MessageStatus.loading && message.isEmpty;
+    if(isEmpty) return const SizedBox();
     return Obx(() {
-      bool isAnonymous = controller.isAnonymous;
-      bool isActionBarAlwaysVisible = controller.isActionBarAlwaysVisible.value;
+      final bool isAnonymous = controller.isAnonymous;
+      final bool isActionBarAlwaysVisible = controller.isActionBarAlwaysVisible.value;
       return Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
@@ -31,7 +35,8 @@ class MessageBottomElements extends GetView<PupauChatController> {
               showKBReferencesModal(message.kbReferences);
             },
           ),
-          if (!message.isEmpty && message.sourceType == SourceType.llm)
+          GroundingVerificationBadge(message: message),
+          if (message.sourceType == SourceType.llm)
             MessageTimeInfo(
               localDate: message.createdAt.toLocal(),
               isAssistant: true,

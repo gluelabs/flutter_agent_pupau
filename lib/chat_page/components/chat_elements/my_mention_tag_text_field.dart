@@ -86,9 +86,7 @@ class MyMentionTagTextField extends TextField {
                 try {
                   controller?.onChanged(value);
                   onChanged?.call(value);
-                } catch (e, s) {
-                  debugPrint(e.toString());
-                  debugPrint(s.toString());
+                } catch (_) {
                 }
               } else {
                 onChanged?.call(value);
@@ -215,9 +213,7 @@ class MyMentionTagTextFormField extends TextFormField {
                 try {
                   controller?.onChanged(value);
                   onChanged?.call(value);
-                } catch (e, s) {
-                  debugPrint(e.toString());
-                  debugPrint(s.toString());
+                } catch (_) {
                 }
               } else {
                 onChanged?.call(value);

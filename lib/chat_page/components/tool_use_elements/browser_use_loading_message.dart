@@ -11,7 +11,8 @@ class LoadingBrowserUse extends StatelessWidget {
   final String browserAction;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) {   
+    Theme.of(context);
     return Container(
         padding: EdgeInsets.only(top: 4, left: 10, right: 10),
         child: ToolUseBubble(

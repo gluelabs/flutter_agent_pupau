@@ -25,9 +25,7 @@ class AskUserOption extends StatelessWidget {
     bool isTablet = DeviceService.isTablet;
     return Material(
       color: isSelected
-          ? MyStyles.pupauTheme(!Get.isDarkMode)
-              .lilacPressed
-              .withValues(alpha: 0.75)
+          ? MyStyles.pupauTheme(!Get.isDarkMode).primary.withValues(alpha: 0.25)
           : Colors.transparent,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
@@ -37,27 +35,27 @@ class AskUserOption extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-                color: isAnonymous
-                    ? AnonymousThemeColors.userBubble
-                    : Get.isDarkMode
-                        ? MyStyles.pupauTheme(false).lilac
-                        : MyStyles.pupauTheme(true).grey),
+              color: isAnonymous
+                  ? AnonymousThemeColors.userBubble
+                  : MyStyles.pupauTheme(!Get.isDarkMode).grey,
+            ),
           ),
           child: Text(
             option + (isSuggested ? "*" : ""),
             style: TextStyle(
-                fontSize: isTablet ? 16 : 14,
-                color: isAnonymous
-                    ? isSelected
+              fontSize: isTablet ? 16 : 14,
+              color: isAnonymous
+                  ? isSelected
                         ? Colors.white
                         : AnonymousThemeColors.userBubble
-                    : isSelected
-                        ? Get.isDarkMode
-                            ? MyStyles.pupauTheme(false).lilacPressed
-                            : MyStyles.pupauTheme(true).black
-                        : Get.isDarkMode
-                            ? MyStyles.pupauTheme(false).lilac
-                            : MyStyles.pupauTheme(true).grey),
+                  : isSelected
+                  ? Get.isDarkMode
+                        ? (MyStyles.getTextTheme(
+                            isLightTheme: false,
+                          ).bodyMedium?.color)!
+                        : MyStyles.pupauTheme(true).black
+                  : MyStyles.pupauTheme(!Get.isDarkMode).grey,
+            ),
           ),
         ),
       ),

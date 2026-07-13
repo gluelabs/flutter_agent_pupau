@@ -36,10 +36,10 @@ class CustomCheckbox extends StatelessWidget {
                 height: size,
                 decoration: BoxDecoration(
                   border: Border.all(
-                      color: MyStyles.pupauTheme(!Get.isDarkMode).darkBlue),
+                      color: MyStyles.pupauTheme(!Get.isDarkMode).primary),
                   borderRadius: BorderRadius.circular(6),
                   color: enabled
-                      ? MyStyles.pupauTheme(!Get.isDarkMode).darkBlue
+                      ? MyStyles.pupauTheme(!Get.isDarkMode).primary
                       : MyStyles.pupauTheme(!Get.isDarkMode).white,
                 ),
                 child: enabled

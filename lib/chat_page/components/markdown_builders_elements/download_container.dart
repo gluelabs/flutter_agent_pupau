@@ -33,7 +33,7 @@ class DownloadContainer extends GetView<PupauChatController> {
         return Material(
           color: isAnonymous
               ? Colors.white
-              : MyStyles.pupauTheme(!Get.isDarkMode).darkBlue,
+              : MyStyles.pupauTheme(!Get.isDarkMode).primary,
           borderRadius: BorderRadius.circular(6),
           child: InkWell(
             onTap: () => isDownloading ? null : attachmentsController.downloadAttachment(id),

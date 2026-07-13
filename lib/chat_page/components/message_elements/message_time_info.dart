@@ -18,8 +18,9 @@ class MessageTimeInfo extends GetView<PupauChatController> {
 
   @override
   Widget build(BuildContext context) {
-    bool isTablet = DeviceService.isTablet;
-    bool isAnonymous = controller.isAnonymous;
+    Theme.of(context);
+    final bool isTablet = DeviceService.isTablet;
+    final bool isAnonymous = controller.isAnonymous;
     return Visibility(
       visible: localDate != null,
       child: Padding(
@@ -37,7 +38,7 @@ class MessageTimeInfo extends GetView<PupauChatController> {
                       : MyStyles.pupauTheme(!Get.isDarkMode).grey
                 : isAnonymous
                 ? AnonymousThemeColors.userText
-                : MyStyles.pupauTheme(!Get.isDarkMode).white,
+                : MyStyles.getTextTheme(isLightTheme: true).bodyMedium?.color,
             fontSize: isTablet ? 14 : 12,
           ),
         ),

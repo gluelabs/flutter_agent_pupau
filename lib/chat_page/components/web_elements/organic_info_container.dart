@@ -14,7 +14,7 @@ class OrganicInfoContainer extends StatelessWidget {
     super.key,
     required this.organicInfo,
     required this.isAnonymous,
-    required this.isCancelled
+    required this.isCancelled,
   });
 
   final List<OrganicInfo> organicInfo;
@@ -29,44 +29,48 @@ class OrganicInfoContainer extends StatelessWidget {
       child: Container(
         margin: EdgeInsets.all(4),
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-                color: isAnonymous
-                    ? Colors.transparent
-                    : MyStyles.pupauTheme(!Get.isDarkMode).lilacPressed),
-            color:
-                StyleService.getBubbleColor(true, isAnonymous, isCancelled)),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isAnonymous
+                ? Colors.transparent
+                : MyStyles.pupauTheme(!Get.isDarkMode).grey,
+          ),
+          color: StyleService.getBubbleColor(true, isAnonymous, isCancelled),
+        ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: () => showOrganicInfoModal(organicInfo),
             child: Padding(
-                padding: const EdgeInsets.all(6),
-                child: SizedBox(
-                  width: (organicInfo.length * 18) + (isTablet ? 12 : 8),
-                  height: isTablet ? 32 : 28,
-                  child: Stack(
-                    children: [
-                      for (int i = 0; i < organicInfo.length; i++)
-                        Positioned(
-                            left: 0 + i * 18,
-                            top: 0,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(100),
-                              child: CachedNetworkImage(
-                                  imageUrl: ConversationService.getFaviconUrl(
-                                      organicInfo[i].link),
-                                  width: isTablet ? 32 : 28,
-                                  height: isTablet ? 32 : 28,
-                                  errorListener: (error) => print,
-                                  errorWidget: (context, url, error) =>
-                                      Image.asset(Constants.missingImage)),
-                            )
-                            //
+              padding: const EdgeInsets.all(6),
+              child: SizedBox(
+                width: (organicInfo.length * 18) + (isTablet ? 12 : 8),
+                height: isTablet ? 32 : 28,
+                child: Stack(
+                  children: [
+                    for (int i = 0; i < organicInfo.length; i++)
+                      Positioned(
+                        left: 0 + i * 18,
+                        top: 0,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(100),
+                          child: CachedNetworkImage(
+                            imageUrl: ConversationService.getFaviconUrl(
+                              organicInfo[i].link,
                             ),
-                    ],
-                  ),
-                )),
+                            width: isTablet ? 32 : 28,
+                            height: isTablet ? 32 : 28,
+                            errorListener: (error) => print,
+                            errorWidget: (context, url, error) =>
+                                Image.asset(Constants.missingImage),
+                          ),
+                        ),
+                        //
+                      ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),

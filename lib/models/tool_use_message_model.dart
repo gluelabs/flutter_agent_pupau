@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_attachment_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_code_interpreter_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_native_database_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_spreadsheet_data.dart';
@@ -13,12 +14,15 @@ import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_browser_use_
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_document_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_image_generation_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_knowledge_base_data.dart';
+import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_mail_data.dart';
+import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_memory_profile_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_pipeline_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_s_m_t_p_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_to_do_list_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_web_reader_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_web_search_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_subagent_data.dart';
+import 'package:flutter_agent_pupau/services/attachment_tool_label_service.dart';
 import 'package:flutter_agent_pupau/services/tool_use_service.dart';
 
 class ToolUseMessage {
@@ -42,6 +46,7 @@ class ToolUseMessage {
   ToolUseKnowledgeBaseData? knowledgeBaseData;
   ToolUseDocumentData? documentData;
   ToolUseSMTPData? smtpData;
+  ToolUseMailData? mailData;
   ToolUseImageGenerationData? imageGenerationData;
   ToolUseBrowserUseData? browserUseData;
   ToolUseAskUserData? askUserData;
@@ -51,6 +56,8 @@ class ToolUseMessage {
   ToolUseSpreadsheetData? spreadsheetData;
   ToolUseTaskData? taskToolData;
   ToolUseSubagentData? subagentData;
+  ToolUseMemoryProfileData? memoryProfileData;
+  ToolUseAttachmentData? attachmentToolData;
 
   ToolUseMessage({
     required this.id,
@@ -73,6 +80,7 @@ class ToolUseMessage {
     this.knowledgeBaseData,
     this.documentData,
     this.smtpData,
+    this.mailData,
     this.imageGenerationData,
     this.browserUseData,
     this.askUserData,
@@ -82,6 +90,8 @@ class ToolUseMessage {
     this.spreadsheetData,
     this.taskToolData,
     this.subagentData,
+    this.memoryProfileData,
+    this.attachmentToolData,
   });
 
   factory ToolUseMessage.fromJsonSSE(Map<String, dynamic> json) {
@@ -89,26 +99,29 @@ class ToolUseMessage {
       json["type"] ?? "",
       nativeToolType: json["typeDetails"]?["nativeTool"]?["id"],
     );
-    bool isPipeline = type == ToolUseType.pipeline;
-    bool isRemoteCall = type == ToolUseType.remoteCall;
-    bool isThinking = type == ToolUseType.nativeToolsThinking;
-    bool isTodoList = type == ToolUseType.nativeToolsToDoList;
-    bool isWebSearch = type == ToolUseType.nativeToolsWebSearch;
-    bool isKnowledgeBase = type == ToolUseType.nativeToolsKnowledgeBase;
-    bool isDocument = type == ToolUseType.nativeToolsDocument;
-    bool isSMTP = type == ToolUseType.nativeToolsSMTP;
-    bool isImageGeneration = type == ToolUseType.nativeToolsImageGeneration;
-    bool isCodeInterpreter = type == ToolUseType.nativeToolsCodeInterpreter;
-    bool isNativeDatabase = type == ToolUseType.nativeToolsNativeDatabase;
+    final bool isPipeline = type == ToolUseType.pipeline;
+    final bool isRemoteCall = type == ToolUseType.remoteCall;
+    final bool isThinking = type == ToolUseType.nativeToolsThinking;
+    final bool isTodoList = type == ToolUseType.nativeToolsToDoList;
+    final bool isWebSearch = type == ToolUseType.nativeToolsWebSearch;
+    final bool isKnowledgeBase = type == ToolUseType.nativeToolsKnowledgeBase;
+    final bool isDocument = type == ToolUseType.nativeToolsDocument;
+    final bool isSMTP = type == ToolUseType.nativeToolsSMTP;
+    final bool isMail = type == ToolUseType.nativeToolsMail;
+    final bool isImageGeneration = type == ToolUseType.nativeToolsImageGeneration;
+    final bool isCodeInterpreter = type == ToolUseType.nativeToolsCodeInterpreter;
+    final bool isNativeDatabase = type == ToolUseType.nativeToolsNativeDatabase;
     final String nativeDbToolName = getString(json["typeDetails"]?["toolName"]);
     final bool isSpreadsheetTool =
         isNativeDatabase && nativeDbToolName.trim().startsWith('spreadsheet_');
-    bool isBrowserUse = type == ToolUseType.nativeToolsBrowserUse;
-    bool isAskUser = type == ToolUseType.nativeToolsAskUser;
-    bool isWebReader = type == ToolUseType.nativeToolsWebReader;
-    bool isTaskTool = type == ToolUseType.nativeToolsTaskTool;
-    bool isSubagent = type == ToolUseType.nativeToolsSubagent;
-    Map<String, dynamic> data = ToolUseMessage.getMessage(json, true);
+    final bool isBrowserUse = type == ToolUseType.nativeToolsBrowserUse;
+    final bool isAskUser = type == ToolUseType.nativeToolsAskUser;
+    final bool isWebReader = type == ToolUseType.nativeToolsWebReader;
+    final bool isTaskTool = type == ToolUseType.nativeToolsTaskTool;
+    final bool isSubagent = type == ToolUseType.nativeToolsSubagent;
+    final bool isMemoryProfile = type == ToolUseType.nativeToolsMemoryProfile;
+    final bool isAttachmentTool = type == ToolUseType.nativeToolsAttachment;
+    final Map<String, dynamic> data = ToolUseMessage.getMessage(json, true);
     Map<String, dynamic>? nativeForSubagent;
     if (isSubagent) {
       nativeForSubagent = ToolUseService.isNativeTool(type)
@@ -146,6 +159,12 @@ class ToolUseMessage {
           ? ToolUseDocumentData.fromJson(data, json["typeDetails"])
           : null,
       smtpData: isSMTP ? ToolUseSMTPData.fromJson(data) : null,
+      mailData: isMail
+          ? ToolUseMailData.fromToolUseMessage(
+              message: data,
+              typeDetails: json["typeDetails"],
+            )
+          : null,
       imageGenerationData: isImageGeneration
           ? ToolUseImageGenerationData.fromJson(data)
           : null,
@@ -185,6 +204,20 @@ class ToolUseMessage {
       subagentData: isSubagent && nativeForSubagent != null
           ? ToolUseSubagentData.fromNativeMap(nativeForSubagent)
           : null,
+      memoryProfileData: isMemoryProfile
+          ? ToolUseMemoryProfileData.fromToolUseMessage(
+              message: data,
+              typeDetails: json["typeDetails"],
+            )
+          : null,
+      attachmentToolData: isAttachmentTool
+          ? ToolUseAttachmentData.fromToolUseMessage(
+              toolName: nativeDbToolName,
+              rawJson: json,
+              message: data,
+              typeDetails: json["typeDetails"],
+            )
+          : null,
     );
   }
 
@@ -193,27 +226,31 @@ class ToolUseMessage {
       json["extraInfo"]?["typeDetails"]?["toolType"] ?? "",
       nativeToolType: json["extraInfo"]?["typeDetails"]?["nativeTool"]?["id"],
     );
-    bool isPipeline = type == ToolUseType.pipeline;
-    bool isRemoteCall = type == ToolUseType.remoteCall;
-    bool isThinking = type == ToolUseType.nativeToolsThinking;
-    bool isTodoList = type == ToolUseType.nativeToolsToDoList;
-    bool isWebSearch = type == ToolUseType.nativeToolsWebSearch;
-    bool isKnowledgeBase = type == ToolUseType.nativeToolsKnowledgeBase;
-    bool isDocument = type == ToolUseType.nativeToolsDocument;
-    bool isSMTP = type == ToolUseType.nativeToolsSMTP;
-    bool isImageGeneration = type == ToolUseType.nativeToolsImageGeneration;
-    bool isCodeInterpreter = type == ToolUseType.nativeToolsCodeInterpreter;
-    bool isNativeDatabase = type == ToolUseType.nativeToolsNativeDatabase;
-    final String nativeDbToolName =
-        getString(json["extraInfo"]?["typeDetails"]?["toolName"]);
+    final bool isPipeline = type == ToolUseType.pipeline;
+    final bool isRemoteCall = type == ToolUseType.remoteCall;
+    final bool isThinking = type == ToolUseType.nativeToolsThinking;
+    final bool isTodoList = type == ToolUseType.nativeToolsToDoList;
+    final bool isWebSearch = type == ToolUseType.nativeToolsWebSearch;
+    final bool isKnowledgeBase = type == ToolUseType.nativeToolsKnowledgeBase;
+    final bool isDocument = type == ToolUseType.nativeToolsDocument;
+    final bool isSMTP = type == ToolUseType.nativeToolsSMTP;
+    final bool isMail = type == ToolUseType.nativeToolsMail;
+    final bool isImageGeneration = type == ToolUseType.nativeToolsImageGeneration;
+    final bool isCodeInterpreter = type == ToolUseType.nativeToolsCodeInterpreter;
+    final bool isNativeDatabase = type == ToolUseType.nativeToolsNativeDatabase;
+    final String nativeDbToolName = getString(
+      json["extraInfo"]?["typeDetails"]?["toolName"],
+    );
     final bool isSpreadsheetTool =
         isNativeDatabase && nativeDbToolName.trim().startsWith('spreadsheet_');
-    bool isBrowserUse = type == ToolUseType.nativeToolsBrowserUse;
-    bool isAskUser = type == ToolUseType.nativeToolsAskUser;
-    bool isWebReader = type == ToolUseType.nativeToolsWebReader;
-    bool isTaskTool = type == ToolUseType.nativeToolsTaskTool;
-    bool isSubagent = type == ToolUseType.nativeToolsSubagent;
-    Map<String, dynamic> answer = getMessage(json, false);
+    final bool isBrowserUse = type == ToolUseType.nativeToolsBrowserUse;
+    final bool isAskUser = type == ToolUseType.nativeToolsAskUser;
+    final bool isWebReader = type == ToolUseType.nativeToolsWebReader;
+    final bool isTaskTool = type == ToolUseType.nativeToolsTaskTool;
+    final bool isSubagent = type == ToolUseType.nativeToolsSubagent;
+    final bool isMemoryProfile = type == ToolUseType.nativeToolsMemoryProfile;
+    final bool isAttachmentTool = type == ToolUseType.nativeToolsAttachment;
+    final Map<String, dynamic> answer = getMessage(json, false);
     Map<String, dynamic>? nativeForSubagent;
     if (isSubagent) {
       nativeForSubagent = ToolUseService.isNativeTool(type)
@@ -257,6 +294,12 @@ class ToolUseMessage {
             )
           : null,
       smtpData: isSMTP ? ToolUseSMTPData.fromJson(answer) : null,
+      mailData: isMail
+          ? ToolUseMailData.fromToolUseMessage(
+              message: answer,
+              typeDetails: json["extraInfo"]?["typeDetails"],
+            )
+          : null,
       imageGenerationData: isImageGeneration
           ? ToolUseImageGenerationData.fromJson(answer)
           : null,
@@ -302,18 +345,34 @@ class ToolUseMessage {
       subagentData: isSubagent && nativeForSubagent != null
           ? ToolUseSubagentData.fromNativeMap(nativeForSubagent)
           : null,
+      memoryProfileData: isMemoryProfile
+          ? ToolUseMemoryProfileData.fromToolUseMessage(
+              message: answer,
+              typeDetails: json["extraInfo"]?["typeDetails"],
+            )
+          : null,
+      attachmentToolData: isAttachmentTool
+          ? ToolUseAttachmentData.fromToolUseMessage(
+              toolName: nativeDbToolName,
+              rawJson: json,
+              message: answer,
+              typeDetails: json["extraInfo"]?["typeDetails"],
+            )
+          : null,
     );
   }
 
   String getName() {
-    if (thinkingData != null && thinkingData!.subject.trim() != "") {
-      return thinkingData!.subject;
+    if (thinkingData != null) {
+      final String thinkingSubject = thinkingData!.subject.trim();
+      if (thinkingSubject.isNotEmpty) return thinkingSubject;
+      final String toolMessageTitle = toolMessage.trim();
+      if (toolMessageTitle.isNotEmpty) return toolMessageTitle;
     }
     if (codeInterpreterData != null) {
       final String language = codeInterpreterData!.language.trim();
       final String name = toolName.replaceAll("_", " ").capitalize ?? toolName;
       return language.isEmpty ? name : '$name ($language)';
-
     }
     if (documentData?.action != null) {
       return toolName.replaceAll("_", " ").capitalize! +
@@ -333,6 +392,12 @@ class ToolUseMessage {
     if (browserUseData != null) {
       return browserUseData!.getBrowserUseActionName();
     }
+    if (mailData != null) {
+      final String base = toolName.replaceAll("_", " ").capitalize ?? toolName;
+      final String subject = mailData!.subject.trim();
+      if (subject.isNotEmpty) return '$base: $subject';
+      return base;
+    }
     if (webReaderData != null) {
       return "${toolName.replaceAll("_", " ").capitalize!}: ${webReaderData!.url}";
     }
@@ -342,6 +407,19 @@ class ToolUseMessage {
         return 'Create Task: ${taskToolData!.name!.trim()}';
       }
       return "${toolName.replaceAll("_", " ").capitalize!}: ${taskToolData!.displayMessage}";
+    }
+    if (memoryProfileData != null) {
+      final String action = memoryProfileData!.action.trim();
+      final String base = toolName.replaceAll("_", " ").capitalize ?? toolName;
+      return action.isEmpty ? base : '$base (${action.toLowerCase()})';
+    }
+    if (attachmentToolData != null) {
+      final String base = toolName.replaceAll("_", " ").capitalize ?? toolName;
+      final String? rich = AttachmentToolLabelService.richLabel(
+        attachmentToolData!.toolName,
+        attachmentToolData!.toolArgs,
+      );
+      return rich ?? base;
     }
     return toolName.replaceAll("_", " ").capitalize ?? toolName;
   }

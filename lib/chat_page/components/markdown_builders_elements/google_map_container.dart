@@ -35,9 +35,7 @@ class _GoogleMapContainerState extends State<GoogleMapContainer> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: MyStyles.pupauTheme(
-                !Get.isDarkMode,
-              ).lilacPressed, // Adjust as per your theme
+              color: MyStyles.pupauTheme(!Get.isDarkMode).grey,
             ),
           ),
           child: Stack(
@@ -223,7 +221,7 @@ class _GoogleMapContainerState extends State<GoogleMapContainer> {
         height: constraints.maxWidth,
         color: MyStyles.pupauTheme(
           !Get.isDarkMode,
-        ).lilacPressed.withValues(alpha: 0.1),
+        ).primary.withValues(alpha: 0.1),
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(16.0),

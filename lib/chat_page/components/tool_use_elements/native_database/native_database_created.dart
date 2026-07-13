@@ -13,10 +13,12 @@ class NativeDatabaseCreatedCard extends StatelessWidget {
     super.key,
     required this.database,
     required this.isAnonymous,
+    required this.scope,
   });
 
   final NativeDbCreatedDatabase database;
   final bool isAnonymous;
+  final NativeDbScope scope;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +33,7 @@ class NativeDatabaseCreatedCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(Symbols.check_circle, color: green, size: 20),
               const SizedBox(width: 8),
@@ -42,6 +45,8 @@ class NativeDatabaseCreatedCard extends StatelessWidget {
                   style: StyleService.toolHeaderTextStyle(isDark),
                 ),
               ),
+              const SizedBox(width: 10),
+              NativeDatabaseScopeBadge(scope: scope, isAnonymous: isAnonymous),
             ],
           ),
           if (description.isNotEmpty) ...[
