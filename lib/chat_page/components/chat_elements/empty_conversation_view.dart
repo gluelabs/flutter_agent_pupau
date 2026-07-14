@@ -24,13 +24,12 @@ class EmptyConversationView extends GetView<PupauChatController> {
 
       final String welcome = TagService.addUserNameTag(
         controller.effectiveWelcomeMessage,
-      ).trim();
-
+      ).trim(); 
       final Color primaryTextColor = isAnonymous
-          ? AnonymousThemeColors.userText
+          ? AnonymousThemeColors.assistantText
           : MyStyles.pupauTheme(!Get.isDarkMode).black;
       final Color secondaryTextColor = isAnonymous
-          ? AnonymousThemeColors.userText.withValues(alpha: 0.75)
+          ? AnonymousThemeColors.assistantText.withValues(alpha: 0.75)
           : MyStyles.pupauTheme(!Get.isDarkMode).grey;
 
       return Center(

@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.5+1] - 14/07/2026
+
+### Changes
+- Fixed anonymous chat theme
+
 ## [1.0.5] - 13/07/2026
 
 ### Changes

@@ -77,7 +77,10 @@ class ChatInputField extends GetView<PupauChatController> {
                               : MyStyles.pupauTheme(!Get.isDarkMode).white,
                           border: Border.all(
                             color: isAnonymous
-                                ? Colors.transparent
+                                ? (isFocused
+                                      ? AnonymousThemeColors.primary
+                                            .withValues(alpha: 0.6)
+                                      : Colors.transparent)
                                 : isFocused
                                 ? MyStyles.pupauTheme(
                                     !Get.isDarkMode,

@@ -78,9 +78,21 @@ import 'package:flutter_client_sse/flutter_client_sse.dart';
 class PupauChatController extends GetxController {
   PupauChatController({PupauConfig? config}) : pupauConfig = config {
     ApiUrls.setApiUrlOverride(config?.apiUrl);
+    _isAnonymousRx.value = config?.isAnonymous ?? false;
   }
   PupauConfig? pupauConfig;
   String? _cachedAssistantId;
+
+  /// Mirrors `pupauConfig?.isAnonymous`, kept in sync wherever [pupauConfig]
+  /// is reassigned. [pupauConfig] itself is a plain field, so `Obx` blocks
+  /// reading [isAnonymous] directly off it could never detect a change (no
+  /// `.value` access for GetX to track) — the whole anonymous-mode theme
+  /// (chat background, scroll button, input field, ...) would silently keep
+  /// rendering the stale mode until some unrelated `Rx` value in the same
+  /// `Obx` happened to change and force a rebuild. Reading through this `Rx`
+  /// instead makes every existing `Obx`-wrapped `controller.isAnonymous`
+  /// read reactive with no call-site changes needed.
+  final RxBool _isAnonymousRx = false.obs;
 
   String get assistantId {
     final String? currentId = pupauConfig?.assistantId;
@@ -89,7 +101,7 @@ class PupauChatController extends GetxController {
   }
 
   bool get isMarketplace => pupauConfig?.isMarketplace ?? false;
-  bool get isAnonymous => pupauConfig?.isAnonymous ?? false;
+  bool get isAnonymous => _isAnonymousRx.value;
   bool get hideAudioRecordingButton =>
       pupauConfig?.hideAudioRecordingButton ?? false;
   bool get isLiveVoiceAvailable =>
@@ -1205,6 +1217,7 @@ class PupauChatController extends GetxController {
 
     if (resolvedConfig != null) {
       pupauConfig = resolvedConfig;
+      _isAnonymousRx.value = resolvedConfig.isAnonymous;
       ApiUrls.setApiUrlOverride(resolvedConfig.apiUrl);
       hideInputBox.value = resolvedConfig.hideInputBox;
       final String bearerForProfile = resolvedConfig.bearerToken?.trim() ?? "";

@@ -33,13 +33,11 @@ class ScrollButton extends StatelessWidget {
   Widget build(BuildContext context) {
     Theme.of(context);
     final bool isTablet = DeviceService.isTablet;
-    // Content is primary so it stays visible now that the button's fill
-    // matches the chat background instead of being a solid accent circle.
     final Color iconColor = isAnonymous
         ? AnonymousThemeColors.primary
         : MyStyles.pupauTheme(!Get.isDarkMode).primary;
     final Color backgroundColor = isAnonymous
-        ? AnonymousThemeColors.background
+        ? AnonymousThemeColors.userBubble
         : MyStyles.pupauTheme(!Get.isDarkMode).white;
 
     return Visibility(
