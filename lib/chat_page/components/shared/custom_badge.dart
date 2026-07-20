@@ -15,6 +15,7 @@ class CustomBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context);
     final bool isTablet = DeviceService.isTablet;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

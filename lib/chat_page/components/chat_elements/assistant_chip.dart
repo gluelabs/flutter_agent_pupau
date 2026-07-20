@@ -37,7 +37,7 @@ class AssistantChip extends GetView<PupauChatController> {
               imageUuid: assistant.imageUuid,
               isMarketplaceUrl: assistant.type == AssistantType.marketplace,
               radius: 11,
-              format: ImageFormat.high),
+              format: ImageFormat.low),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Text(

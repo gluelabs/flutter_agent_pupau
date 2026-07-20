@@ -41,6 +41,10 @@ class NewsContainer extends StatelessWidget {
                   imageUrl: news.imageUrl,
                   width: newsImageSize,
                   height: newsImageSize,
+                  memCacheWidth:
+                      DeviceService.memCachePixels(context, newsImageSize),
+                  memCacheHeight:
+                      DeviceService.memCachePixels(context, newsImageSize),
                   errorListener: (error) {},
                   fit: BoxFit.cover,
                   errorWidget: (context, url, error) => Image.asset(
@@ -63,6 +67,10 @@ class NewsContainer extends StatelessWidget {
                       imageUrl: ConversationService.getFaviconUrl(news.link),
                       width: isTablet ? 28 : 24,
                       height: isTablet ? 28 : 24,
+                      memCacheWidth: DeviceService.memCachePixels(
+                          context, isTablet ? 28 : 24),
+                      memCacheHeight: DeviceService.memCachePixels(
+                          context, isTablet ? 28 : 24),
                       errorListener: (e) {},
                       errorWidget: (context, url, error) =>
                           Image.asset(Constants.missingImage)),

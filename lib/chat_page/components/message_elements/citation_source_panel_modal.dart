@@ -21,8 +21,6 @@ void showCitationSourcePanel({required CitationElementData data}) {
 
   WoltModalSheetPage page(BuildContext modalSheetContext) {
     return WoltModalSheetPage(
-      surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
-      backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
       hasTopBarLayer: true,
       topBarTitle: ModalTopBarTitle(title: Strings.sources.tr),
       isTopBarLayerAlwaysVisible: true,
@@ -33,7 +31,7 @@ void showCitationSourcePanel({required CitationElementData data}) {
     );
   }
 
-  WoltModalSheet.show(
+  showPupauModalSheet(
     context: safeContext,
     pageListBuilder: (modalSheetContext) => [page(modalSheetContext)],
   );

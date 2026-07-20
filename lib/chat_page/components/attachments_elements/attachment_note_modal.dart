@@ -21,8 +21,6 @@ void showAttachmentNoteModal({bool isEditable = true}) {
         ? (isEditMode ? Strings.editNote.tr : Strings.createNote.tr)
         : (controller.openAttachmentNote.value?.fileName ?? "");
     return WoltModalSheetPage(
-        surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
-        backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
         hasTopBarLayer: true,
         topBarTitle: ModalTopBarTitle(
           title: title,
@@ -125,7 +123,7 @@ void showAttachmentNoteModal({bool isEditable = true}) {
   BuildContext? safeContext = getSafeModalContext();
   if (safeContext == null) return;
   
-  WoltModalSheet.show(
+  showPupauModalSheet(
       context: safeContext,
       pageListBuilder: (modalSheetContext) {
         return [

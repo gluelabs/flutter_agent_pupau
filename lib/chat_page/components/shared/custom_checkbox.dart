@@ -21,7 +21,8 @@ class CustomCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isTablet = DeviceService.isTablet;
+    Theme.of(context);
+    final bool isTablet = DeviceService.isTablet;
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(8),

@@ -15,6 +15,7 @@ class CustomSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context);
     return Switch(
       value: isActive,
       onChanged: onChanged,

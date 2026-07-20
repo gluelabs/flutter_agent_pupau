@@ -89,6 +89,10 @@ class ChatImagesList extends GetView<PupauChatController> {
                                   imageUrl: url,
                                   width: isTablet ? 200 : 125,
                                   height: isTablet ? 200 : 125,
+                                  memCacheWidth: DeviceService.memCachePixels(
+                                      context, isTablet ? 200 : 125),
+                                  memCacheHeight: DeviceService.memCachePixels(
+                                      context, isTablet ? 200 : 125),
                                   fit: BoxFit.cover,
                                   errorListener: (error) {},
                                   errorWidget: (context, url, error) =>

@@ -18,8 +18,6 @@ void showThinkingModal() {
     final List<String> efforts = controller.supportedThinkingEfforts();
 
     return WoltModalSheetPage(
-      surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
-      backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
       hasTopBarLayer: true,
       topBarTitle: ModalTopBarTitle(title: "Thinking Effort"),
       isTopBarLayerAlwaysVisible: true,
@@ -110,7 +108,7 @@ void showThinkingModal() {
   final BuildContext? safeContext = getSafeModalContext();
   if (safeContext == null) return;
 
-  WoltModalSheet.show(
+  showPupauModalSheet(
     context: safeContext,
     pageListBuilder: (modalSheetContext) => [page(modalSheetContext)],
   );

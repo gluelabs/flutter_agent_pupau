@@ -5,7 +5,7 @@ import 'package:flutter_agent_pupau/models/attachment_model.dart';
 import 'package:flutter_agent_pupau/services/attachment_service.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
-import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
+import 'package:flutter_agent_pupau/utils/translations/theme/theme_extensions/pupau_theme_data.dart';
 import 'package:flutter_agent_pupau/chat_page/components/attachments_elements/attachment_switch_skeleton.dart';
 import 'package:flutter_agent_pupau/chat_page/components/attachments_elements/attachments_list.dart';
 import 'package:flutter_agent_pupau/chat_page/components/attachments_elements/attachments_search_bar.dart';
@@ -23,35 +23,38 @@ import '../shared/close_icon.dart';
 
 void showAttachmentsModal() {
   WoltModalSheetPage page(BuildContext modalSheetContext) {
-    Theme.of(modalSheetContext);
     final bool isTablet = DeviceService.isTablet;
     final PupauAttachmentsController controller = Get.find();
     return WoltModalSheetPage(
-      surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
-      backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
       hasTopBarLayer: true,
       topBarTitle: ModalTopBarTitle(
         title: Strings.contextResources.tr,
-        trailing: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: Icon(
-                  Symbols.info,
-                  color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
-                  size: isTablet ? 32 : 24,
-                ),
-                tooltip: Strings.info.tr,
-                onPressed: () => showInfoBox(
-                  Strings.contextResources.tr,
-                  Strings.contextResourcesInfo.tr,
-                ),
+        trailing: Builder(
+          builder: (context) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Symbols.info,
+                      color: Theme.of(context)
+                          .extension<PupauThemeData>()!
+                          .primary,
+                      size: isTablet ? 32 : 24,
+                    ),
+                    tooltip: Strings.info.tr,
+                    onPressed: () => showInfoBox(
+                      Strings.contextResources.tr,
+                      Strings.contextResourcesInfo.tr,
+                    ),
+                  ),
+                  const CloseIcon(),
+                ],
               ),
-              const CloseIcon(),
-            ],
-          ),
+            );
+          },
         ),
       ),
       isTopBarLayerAlwaysVisible: true,
@@ -165,7 +168,7 @@ void showAttachmentsModal() {
   BuildContext? safeContext = getSafeModalContext();
   if (safeContext == null) return;
   
-  WoltModalSheet.show(
+  showPupauModalSheet(
     context: safeContext,
     pageListBuilder: (modalSheetContext) {
       return [page(modalSheetContext)];

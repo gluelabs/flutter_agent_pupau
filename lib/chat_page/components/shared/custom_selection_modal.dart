@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/modal_top_bar_title.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/no_data_found_info.dart';
+import 'package:flutter_agent_pupau/chat_page/utils/modal_utils.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
-import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:get/get.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
@@ -14,8 +14,6 @@ void showCustomSelectionModal({
   FocusManager.instance.primaryFocus?.unfocus();
   WoltModalSheetPage page(BuildContext modalSheetContext) {
     return WoltModalSheetPage(
-        surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
-        backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
         hasTopBarLayer: true,
         isTopBarLayerAlwaysVisible: true,
         stickyActionBar: stickyActionBar,
@@ -37,7 +35,7 @@ void showCustomSelectionModal({
         ));
   }
 
-  WoltModalSheet.show(
+  showPupauModalSheet(
       context: Get.context!,
       pageListBuilder: (modalSheetContext) {
         return [

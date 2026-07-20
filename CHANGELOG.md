@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.7] - 20/07/2026
+
+### Changes
+- Fixed modal light/dark theme not updating live
+- Reduced memory usage from network images
+
 ## [1.0.6] - 14/07/2026
 
 ### Changes

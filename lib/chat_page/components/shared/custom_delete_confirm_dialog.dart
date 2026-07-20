@@ -8,8 +8,8 @@ import 'package:flutter_agent_pupau/chat_page/utils/modal_utils.dart';
 import '../../../utils/translations/strings_enum.dart';
 
 Future<void> showDeleteConfirmDialog(String title, Function() onConfirm) {
-  bool isTablet = DeviceService.isTablet;
-  BuildContext? safeContext = getSafeModalContext();
+  final bool isTablet = DeviceService.isTablet;
+  final BuildContext? safeContext = getSafeModalContext();
   if (safeContext == null) return Future.value();
 
   return showDialog<void>(

@@ -9,58 +9,65 @@ import 'package:flutter_agent_pupau/chat_page/utils/modal_utils.dart';
 import 'package:flutter_agent_pupau/models/skill_loaded_info.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
-import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
+import 'package:flutter_agent_pupau/utils/translations/theme/theme_extensions/pupau_theme_data.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 void showActiveSkillsModal() {
   WoltModalSheetPage page(BuildContext modalSheetContext) {
     final bool isTablet = DeviceService.isTablet;
     return WoltModalSheetPage(
-      surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
-      backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
       hasTopBarLayer: true,
-      topBarTitle: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const SizedBox(width: 48),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 12),
-                      child: Text(
-                        Strings.activeSkills.tr,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: isTablet ? 18 : 16,
-                          fontWeight: FontWeight.w600,
-                          color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
+      topBarTitle: Builder(
+        builder: (context) {
+          final PupauThemeData pupauTheme =
+              Theme.of(context).extension<PupauThemeData>()!;
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const SizedBox(width: 48),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 12),
+                          child: Text(
+                            Strings.activeSkills.tr,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: isTablet ? 18 : 16,
+                              fontWeight: FontWeight.w600,
+                              color: pupauTheme.primary,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      IconButton(
+                        icon: Icon(
+                          Symbols.info,
+                          color: pupauTheme.primary,
+                          size: isTablet ? 22 : 20,
+                        ),
+                        tooltip: Strings.info.tr,
+                        onPressed: () => showInfoBox(
+                          Strings.activeSkills.tr,
+                          Strings.activeSkillsInfo.tr,
+                        ),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    icon: Icon(
-                      Symbols.info,
-                      color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
-                      size: isTablet ? 22 : 20,
-                    ),
-                    tooltip: Strings.info.tr,
-                    onPressed: () => showInfoBox(
-                      Strings.activeSkills.tr,
-                      Strings.activeSkillsInfo.tr,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-          const Padding(padding: EdgeInsets.only(top: 8), child: CloseIcon()),
-        ],
+              const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: CloseIcon(),
+              ),
+            ],
+          );
+        },
       ),
       isTopBarLayerAlwaysVisible: true,
       child: Obx(() {
@@ -88,7 +95,7 @@ void showActiveSkillsModal() {
   final BuildContext? safeContext = getSafeModalContext();
   if (safeContext == null) return;
 
-  WoltModalSheet.show(
+  showPupauModalSheet(
     context: safeContext,
     pageListBuilder: (modalSheetContext) {
       return [page(modalSheetContext)];

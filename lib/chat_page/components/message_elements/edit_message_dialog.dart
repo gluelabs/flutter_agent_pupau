@@ -19,8 +19,6 @@ void showEditMessageModal(PupauMessage message) {
   WoltModalSheetPage page(BuildContext modalSheetContext) {
     final bool isTablet = DeviceService.isTablet;
     return WoltModalSheetPage(
-      surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
-      backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
       hasTopBarLayer: true,
       isTopBarLayerAlwaysVisible: true,
       topBarTitle: ModalTopBarTitle(title: Strings.editMessageTitle.tr),
@@ -38,7 +36,7 @@ void showEditMessageModal(PupauMessage message) {
     return;
   }
 
-  WoltModalSheet.show(
+  showPupauModalSheet(
     context: safeContext,
     pageListBuilder: (modalSheetContext) {
       return [page(modalSheetContext)];

@@ -33,6 +33,15 @@ class DeviceService {
     return "web";
   }
 
+  /// Converts a logical display size to physical pixels for
+  /// `CachedNetworkImage.memCacheWidth`/`memCacheHeight` — decoding network
+  /// images at their displayed size instead of full resolution is what
+  /// keeps the Flutter image cache from accumulating full-size bitmaps
+  /// across avatars, favicons, and gallery thumbnails.
+  static int memCachePixels(BuildContext context, double logicalSize) {
+    return (logicalSize * MediaQuery.devicePixelRatioOf(context)).round();
+  }
+
   static Future<bool> openLink(
     String link, {
     String? href,

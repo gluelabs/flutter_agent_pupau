@@ -34,6 +34,10 @@ class SourceInfo extends StatelessWidget {
                         ConversationService.getFaviconUrl(organicInfo.link),
                     width: isTablet ? 32 : 28,
                     height: isTablet ? 32 : 28,
+                    memCacheWidth: DeviceService.memCachePixels(
+                        context, isTablet ? 32 : 28),
+                    memCacheHeight: DeviceService.memCachePixels(
+                        context, isTablet ? 32 : 28),
                     errorListener: (e) {},
                     errorWidget: (context, url, error) =>
                         Image.asset(Constants.missingImage)),

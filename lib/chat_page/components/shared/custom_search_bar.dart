@@ -30,8 +30,8 @@ class CustomSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isTablet = DeviceService.isTablet;
-
+   Theme.of(context);
+   final bool isTablet = DeviceService.isTablet;
     return Visibility(
       visible: isVisible,
       child: Padding(

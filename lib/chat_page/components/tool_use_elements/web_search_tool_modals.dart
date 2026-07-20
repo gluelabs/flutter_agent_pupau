@@ -5,7 +5,6 @@ import 'package:flutter_agent_pupau/models/tool_use_message_model.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_web_search_data.dart';
 import 'package:flutter_agent_pupau/services/tool_use_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
-import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/modal_top_bar_title.dart';
 import 'package:flutter_agent_pupau/chat_page/components/web_elements/organic_info_modal.dart';
 import 'package:flutter_agent_pupau/chat_page/components/web_elements/web_search_images_modal.dart';
@@ -51,22 +50,24 @@ void _showWebSearchQueryOnlyModal(String query) {
   }
   WoltModalSheetPage page(BuildContext modalSheetContext) {
     return WoltModalSheetPage(
-      surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
-      backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
       hasTopBarLayer: true,
       topBarTitle: ModalTopBarTitle(title: Strings.webSearch.tr),
       isTopBarLayerAlwaysVisible: true,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        child: SelectableText(
-          query,
-          style: Theme.of(modalSheetContext).textTheme.bodyLarge,
-        ),
+      child: Builder(
+        builder: (context) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            child: SelectableText(
+              query,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          );
+        },
       ),
     );
   }
 
-  WoltModalSheet.show(
+  showPupauModalSheet(
     context: safeContext,
     pageListBuilder: (BuildContext modalSheetContext) {
       return <WoltModalSheetPage>[page(modalSheetContext)];

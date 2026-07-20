@@ -60,6 +60,10 @@ class OrganicInfoContainer extends StatelessWidget {
                             ),
                             width: isTablet ? 32 : 28,
                             height: isTablet ? 32 : 28,
+                            memCacheWidth: DeviceService.memCachePixels(
+                                context, isTablet ? 32 : 28),
+                            memCacheHeight: DeviceService.memCachePixels(
+                                context, isTablet ? 32 : 28),
                             errorListener: (error) => print,
                             errorWidget: (context, url, error) =>
                                 Image.asset(Constants.missingImage),

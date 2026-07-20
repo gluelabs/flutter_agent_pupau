@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/services/assistant_service.dart';
+import 'package:flutter_agent_pupau/services/device_service.dart';
 
 class AssistantAvatar extends StatelessWidget {
   const AssistantAvatar(
@@ -48,6 +49,10 @@ class AssistantAvatar extends StatelessWidget {
                       fit: BoxFit.cover,
                       width: radius * 2,
                       height: radius * 2,
+                      memCacheWidth: DeviceService.memCachePixels(
+                          context, radius * 2),
+                      memCacheHeight: DeviceService.memCachePixels(
+                          context, radius * 2),
                       errorWidget: (context, error, stackTrace) => Image.asset(
                           AssistantService.getAssistantFallbackImage(
                               assistantId),

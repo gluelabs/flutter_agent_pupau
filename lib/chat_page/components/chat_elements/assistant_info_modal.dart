@@ -18,8 +18,6 @@ void showAssistantInfoModal(Assistant assistant) {
   bool isMarketplace = assistant.type == AssistantType.marketplace;
   WoltModalSheetPage page(BuildContext modalSheetContext) {
     return WoltModalSheetPage(
-      backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
-      surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
       hasTopBarLayer: false,
       child: Padding(
         padding: EdgeInsets.only(
@@ -121,7 +119,7 @@ void showAssistantInfoModal(Assistant assistant) {
   BuildContext? safeContext = getSafeModalContext();
   if (safeContext == null) return;
 
-  WoltModalSheet.show(
+  showPupauModalSheet(
     context: safeContext,
     pageListBuilder: (modalSheetContext) {
       return [page(modalSheetContext)];

@@ -8,7 +8,6 @@ import 'package:flutter_agent_pupau/models/memory_reference_model.dart';
 import 'package:get/get.dart';
 import 'package:flutter_agent_pupau/chat_page/utils/modal_utils.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
-import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 void showMemoryReferencesModal({
@@ -21,8 +20,6 @@ void showMemoryReferencesModal({
 
   WoltModalSheetPage page(BuildContext modalSheetContext) {
     return WoltModalSheetPage(
-      surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
-      backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
       hasTopBarLayer: true,
       topBarTitle: ModalTopBarTitle(title: Strings.memoriesUsed.tr),
       isTopBarLayerAlwaysVisible: true,
@@ -66,7 +63,7 @@ void showMemoryReferencesModal({
   final BuildContext? safeContext = getSafeModalContext();
   if (safeContext == null) return;
 
-  WoltModalSheet.show(
+  showPupauModalSheet(
     context: safeContext,
     pageListBuilder: (modalSheetContext) => [page(modalSheetContext)],
   );

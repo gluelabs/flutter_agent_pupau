@@ -7,24 +7,21 @@ import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/chat_page/utils/modal_utils.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
-import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 void showForkConversationModal() {
   WoltModalSheetPage page(BuildContext modalSheetContext) {
-    bool isTablet = DeviceService.isTablet;
-    PupauChatController chatController = Get.find();
+    final bool isTablet = DeviceService.isTablet;
+    final PupauChatController chatController = Get.find();
     return WoltModalSheetPage(
-      surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
-      backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
       hasTopBarLayer: true,
       isTopBarLayerAlwaysVisible: true,
       topBarTitle: ModalTopBarTitle(title: Strings.forkTitle.tr),
       child: Obx(() {
-        String forkConversationTitle =
+        final String forkConversationTitle =
             chatController.forkConversationTitle.value;
-        bool canFork = forkConversationTitle.trim() != "";
-        bool isForking = chatController.isForking.value;
+        final bool canFork = forkConversationTitle.trim() != "";
+        final bool isForking = chatController.isForking.value;
         return Column(
           children: [
             Padding(
@@ -93,7 +90,7 @@ void showForkConversationModal() {
     return;
   }
 
-  WoltModalSheet.show(
+  showPupauModalSheet(
     context: safeContext,
     pageListBuilder: (modalSheetContext) {
       return [page(modalSheetContext)];

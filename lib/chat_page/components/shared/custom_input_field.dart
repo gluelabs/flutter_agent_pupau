@@ -48,7 +48,8 @@ class CustomInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isTablet = DeviceService.isTablet;
+    Theme.of(context);
+    final bool isTablet = DeviceService.isTablet;
     TextStyle textStyle = TextStyle(
       fontSize: isTablet ? 16 : 14,
       fontWeight: FontWeight.w500,

@@ -15,8 +15,6 @@ void showCustomActionsModal(List<CustomAction> customActions) {
     bool isTablet = DeviceService.isTablet;
     PupauChatController controller = Get.find();
     return WoltModalSheetPage(
-      surfaceTintColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
-      backgroundColor: MyStyles.pupauTheme(!Get.isDarkMode).white,
       hasTopBarLayer: true,
       topBarTitle: ModalTopBarTitle(title: Strings.customActions.tr),
       isTopBarLayerAlwaysVisible: true,
@@ -68,7 +66,7 @@ void showCustomActionsModal(List<CustomAction> customActions) {
   BuildContext? safeContext = getSafeModalContext();
   if (safeContext == null) return;
 
-  WoltModalSheet.show(
+  showPupauModalSheet(
     context: safeContext,
     pageListBuilder: (modalSheetContext) {
       return [page(modalSheetContext)];

@@ -59,6 +59,10 @@ class GraphInfoContainer extends StatelessWidget {
                           imageUrl: graphInfo.imageUrl,
                           width: isTablet ? 150 : 95,
                           height: isTablet ? 150 : 95,
+                          memCacheWidth: DeviceService.memCachePixels(
+                              context, isTablet ? 150 : 95),
+                          memCacheHeight: DeviceService.memCachePixels(
+                              context, isTablet ? 150 : 95),
                           errorListener: (error) {},
                           fit: BoxFit.cover,
                           errorWidget: (context, url, error) =>

@@ -381,6 +381,11 @@ class PupauChatController extends GetxController {
     message.groupId = gid;
   }
 
+  void assignStreamingGroup(PupauMessage userMessage) {
+    _activeStreamingGroupId = _generateStreamingGroupId();
+    userMessage.groupId = _activeStreamingGroupId ?? "";
+  }
+
   bool _hasRenderableStreamingContent(PupauMessage message) {
     if (message.answer.trim().isNotEmpty) return true;
     if (message.images.isNotEmpty) return true;
