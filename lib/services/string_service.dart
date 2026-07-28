@@ -66,8 +66,9 @@ class StringService {
   static String prettifyJsonString(String? string) {
     String prettyString = string ?? "";
     try {
-      prettyString =
-          JsonEncoder.withIndent('  ').convert(json.decode(string ?? ""));
+      prettyString = JsonEncoder.withIndent(
+        '  ',
+      ).convert(json.decode(string ?? ""));
     } catch (e) {
       prettyString = string ?? "";
     }
@@ -75,8 +76,10 @@ class StringService {
   }
 
   static String fixMarkdownNewLines(String data) {
-    final codeBlockPattern =
-        RegExp(r'```.*?```', dotAll: true); // Matches code blocks
+    final codeBlockPattern = RegExp(
+      r'```.*?```',
+      dotAll: true,
+    ); // Matches code blocks
     final nonCodeBlocks = <String>[];
     final codeBlocks = <String>[];
 
@@ -103,7 +106,9 @@ class StringService {
     final processedNonCodeBlocks = nonCodeBlocks.map((block) {
       return block
           .replaceAll(
-              '\n\n\n\n', '\n\n\n\u200B\n') // First replace quadruple newlines
+            '\n\n\n\n',
+            '\n\n\n\u200B\n',
+          ) // First replace quadruple newlines
           .replaceAll('\n\n\n', '\n\n\u200B\n') // Then replace triple newlines
           .replaceAll('\n', '  \n'); // Then replace single newlines
     }).toList();
@@ -127,5 +132,12 @@ class StringService {
     }
 
     return buffer.toString();
+  }
+
+  static String formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    final double kb = bytes / 1024;
+    if (kb < 1024) return '${kb.toStringAsFixed(1)} KB';
+    return '${(kb / 1024).toStringAsFixed(1)} MB';
   }
 }

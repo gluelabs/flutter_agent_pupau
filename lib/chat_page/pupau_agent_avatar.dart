@@ -29,6 +29,10 @@ class _PupauAgentAvatarState extends State<PupauAgentAvatar> {
   final GlobalKey _avatarKey = GlobalKey();
   bool _isInitializingSized = false;
 
+  // Guards WidgetMode.full navigation: a quick double tap fires onTap twice
+  // before the first Navigator.push settles, pushing the chat screen twice.
+  bool _isOpeningChat = false;
+
   void _setInitCompleteCallback() {
     if (!mounted) return;
 
@@ -287,12 +291,17 @@ class _PupauAgentAvatarState extends State<PupauAgentAvatar> {
         return InkWell(
           key: _avatarKey,
           onTap: () {
+            // Ignore taps that arrive while a previous full-mode open is
+            // still navigating (e.g. a quick double tap), otherwise the
+            // chat screen gets pushed twice.
+            if (_isOpeningChat) return;
             // Initialize binding and reset state before navigation
             if (widget.config != null) {
               ChatBinding(config: widget.config).dependencies();
               if (Get.isRegistered<PupauChatController>()) {
                 final controller = Get.find<PupauChatController>();
                 if (widgetMode == WidgetMode.full) {
+                  _isOpeningChat = true;
                   controller.openChatWithConfig(widget.config);
                   Navigator.push(
                     context,
@@ -300,7 +309,9 @@ class _PupauAgentAvatarState extends State<PupauAgentAvatar> {
                       builder: (context) =>
                           PupauAgentChat(config: widget.config),
                     ),
-                  );
+                  ).then((_) {
+                    _isOpeningChat = false;
+                  });
                 } else if (widgetMode == WidgetMode.floating) {
                   controller.openChatWithConfig(widget.config);
                   WidgetsBinding.instance.addPostFrameCallback((_) {

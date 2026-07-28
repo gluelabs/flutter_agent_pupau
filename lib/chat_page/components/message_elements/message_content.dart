@@ -111,6 +111,7 @@ class MessageContent extends StatelessWidget {
               isFromAssistant: true,
               isAnonymous: isAnonymous,
               grounding: grounding,
+              wrapWithSelectionArea: status != MessageStatus.loading,
             ),
           ],
         ),

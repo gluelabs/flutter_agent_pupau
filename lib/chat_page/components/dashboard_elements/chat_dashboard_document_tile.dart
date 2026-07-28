@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/models/attachment_model.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_document_data.dart';
+import 'package:flutter_agent_pupau/services/attachment_service.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:get/get.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 /// Single-line document label for the chat dashboard.
 /// Documents are read-only entries — they are never tappable.
@@ -18,6 +20,10 @@ class ChatDashboardDocumentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isTablet = DeviceService.isTablet;
     final Attachment? attachment = document.relatedAttachment;
+    final bool isImage =
+        attachment != null &&
+        AttachmentService.getAttachmentCategory(attachment) ==
+            AttachmentCategory.image;
 
     final String label = attachment != null
         ? '${attachment.fileName}.${attachment.extension}'
@@ -27,14 +33,20 @@ class ChatDashboardDocumentTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: <Widget>[
+          if (isImage)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Icon(Symbols.image, size: isTablet ? 20 : 18),
+            ),
           Flexible(
             child: Text(
               label,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: isTablet ? 16 : 14,
-                fontWeight:
-                    attachment != null ? FontWeight.normal : FontWeight.w300,
+                fontWeight: attachment != null
+                    ? FontWeight.normal
+                    : FontWeight.w300,
               ),
             ),
           ),

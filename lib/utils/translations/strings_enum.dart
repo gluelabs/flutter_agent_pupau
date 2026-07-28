@@ -118,8 +118,7 @@ class Strings {
       "Proportional reduction";
   static const String attachmentTrimmingReasonFallbackOverBudget =
       "Removed (over context limit)";
-  static const String attachmentTrimmingReasonOverBudget =
-      "Over context limit";
+  static const String attachmentTrimmingReasonOverBudget = "Over context limit";
   static const String attachmentTrimmingReasonBelowMinUseful =
       "Below minimum useful";
   static const String contextResources = "Context Resources";
@@ -165,6 +164,7 @@ class Strings {
       "You will create a copy of this conversation ending with this message. This conversation will remain untouched. Do you want to continue?";
   static const String skillEventLoaded = "Skill loaded";
   static const String skillEventUnloaded = "Skill unloaded";
+
   /// Use @count placeholder for the number of skills.
   static const String skillsActiveCount = "@count active skills";
   static const String activeSkills = "Active Skills";
@@ -181,6 +181,7 @@ class Strings {
       "Are you sure you want to delete this resource: ";
   static const String documents = "Documents";
   static const String databases = "Databases";
+  static const String terminal = "Terminal";
   static const String database = "Database";
   static const String columns = "Columns";
   static const String images = "Images";
@@ -292,8 +293,7 @@ class Strings {
   static const String nativeDbLoadingInsert = "Inserting row...";
   static const String nativeDbLoadingUpdate = "Updating row...";
   static const String nativeDbLoadingDelete = "Deleting row...";
-  static const String nativeDbLoadingCreateDatabase =
-      "Creating database...";
+  static const String nativeDbLoadingCreateDatabase = "Creating database...";
   static const String nativeDbLoadingAddColumn = "Adding column...";
 
   // ATTACHMENT (JIT) TOOLS
@@ -302,8 +302,7 @@ class Strings {
       "Reading attachment structure...";
   static const String attachmentToolLoadingRead = "Reading attachment...";
   static const String attachmentToolLoadingGrep = "Searching attachment...";
-  static const String attachmentToolLoadingSearch =
-      "Searching attachments...";
+  static const String attachmentToolLoadingSearch = "Searching attachments...";
   static const String attachmentToolReadLabel = 'Reading "@fileName"';
   static const String attachmentToolReadRangeLabel =
       'Reading "@fileName" (lines @fromLine-@toLine)';
@@ -318,6 +317,15 @@ class Strings {
   static const String attachmentToolTruncatedNote = "Result truncated";
   static const String attachmentToolSoftNoteTitle = "Note";
 
+  // VM / SANDBOX TOOLS (shell, attach_artifact, import_attachment)
+  static const String shellCommandLabel = "Command";
+  static const String toolArtifactSavedSubtitle =
+      "Saved as a conversation attachment";
+  static const String toolArtifactAttachFailedTitle = "Attach failed";
+  static const String toolImportedSubtitle =
+      "Imported into the workspace at @path";
+  static const String toolImportToSandboxFailedTitle = "Import failed";
+
   // RAG GROUNDING CITATIONS
   // Note: panel title and attachment-origin label reuse the existing
   // `sources`/`attachment` keys above instead of duplicating their value.
@@ -328,12 +336,14 @@ class Strings {
   static const String citationVerificationPending = "Verifying…";
   static const String citationVerificationGrounded = "grounded";
   static const String exportCsv = "Export CSV";
-  static const String spreadsheetLoadingInfo = "Reading spreadsheet structure...";
+  static const String spreadsheetLoadingInfo =
+      "Reading spreadsheet structure...";
   static const String spreadsheetLoadingSample = "Loading sample rows...";
   static const String spreadsheetLoadingSearch = "Searching spreadsheet...";
   static const String spreadsheetLoadingInsert = "Adding row to spreadsheet...";
   static const String spreadsheetLoadingSummary = "Calculating statistics...";
-  static const String spreadsheetLoadingDistinct = "Analyzing distinct values...";
+  static const String spreadsheetLoadingDistinct =
+      "Analyzing distinct values...";
   static const String spreadsheetResultsSummary =
       'Results from "@fileName" — @rowCount rows found';
   static const String spreadsheetRowAdded = 'Row added to spreadsheet';
@@ -393,8 +403,7 @@ class Strings {
       "Camera access denied, please grant camera permission to the app in your device settings";
   static const String conversationForbidden =
       "Access to this conversation is denied";
-  static const String conversationLoadFailed =
-      "Failed to load conversation";
+  static const String conversationLoadFailed = "Failed to load conversation";
   static const String convertingAudio = "Waiting for transcription";
   static const String audioMessage = "Voice message";
   static const String recordAudio = "Record voice message";
@@ -409,7 +418,8 @@ class Strings {
   static const String noItemsFound = "No items found...";
 
   // THINKING SETTINGS
-  static const String thinkingNotSupported = "This model does not support thinking.";
+  static const String thinkingNotSupported =
+      "This model does not support thinking.";
   static const String enableThinking = "Enable thinking";
   static const String effort = "Effort";
   static const String notSelected = "Not selected";
@@ -791,5 +801,4 @@ class Strings {
     generating185,
     generating186,
   ];
-
 }

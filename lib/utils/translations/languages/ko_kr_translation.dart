@@ -71,8 +71,7 @@ const Map<String, String> koKr = {
   Strings.attachmentUploadSuccess: '첨부 파일이 성공적으로 업로드되었습니다!',
   Strings.attachmentUploadSuccessMultiple: '첨부 파일이 성공적으로 업로드되었습니다!',
   Strings.attachmentUploadFailed: '첨부 파일 업로드에 실패했습니다!',
-  Strings.attachmentTrimmingSnackbar:
-      '컨텍스트 제한을 준수하기 위해 일부 첨부 파일이 축소되었습니다.',
+  Strings.attachmentTrimmingSnackbar: '컨텍스트 제한을 준수하기 위해 일부 첨부 파일이 축소되었습니다.',
   Strings.attachmentTrimmingDetailBoth: '@truncated개 잘림, @removed개 제거됨.',
   Strings.attachmentTrimmingDetailTruncated: '@truncated개 잘림.',
   Strings.attachmentTrimmingDetailRemoved: '@removed개 제거됨.',
@@ -82,8 +81,7 @@ const Map<String, String> koKr = {
   Strings.attachmentTrimmingTokensDetail:
       '컨텍스트 토큰(약): @before 이전 → @after 이후 · @saved 절약',
   Strings.attachmentTrimmingReasonProportionalShare: '비례 축소',
-  Strings.attachmentTrimmingReasonFallbackOverBudget:
-      '제거됨(컨텍스트 제한 초과)',
+  Strings.attachmentTrimmingReasonFallbackOverBudget: '제거됨(컨텍스트 제한 초과)',
   Strings.attachmentTrimmingReasonOverBudget: '컨텍스트 제한 초과',
   Strings.attachmentTrimmingReasonBelowMinUseful: '최소 유용 기준 미만',
   Strings.contextResources: '컨텍스트 리소스',
@@ -108,8 +106,7 @@ const Map<String, String> koKr = {
   Strings.anonymousConversation: '익명 대화',
   Strings.anonymousSessionInfo:
       '익명 세션이 시작되고 있습니다. 한 번 시작되면 15분 동안 비활성 상태가 되면 세션이 삭제되고 생성 시 생성된 키로 암호화됩니다. 대화를 종료하면 세션에 대한 액세스가 손실되고 이후 삭제됩니다.',
-  Strings.anonymousConversationsNotAllowed:
-      '이 에이전트에 대해 익명 대화가 허용되지 않습니다',
+  Strings.anonymousConversationsNotAllowed: '이 에이전트에 대해 익명 대화가 허용되지 않습니다',
   Strings.searchingTheWeb: '웹에서 검색 중',
   Strings.sources: '소스',
   Strings.media: '미디어',
@@ -121,8 +118,7 @@ const Map<String, String> koKr = {
   Strings.fork: '여기서 대화 계속하기',
   Strings.forkTitle: '여기서 대화 계속하기',
   Strings.editMessageTitle: '메시지 편집',
-  Strings.editMessageDescription:
-      '이 메시지를 편집하고 위의 모든 메시지는 그대로 둡니다.',
+  Strings.editMessageDescription: '이 메시지를 편집하고 위의 모든 메시지는 그대로 둡니다.',
   Strings.forkDescription:
       '이 메시지로 끝나는 대화의 복사본을 만듭니다. 현재 대화는 변경되지 않습니다. 계속하시겠습니까?',
   Strings.skillEventLoaded: '스킬 로드됨',
@@ -139,10 +135,11 @@ const Map<String, String> koKr = {
   Strings.resourceDeleteConfirm: '이 리소스를 삭제하시겠습니까: ',
   Strings.documents: '서류',
   Strings.databases: '데이터베이스',
+  Strings.terminal: '터미널',
   Strings.database: '데이터베이스',
   Strings.columns: '열',
   Strings.images: '이미지',
-  Strings.generatedImages: "생성된 이미지", 
+  Strings.generatedImages: "생성된 이미지",
   Strings.links: '모래밭',
   Strings.noResourcesFound: '리소스를 찾을 수 없습니다...',
   Strings.news: '뉴스',
@@ -155,10 +152,8 @@ const Map<String, String> koKr = {
   Strings.whatDoYouSee: '무엇을 보고 있습니까?',
   Strings.scrollToBottom: '맨 아래로 스크롤',
   Strings.scrollToTop: '맨 위로 스크롤',
-  Strings.autoScrollMagnetOnTapToTurnOff:
-      '자석 자동 스크롤이 켜져 있습니다. 탭하여 끄기.',
-  Strings.autoScrollMagnetOffTapToTurnOn:
-      '자석 자동 스크롤이 꺼져 있습니다. 탭하여 켜기.',
+  Strings.autoScrollMagnetOnTapToTurnOff: '자석 자동 스크롤이 켜져 있습니다. 탭하여 끄기.',
+  Strings.autoScrollMagnetOffTapToTurnOn: '자석 자동 스크롤이 꺼져 있습니다. 탭하여 켜기.',
   Strings.doubleTapToShowMoreOptions: '두 번 눌러 더 많은 옵션 표시',
   Strings.customActions: '사용자 정의 작업',
   Strings.openDrawer: '메뉴 열기',
@@ -250,14 +245,18 @@ const Map<String, String> koKr = {
   Strings.attachmentToolLoadingGrep: '첨부 파일 검색 중...',
   Strings.attachmentToolLoadingSearch: '첨부 파일들 검색 중...',
   Strings.attachmentToolReadLabel: '"@fileName" 읽는 중',
-  Strings.attachmentToolReadRangeLabel:
-      '"@fileName" 읽는 중 (@fromLine-@toLine행)',
+  Strings.attachmentToolReadRangeLabel: '"@fileName" 읽는 중 (@fromLine-@toLine행)',
   Strings.attachmentToolGrepLabel: '@fileName에서 "@pattern" 검색 중',
   Strings.attachmentToolGrepAllLabel: '첨부 파일에서 "@pattern" 검색 중',
   Strings.attachmentToolSearchLabel: '첨부 파일에서 "@searchText" 검색 중',
   Strings.attachmentToolOutlineLabel: '"@fileName" 구조 읽는 중',
   Strings.attachmentToolTruncatedNote: '결과가 잘림',
   Strings.attachmentToolSoftNoteTitle: '참고',
+  Strings.shellCommandLabel: '명령어',
+  Strings.toolArtifactSavedSubtitle: '대화 첨부파일로 저장됨',
+  Strings.toolArtifactAttachFailedTitle: '첨부 실패',
+  Strings.toolImportedSubtitle: '@path 경로의 작업 공간으로 가져옴',
+  Strings.toolImportToSandboxFailedTitle: '가져오기 실패',
   Strings.citationOriginKnowledgeBase: '지식 베이스',
   Strings.citationOriginWebSearch: '웹 검색',
   Strings.citationOpenAttachment: '첨부 파일 열기',
@@ -276,8 +275,7 @@ const Map<String, String> koKr = {
   Strings.spreadsheetRowAdded: 'Row added to spreadsheet',
   Strings.spreadsheetRowUpdated: 'Row updated in spreadsheet',
   Strings.spreadsheetRowDeleted: 'Row deleted from spreadsheet',
-  Strings.spreadsheetRowDeletedWithId:
-      'Row deleted from spreadsheet (id: @id)',
+  Strings.spreadsheetRowDeletedWithId: 'Row deleted from spreadsheet (id: @id)',
   Strings.spreadsheetStats: 'Spreadsheet statistics',
   Strings.spreadsheetStatsSummary: 'Statistics from "@fileName"',
   Strings.spreadsheetTotal: 'Total',
@@ -288,7 +286,7 @@ const Map<String, String> koKr = {
   Strings.spreadsheetDistinctSummary:
       'Distinct values for "@column" — @categories categories, @rows rows',
   Strings.spreadsheetDistinctMore: '...and @count more values',
-  Strings.inspectBrowser: '브라우저 검사',  
+  Strings.inspectBrowser: '브라우저 검사',
   Strings.network: '네트워크',
   Strings.dataLayer: '데이터 레이어',
   Strings.searchNetwork: '네트워크 검색',
@@ -311,8 +309,7 @@ const Map<String, String> koKr = {
   Strings.audioMessage: '음성 메시지',
   Strings.recordAudio: '음성 메시지 녹음',
   Strings.sendVoiceMessage: '음성 메시지 보내기',
-  Strings.microphoneAccessDenied:
-      '마이크 액세스가 거부되었습니다. 기기 설정에서 앱에 마이크 권한을 부여해주세요',
+  Strings.microphoneAccessDenied: '마이크 액세스가 거부되었습니다. 기기 설정에서 앱에 마이크 권한을 부여해주세요',
   Strings.voiceModeTooltip: '음성 모드',
   Strings.voiceIdle: '뭔가 말해보세요…',
   Strings.voiceListening: '듣고 있어요…',

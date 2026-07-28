@@ -312,9 +312,13 @@ class _ToolUseExpandableContentState extends State<_ToolUseExpandableContent>
   void didUpdateWidget(covariant _ToolUseExpandableContent oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isExpanded != oldWidget.isExpanded) {
-      final duration = widget.isUserToggled
-          ? const Duration(milliseconds: 200)
-          : Duration.zero;
+      if (!widget.isUserToggled) {
+        // Skip the Ticker/TickerFuture machinery for the instant case — it
+        // can outlive this widget if removed from the list mid-animation.
+        _controller.value = widget.isExpanded ? 1.0 : 0.0;
+        return;
+      }
+      const duration = Duration(milliseconds: 200);
       _controller.duration = duration;
       _controller.reverseDuration = duration;
       if (widget.isExpanded) {

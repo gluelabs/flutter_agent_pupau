@@ -30,10 +30,17 @@ class PupauAttachmentsController extends GetxController {
   Rxn<Attachment> openAttachmentNote = Rxn<Attachment>();
   RxBool isSavingAttachmentNote = false.obs;
   RxList<String> downloadingAttachments = <String>[].obs;
+
   /// Attachment IDs that are currently loading note content for the note modal.
   RxSet<String> attachmentIdsLoadingNoteModal = <String>{}.obs;
+
+  /// Decoded image bytes for the attachment currently open in the dashboard
+  /// canvas — only populated when that attachment is an image.
+  Rxn<Uint8List> canvasImageBytes = Rxn<Uint8List>();
+
   /// Monotonic request id used to ignore stale note-content loads (modal).
   int _noteModalLoadRequestId = 0;
+
   /// Separate monotonic request id for canvas loads (independent of modal).
   int _canvasLoadRequestId = 0;
 
@@ -115,11 +122,9 @@ class PupauAttachmentsController extends GetxController {
       if (!conversationExists) return;
       Directory tempDir = await getTemporaryDirectory();
       for (Uint8ListWithName image in images) {
-        ByteBuffer buffer = image.image.buffer;
-        ByteData byteData = ByteData.view(buffer);
-        File file = await File('${tempDir.path}/${image.name}').writeAsBytes(
-          buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes),
-        );
+        File file = await File(
+          '${tempDir.path}/${image.name}',
+        ).writeAsBytes(image.image);
         Attachment? newAttachment = await AttachmentService.postAttachment(
           file,
         );
@@ -206,8 +211,9 @@ class PupauAttachmentsController extends GetxController {
   }
 
   Future<void> toggleAllAttachments() async {
-    final List<bool> previousSelected =
-        attachments.map((Attachment a) => a.selected).toList();
+    final List<bool> previousSelected = attachments
+        .map((Attachment a) => a.selected)
+        .toList();
 
     allAttachmentsDisabled.value = !allAttachmentsDisabled.value;
     final bool newSelected = !allAttachmentsDisabled.value;
@@ -229,8 +235,11 @@ class PupauAttachmentsController extends GetxController {
         const int maxRetries = 3;
         for (int attempt = 0; attempt < maxRetries; attempt++) {
           try {
-            final Attachment? result = await AttachmentService
-                .patchAttachmentSelected(attachment.id, newSelected);
+            final Attachment? result =
+                await AttachmentService.patchAttachmentSelected(
+                  attachment.id,
+                  newSelected,
+                );
             if (result != null) return true;
           } catch (_) {}
         }
@@ -243,8 +252,9 @@ class PupauAttachmentsController extends GetxController {
 
     await Future.wait(futures);
     attachments.refresh();
-    allAttachmentsDisabled.value =
-        !attachments.any((Attachment a) => a.selected);
+    allAttachmentsDisabled.value = !attachments.any(
+      (Attachment a) => a.selected,
+    );
     update();
   }
 
@@ -307,7 +317,6 @@ class PupauAttachmentsController extends GetxController {
     update();
   }
 
-
   /// Loads attachment content and sets the controller state without opening
   /// the modal. Used by the dashboard canvas to render content inline.
   ///
@@ -318,19 +327,31 @@ class PupauAttachmentsController extends GetxController {
     _canvasLoadRequestId++;
     final int requestId = _canvasLoadRequestId;
     final String? attachmentId = attachment?.id;
+    final bool isImage =
+        attachment != null &&
+        AttachmentService.getAttachmentCategory(attachment) ==
+            AttachmentCategory.image;
 
     noteName.value = attachment?.fileName ?? '';
     noteContent.value = '';
+    canvasImageBytes.value = null;
 
     // Mark as loading before the first await so Obx sees it synchronously.
     if (attachmentId != null && attachmentId.isNotEmpty) {
       attachmentIdsLoadingNoteModal.add(attachmentId);
     }
 
-    if (attachment != null) {
+    if (attachment != null && isImage) {
+      final Uint8List? bytes = await AttachmentService.readAttachmentImageBytes(
+        attachment.id,
+      );
+      if (requestId != _canvasLoadRequestId) return;
+      canvasImageBytes.value = bytes;
+    } else if (attachment != null) {
       try {
-        final String? content =
-            await AttachmentService.readAttachmentContent(attachment.id);
+        final String? content = await AttachmentService.readAttachmentContent(
+          attachment.id,
+        );
         if (requestId != _canvasLoadRequestId) return;
         noteContent.value = content ?? '';
       } catch (_) {

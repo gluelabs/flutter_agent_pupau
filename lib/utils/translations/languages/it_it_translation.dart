@@ -76,7 +76,8 @@ const Map<String, String> itIt = {
   Strings.attachmentUploadFailed: 'Caricamento dell\'allegato fallito',
   Strings.attachmentTrimmingSnackbar:
       'Per rispettare i limiti di contesto, alcuni allegati sono stati ridotti.',
-  Strings.attachmentTrimmingDetailBoth: '@truncated troncati, @removed rimossi.',
+  Strings.attachmentTrimmingDetailBoth:
+      '@truncated troncati, @removed rimossi.',
   Strings.attachmentTrimmingDetailTruncated: '@truncated troncati.',
   Strings.attachmentTrimmingDetailRemoved: '@removed rimossi.',
   Strings.attachmentTrimmingTitle: 'Riduzione allegati',
@@ -140,11 +141,13 @@ const Map<String, String> itIt = {
   Strings.skillLoadedBy: 'Caricata da',
   Strings.newConversationTitle: 'Titolo della nuova conversazione',
   Strings.newConversationCreated: 'Nuova conversazione creata!',
-  Strings.conversationStoppedCorrectly: 'Conversazione interrotta correttamente!',
+  Strings.conversationStoppedCorrectly:
+      'Conversazione interrotta correttamente!',
   Strings.resourceDeletedSuccess: 'Risorsa eliminata correttamente!',
   Strings.resourceDeleteConfirm: 'Confermi di voler eliminare questa risorsa: ',
   Strings.documents: 'Documenti',
   Strings.databases: 'Database',
+  Strings.terminal: 'Terminale',
   Strings.database: 'Database',
   Strings.columns: 'Colonne',
   Strings.images: 'Immagini',
@@ -268,6 +271,12 @@ const Map<String, String> itIt = {
   Strings.attachmentToolOutlineLabel: 'Leggo la struttura di "@fileName"',
   Strings.attachmentToolTruncatedNote: 'Risultato troncato',
   Strings.attachmentToolSoftNoteTitle: 'Nota',
+  Strings.shellCommandLabel: 'Comando',
+  Strings.toolArtifactSavedSubtitle:
+      'Salvato come allegato della conversazione',
+  Strings.toolArtifactAttachFailedTitle: 'Allegato non riuscito',
+  Strings.toolImportedSubtitle: 'Importato nello spazio di lavoro in @path',
+  Strings.toolImportToSandboxFailedTitle: 'Importazione non riuscita',
   Strings.citationOriginKnowledgeBase: 'Base di conoscenza',
   Strings.citationOriginWebSearch: 'Ricerca web',
   Strings.citationOpenAttachment: 'Apri allegato',
@@ -286,8 +295,7 @@ const Map<String, String> itIt = {
   Strings.spreadsheetRowAdded: 'Riga aggiunta al foglio',
   Strings.spreadsheetRowUpdated: 'Riga aggiornata nel foglio',
   Strings.spreadsheetRowDeleted: 'Riga eliminata dal foglio',
-  Strings.spreadsheetRowDeletedWithId:
-      'Riga eliminata dal foglio (id: @id)',
+  Strings.spreadsheetRowDeletedWithId: 'Riga eliminata dal foglio (id: @id)',
   Strings.spreadsheetStats: 'Statistiche dal foglio',
   Strings.spreadsheetStatsSummary: 'Statistiche da "@fileName"',
   Strings.spreadsheetTotal: 'Totale',
@@ -321,7 +329,7 @@ const Map<String, String> itIt = {
   Strings.audioMessage: 'Messaggio vocale',
   Strings.recordAudio: 'Registra messaggio vocale',
   Strings.sendVoiceMessage: 'Invia messaggio vocale',
-    Strings.microphoneAccessDenied:
+  Strings.microphoneAccessDenied:
       'Accesso al microfono negato, concedi il permesso del microfono all\'app nelle impostazioni del tuo dispositivo',
   Strings.voiceModeTooltip: 'Modalità vocale',
   Strings.voiceIdle: 'Di qualcosa…',

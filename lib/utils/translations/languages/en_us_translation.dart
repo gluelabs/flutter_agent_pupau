@@ -76,7 +76,8 @@ const Map<String, String> enUs = {
   Strings.attachmentUploadFailed: 'Attachment upload failed!',
   Strings.attachmentTrimmingSnackbar:
       'To respect context limits, some attachments were reduced.',
-  Strings.attachmentTrimmingDetailBoth: '@truncated truncated, @removed removed.',
+  Strings.attachmentTrimmingDetailBoth:
+      '@truncated truncated, @removed removed.',
   Strings.attachmentTrimmingDetailTruncated: '@truncated truncated.',
   Strings.attachmentTrimmingDetailRemoved: '@removed removed.',
   Strings.attachmentTrimmingTitle: 'Attachment trimming',
@@ -146,6 +147,7 @@ const Map<String, String> enUs = {
       'Are you sure you want to delete this resource: ',
   Strings.documents: 'Documents',
   Strings.databases: 'Databases',
+  Strings.terminal: 'Terminal',
   Strings.database: 'Database',
   Strings.columns: 'Columns',
   Strings.images: 'Images',
@@ -261,13 +263,16 @@ const Map<String, String> enUs = {
   Strings.attachmentToolReadRangeLabel:
       'Reading "@fileName" (lines @fromLine-@toLine)',
   Strings.attachmentToolGrepLabel: 'Searching for "@pattern" in @fileName',
-  Strings.attachmentToolGrepAllLabel:
-      'Searching for "@pattern" in attachments',
-  Strings.attachmentToolSearchLabel:
-      'Searching attachments for "@searchText"',
+  Strings.attachmentToolGrepAllLabel: 'Searching for "@pattern" in attachments',
+  Strings.attachmentToolSearchLabel: 'Searching attachments for "@searchText"',
   Strings.attachmentToolOutlineLabel: 'Reading structure of "@fileName"',
   Strings.attachmentToolTruncatedNote: 'Result truncated',
   Strings.attachmentToolSoftNoteTitle: 'Note',
+  Strings.shellCommandLabel: 'Command',
+  Strings.toolArtifactSavedSubtitle: 'Saved as a conversation attachment',
+  Strings.toolArtifactAttachFailedTitle: 'Attach failed',
+  Strings.toolImportedSubtitle: 'Imported into the workspace at @path',
+  Strings.toolImportToSandboxFailedTitle: 'Import failed',
   Strings.citationOriginKnowledgeBase: 'Knowledge base',
   Strings.citationOriginWebSearch: 'Web search',
   Strings.citationOpenAttachment: 'Open attachment',
@@ -286,8 +291,7 @@ const Map<String, String> enUs = {
   Strings.spreadsheetRowAdded: 'Row added to spreadsheet',
   Strings.spreadsheetRowUpdated: 'Row updated in spreadsheet',
   Strings.spreadsheetRowDeleted: 'Row deleted from spreadsheet',
-  Strings.spreadsheetRowDeletedWithId:
-      'Row deleted from spreadsheet (id: @id)',
+  Strings.spreadsheetRowDeletedWithId: 'Row deleted from spreadsheet (id: @id)',
   Strings.spreadsheetStats: 'Spreadsheet statistics',
   Strings.spreadsheetStatsSummary: 'Statistics from "@fileName"',
   Strings.spreadsheetTotal: 'Total',

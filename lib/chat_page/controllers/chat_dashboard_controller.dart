@@ -15,7 +15,9 @@ class ChatDashboardController extends GetxController {
   final Rxn<PupauMessage> latestTodoListMessage = Rxn<PupauMessage>();
   final RxList<PupauMessage> latestDocumentMessages = <PupauMessage>[].obs;
   final RxList<PupauMessage> latestWebSectionMessages = <PupauMessage>[].obs;
-  final RxList<PupauMessage> latestNativeDatabaseMessages = <PupauMessage>[].obs;
+  final RxList<PupauMessage> latestNativeDatabaseMessages =
+      <PupauMessage>[].obs;
+  final RxList<PupauMessage> latestTerminalMessages = <PupauMessage>[].obs;
   final RxList<PupauMessage> latestMailToolMessages = <PupauMessage>[].obs;
   final RxList<PupauMessage> latestSmtpToolMessages = <PupauMessage>[].obs;
 
@@ -27,8 +29,9 @@ class ChatDashboardController extends GetxController {
     // attachmentIdsLoadingNoteModal is populated before the canvas widget builds.
     if (item is AttachmentCanvasItem &&
         Get.isRegistered<PupauAttachmentsController>()) {
-      Get.find<PupauAttachmentsController>()
-          .loadAttachmentForCanvas(item.attachment);
+      Get.find<PupauAttachmentsController>().loadAttachmentForCanvas(
+        item.attachment,
+      );
     }
     selectedCanvasItem.value = item;
     update();
@@ -67,6 +70,8 @@ class ChatDashboardController extends GetxController {
         <String, PupauMessage>{};
     final Map<String, PupauMessage> latestNativeDatabaseByToolUseId =
         <String, PupauMessage>{};
+    final Map<String, PupauMessage> latestTerminalByToolUseId =
+        <String, PupauMessage>{};
     final Map<String, PupauMessage> latestMailByToolUseId =
         <String, PupauMessage>{};
     final Map<String, PupauMessage> latestSmtpByToolUseId =
@@ -83,7 +88,8 @@ class ChatDashboardController extends GetxController {
 
       if (toolUseMessage.type == ToolUseType.nativeToolsToDoList &&
           toolUseMessage.toDoListData != null) {
-        if (latestTodo == null || message.createdAt.isAfter(latestTodo.createdAt)) {
+        if (latestTodo == null ||
+            message.createdAt.isAfter(latestTodo.createdAt)) {
           latestTodo = message;
         }
       }
@@ -111,6 +117,13 @@ class ChatDashboardController extends GetxController {
         }
       }
 
+      if (terminalToolQualifiesForDashboard(toolUseMessage)) {
+        final PupauMessage? current = latestTerminalByToolUseId[toolUseId];
+        if (current == null || message.createdAt.isAfter(current.createdAt)) {
+          latestTerminalByToolUseId[toolUseId] = message;
+        }
+      }
+
       if (mailToolQualifiesForDashboard(toolUseMessage)) {
         final PupauMessage? current = latestMailByToolUseId[toolUseId];
         if (current == null || message.createdAt.isAfter(current.createdAt)) {
@@ -127,44 +140,44 @@ class ChatDashboardController extends GetxController {
     }
 
     final List<PupauMessage> sortedDocuments =
-        latestDocumentByToolUseId.values.toList()
-          ..sort(
-            (PupauMessage a, PupauMessage b) =>
-                b.createdAt.compareTo(a.createdAt),
-          );
+        latestDocumentByToolUseId.values.toList()..sort(
+          (PupauMessage a, PupauMessage b) =>
+              b.createdAt.compareTo(a.createdAt),
+        );
 
     final List<PupauMessage> sortedWebSection =
-        latestWebSectionByToolUseId.values.toList()
-          ..sort(
-            (PupauMessage a, PupauMessage b) =>
-                b.createdAt.compareTo(a.createdAt),
-          );
+        latestWebSectionByToolUseId.values.toList()..sort(
+          (PupauMessage a, PupauMessage b) =>
+              b.createdAt.compareTo(a.createdAt),
+        );
 
     final List<PupauMessage> sortedNativeDatabase =
-        latestNativeDatabaseByToolUseId.values.toList()
-          ..sort(
-            (PupauMessage a, PupauMessage b) =>
-                b.createdAt.compareTo(a.createdAt),
-          );
+        latestNativeDatabaseByToolUseId.values.toList()..sort(
+          (PupauMessage a, PupauMessage b) =>
+              b.createdAt.compareTo(a.createdAt),
+        );
 
-    final List<PupauMessage> sortedMail =
-        latestMailByToolUseId.values.toList()
-          ..sort(
-            (PupauMessage a, PupauMessage b) =>
-                b.createdAt.compareTo(a.createdAt),
-          );
+    final List<PupauMessage> sortedTerminal =
+        latestTerminalByToolUseId.values.toList()..sort(
+          (PupauMessage a, PupauMessage b) =>
+              b.createdAt.compareTo(a.createdAt),
+        );
 
-    final List<PupauMessage> sortedSmtp =
-        latestSmtpByToolUseId.values.toList()
-          ..sort(
-            (PupauMessage a, PupauMessage b) =>
-                b.createdAt.compareTo(a.createdAt),
-          );
+    final List<PupauMessage> sortedMail = latestMailByToolUseId.values.toList()
+      ..sort(
+        (PupauMessage a, PupauMessage b) => b.createdAt.compareTo(a.createdAt),
+      );
+
+    final List<PupauMessage> sortedSmtp = latestSmtpByToolUseId.values.toList()
+      ..sort(
+        (PupauMessage a, PupauMessage b) => b.createdAt.compareTo(a.createdAt),
+      );
 
     latestTodoListMessage.value = latestTodo;
     latestDocumentMessages.value = sortedDocuments;
     latestWebSectionMessages.value = sortedWebSection;
     latestNativeDatabaseMessages.value = sortedNativeDatabase;
+    latestTerminalMessages.value = sortedTerminal;
     latestMailToolMessages.value = sortedMail;
     latestSmtpToolMessages.value = sortedSmtp;
   }

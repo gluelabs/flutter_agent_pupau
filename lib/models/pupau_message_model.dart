@@ -33,11 +33,13 @@ class PupauMessage {
   List<MemoryReference> memoryReferences;
   List<MemoryAlways> alwaysMemories;
   ContextInfo? contextInfo;
+
   /// RAG grounding block (`extraInfo.grounding`) — null when the assistant's
   /// `A_GROUNDING_MODE` is OFF (the default), or a live partial version
   /// (IMPLICIT sources only) before the authoritative one lands. See
   /// `GroundingInfo.sourceForMarker`.
   GroundingInfo? grounding;
+
   /// Raw `groundingSources[]` off the `kb` frame (SSE only, §1.2) — IMPLICIT
   /// sources known live, before the turn closes. Forward-filled onto
   /// [grounding] the same way `kbReferences` is, see
@@ -74,8 +76,10 @@ class PupauMessage {
   bool? showTool;
   String? toolMessage;
   String? title;
+
   /// Persisted on assistant query [extraInfo.skillsLoaded] (history).
   List<SkillLoadedInfo> skillsLoaded = const [];
+
   /// Inline SSE row: compact skill load/unload bubble (not persisted separately).
   SkillEventDetail? skillEventDetail;
 
@@ -152,7 +156,9 @@ class PupauMessage {
 
   factory PupauMessage.fromSseStream(Map<String, dynamic> json) {
     try {
-      SourceType sourceType = ConversationService.getSourceTypeEnum(json["messageType"]);
+      SourceType sourceType = ConversationService.getSourceTypeEnum(
+        json["messageType"],
+      );
       MessageType? messageType = ConversationService.getMessageTypeEnum(
         json["type"],
       );
@@ -199,9 +205,8 @@ class PupauMessage {
         alwaysMemories: json["alwaysMemories"] != null
             ? List<MemoryAlways>.from(
                 json["alwaysMemories"].map(
-                  (x) => MemoryAlways.fromMap(
-                    Map<String, dynamic>.from(x as Map),
-                  ),
+                  (x) =>
+                      MemoryAlways.fromMap(Map<String, dynamic>.from(x as Map)),
                 ),
               )
             : [],
@@ -313,9 +318,13 @@ class PupauMessage {
 
   factory PupauMessage.fromLoadedChat(Map<String, dynamic> json) {
     try {
-      final bool isSkillItem =
+      bool isSkillItem =
           json["extraInfo"]?["typeDetails"]?["toolType"] == "NATIVE_TOOLS" &&
           json["extraInfo"]?["typeDetails"]?["nativeTool"]?["id"] == "SKILL";
+      final SkillEventDetail? parsedSkillEventDetail = isSkillItem
+          ? SkillEventDetail.fromHistoryNativeToolItem(json)
+          : null;
+      isSkillItem = parsedSkillEventDetail != null;
       return PupauMessage(
         id: getString(json["id"]),
         answer: isSkillItem ? '' : getString(json["answer"]),
@@ -399,12 +408,12 @@ class PupauMessage {
         sourceType: isSkillItem
             ? SourceType.event
             : (json["type"] != null
-                ? ConversationService.getSourceTypeEnum(json["type"])
-                : SourceType.llm),
+                  ? ConversationService.getSourceTypeEnum(json["type"])
+                  : SourceType.llm),
         type: isSkillItem
             ? (json["extraInfo"]?["typeDetails"]?["toolName"] == 'skill_unload'
-                ? MessageType.skillUnloaded
-                : MessageType.skillLoaded)
+                  ? MessageType.skillUnloaded
+                  : MessageType.skillLoaded)
             : null,
         toolUseMessage:
             !isSkillItem &&
@@ -425,9 +434,7 @@ class PupauMessage {
                 ),
               )
             : const [],
-        skillEventDetail: isSkillItem
-            ? SkillEventDetail.fromHistoryNativeToolItem(json)
-            : null,
+        skillEventDetail: parsedSkillEventDetail,
       );
     } catch (e) {
       return PupauMessage(
@@ -504,14 +511,14 @@ class PupauMessage {
       kbReferences = newKbReferences;
     }
     if (messageFromSse.memoryReferences.isNotEmpty) {
-      List<MemoryReference> newReferences =
-          List<MemoryReference>.from(memoryReferences);
+      List<MemoryReference> newReferences = List<MemoryReference>.from(
+        memoryReferences,
+      );
       newReferences.addAll(messageFromSse.memoryReferences);
       memoryReferences = newReferences;
     }
     if (messageFromSse.alwaysMemories.isNotEmpty) {
-      List<MemoryAlways> newAlways =
-          List<MemoryAlways>.from(alwaysMemories);
+      List<MemoryAlways> newAlways = List<MemoryAlways>.from(alwaysMemories);
       newAlways.addAll(messageFromSse.alwaysMemories);
       alwaysMemories = newAlways;
     }

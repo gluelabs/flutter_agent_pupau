@@ -19,48 +19,26 @@ class LinkBuilder extends MarkdownElementBuilder {
     TextStyle? preferredStyle,
     TextStyle? parentStyle,
   ) {
+    // Inherit the surrounding paragraph's font size/height so this run
+    // flows like the rest of the text it sits in.
+    final TextStyle linkStyle =
+        (parentStyle ?? preferredStyle ?? const TextStyle()).copyWith(
+          fontWeight: isFromAssistant ? FontWeight.w500 : FontWeight.w800,
+          color: isFromAssistant
+              ? isAnonymous
+                    ? Colors.white
+                    : MyStyles.pupauTheme(!Get.isDarkMode).primary
+              : isAnonymous
+              ? Colors.black87
+              : MyStyles.getTextTheme(
+                      isLightTheme: true,
+                    ).bodyMedium?.color ??
+                    Colors.black,
+        );
     return RichText(
       text: TextSpan(
-        text: "",
-        children: [
-          WidgetSpan(
-            alignment: PlaceholderAlignment.baseline,
-            baseline: TextBaseline.alphabetic,
-            child: Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(6),
-              child: InkWell(
-                onTap: () => {
-                  DeviceService.openLink(
-                    element.attributes['href'] ?? element.textContent,
-                  ),
-                },
-                borderRadius: BorderRadius.circular(6),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2.5),
-                  child: Text(
-                    element.textContent,
-                    style: TextStyle(
-                      fontWeight: isFromAssistant
-                          ? FontWeight.w500
-                          : FontWeight.w800,
-                      color: isFromAssistant
-                          ? isAnonymous
-                                ? Colors.white
-                                : MyStyles.pupauTheme(!Get.isDarkMode).primary
-                          : isAnonymous
-                          ? Colors.black87
-                          : MyStyles.getTextTheme(
-                                  isLightTheme: true,
-                                ).bodyMedium?.color ??
-                                Colors.black,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+        text: element.textContent,
+        style: linkStyle,
         recognizer: TapGestureRecognizer()
           ..onTap = () => DeviceService.openLink(
             element.attributes['href'] ?? element.textContent,

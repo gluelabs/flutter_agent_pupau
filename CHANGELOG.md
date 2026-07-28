@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.8] - 28/07/2026
+
+### Changes
+- Added new Tools UI and improved Dashboard
+- Fixed multiple chat opening attempts opening multiple views
+
 ## [1.0.7] - 20/07/2026
 
 ### Changes

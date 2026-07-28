@@ -37,7 +37,7 @@ class AskUserOption extends StatelessWidget {
             border: Border.all(
               color: isAnonymous
                   ? AnonymousThemeColors.userBubble
-                  : MyStyles.pupauTheme(!Get.isDarkMode).grey,
+                  : MyStyles.pupauTheme(!Get.isDarkMode).black.withValues(alpha: 0.8),
             ),
           ),
           child: Text(
@@ -54,7 +54,7 @@ class AskUserOption extends StatelessWidget {
                             isLightTheme: false,
                           ).bodyMedium?.color)!
                         : MyStyles.pupauTheme(true).black
-                  : MyStyles.pupauTheme(!Get.isDarkMode).grey,
+                  : MyStyles.pupauTheme(!Get.isDarkMode).black.withValues(alpha: 0.8),
             ),
           ),
         ),

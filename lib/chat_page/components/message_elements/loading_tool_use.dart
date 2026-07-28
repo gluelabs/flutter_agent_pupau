@@ -7,6 +7,7 @@ import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/services/style_service.dart';
 import 'package:flutter_agent_pupau/services/tool_use_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
+import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -106,14 +107,19 @@ class LoadingToolUse extends GetView<PupauChatController> {
     final String loadingLabel =
         controller.getAttachmentToolLoadingLabel(toolKey) ??
         _loadingLabelForTool(toolKey);
+    // Structure/padding/colors mirror ToolUseBubble's non-showContentOnly
+    // layout exactly, so the loading row and the real tool bubble that
+    // replaces it line up pixel-for-pixel with no visual jump.
+    final Color basicColor = isAnonymous
+        ? AnonymousThemeColors.assistantText
+        : (MyStyles.getTextTheme(isLightTheme: !Get.isDarkMode).bodyMedium?.color)!;
     return Container(
-      padding: const EdgeInsets.only(top: 4),
       margin: const EdgeInsets.symmetric(horizontal: 10),
       child: Material(
-        color: StyleService.getBubbleColor(true, isAnonymous, false),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(6),
         child: Padding(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.symmetric(vertical: 2),
           child: Theme(
             data: Theme.of(context).copyWith(
               splashFactory: NoSplash.splashFactory,
@@ -123,17 +129,14 @@ class LoadingToolUse extends GetView<PupauChatController> {
               onTap: () => controller.toggleLoadingToolExpanded(toolKey),
               borderRadius: BorderRadius.circular(6),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
+                padding: const EdgeInsets.only(
+                  left: 6,
+                  right: 15,
+                  top: 8,
+                  bottom: 8,
                 ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: isAnonymous
-                        ? Colors.white70
-                        : MyStyles.pupauTheme(!Get.isDarkMode).grey,
-                  ),
                 ),
                 child: Obx(() {
                   final bool isExpanded = controller.isLoadingToolExpanded(
@@ -171,11 +174,7 @@ class LoadingToolUse extends GetView<PupauChatController> {
                                       style: TextStyle(
                                         fontWeight: FontWeight.w600,
                                         fontSize: isTablet ? 16 : 14,
-                                        color: Get.isDarkMode || isAnonymous
-                                            ? Colors.white
-                                            : MyStyles.pupauTheme(
-                                                !Get.isDarkMode,
-                                              ).primary,
+                                        color: basicColor,
                                       ),
                                     ),
                                   ),
@@ -226,11 +225,7 @@ class LoadingToolUse extends GetView<PupauChatController> {
                               curve: Curves.easeInOut,
                               child: Icon(
                                 Symbols.chevron_forward,
-                                color: Get.isDarkMode || isAnonymous
-                                    ? Colors.white.withValues(alpha: 0.7)
-                                    : MyStyles.pupauTheme(
-                                        !Get.isDarkMode,
-                                      ).primary.withValues(alpha: 0.7),
+                                color: basicColor.withValues(alpha: 0.7),
                                 size: 24,
                               ),
                             ),

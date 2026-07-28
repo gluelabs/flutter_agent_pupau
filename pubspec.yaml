@@ -2,7 +2,7 @@ name: flutter_agent_pupau
 description: A Flutter plugin that integrates Pupau AI agents into your application.
 repository: https://github.com/gluelabs/flutter_agent_pupau
 issue_tracker: https://github.com/gluelabs/flutter_agent_pupau/issues
-version: 1.0.7
+version: 1.0.8
 
 topics:
   - ai
@@ -21,14 +21,14 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   get: ^4.7.3
-  dio: ^5.10.0
+  dio: ^5.11.0
   flutter_client_sse: ^2.0.3
   url_launcher: ^6.3.2
-  material_symbols_icons: ^4.2951.0
+  material_symbols_icons: ^4.2960.0
   http: ^1.6.0
   downloadsfolder: ^1.2.0
   share_plus: ^12.0.2
-  pro_image_editor: ^13.2.0
+  pro_image_editor: ^13.2.3
   saf_stream: ^3.1.0
   saf_util: ^3.1.0
   permission_handler: ^12.0.3
@@ -56,13 +56,15 @@ dependencies:
   flutter_inappwebview: ^6.1.5
   flutter_tts: ^4.2.5
   photo_view: ^0.15.0
-  uuid: ^4.5.3
+  uuid: ^4.6.0
   highlight: ^0.7.0
   web: ^1.1.1
   record: ^7.1.0
   audioplayers: ^6.8.1
   flutter_widget_from_html: ^0.17.2
   use_scramble: ^0.0.13
+  flutter_image_compress: ^2.5.1
+  flutter_twemoji: ^1.1.0
 
 dev_dependencies:
   flutter_test:

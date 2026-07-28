@@ -76,7 +76,8 @@ const Map<String, String> deDe = {
   Strings.attachmentUploadFailed: 'Anhang-Upload fehlgeschlagen!',
   Strings.attachmentTrimmingSnackbar:
       'Um die Kontextlimits einzuhalten, wurden einige Anhänge gekürzt.',
-  Strings.attachmentTrimmingDetailBoth: '@truncated gekürzt, @removed entfernt.',
+  Strings.attachmentTrimmingDetailBoth:
+      '@truncated gekürzt, @removed entfernt.',
   Strings.attachmentTrimmingDetailTruncated: '@truncated gekürzt.',
   Strings.attachmentTrimmingDetailRemoved: '@removed entfernt.',
   Strings.attachmentTrimmingTitle: 'Anhang-Kürzung',
@@ -146,6 +147,7 @@ const Map<String, String> deDe = {
       'Sind Sie sicher, dass Sie diese Ressource löschen möchten: ',
   Strings.documents: 'Unterlagen',
   Strings.databases: 'Datenbanken',
+  Strings.terminal: 'Terminal',
   Strings.database: 'Datenbank',
   Strings.columns: 'Spalten',
   Strings.images: 'Bilder',
@@ -264,11 +266,15 @@ const Map<String, String> deDe = {
       '"@fileName" wird gelesen (Zeilen @fromLine-@toLine)',
   Strings.attachmentToolGrepLabel: 'Suche nach "@pattern" in @fileName',
   Strings.attachmentToolGrepAllLabel: 'Suche nach "@pattern" in Anhängen',
-  Strings.attachmentToolSearchLabel:
-      'Durchsuche Anhänge nach "@searchText"',
+  Strings.attachmentToolSearchLabel: 'Durchsuche Anhänge nach "@searchText"',
   Strings.attachmentToolOutlineLabel: 'Struktur von "@fileName" wird gelesen',
   Strings.attachmentToolTruncatedNote: 'Ergebnis gekürzt',
   Strings.attachmentToolSoftNoteTitle: 'Hinweis',
+  Strings.shellCommandLabel: 'Befehl',
+  Strings.toolArtifactSavedSubtitle: 'Als Gesprächsanhang gespeichert',
+  Strings.toolArtifactAttachFailedTitle: 'Anhängen fehlgeschlagen',
+  Strings.toolImportedSubtitle: 'In den Arbeitsbereich importiert unter @path',
+  Strings.toolImportToSandboxFailedTitle: 'Import fehlgeschlagen',
   Strings.citationOriginKnowledgeBase: 'Wissensdatenbank',
   Strings.citationOriginWebSearch: 'Websuche',
   Strings.citationOpenAttachment: 'Anhang öffnen',
@@ -287,8 +293,7 @@ const Map<String, String> deDe = {
   Strings.spreadsheetRowAdded: 'Row added to spreadsheet',
   Strings.spreadsheetRowUpdated: 'Row updated in spreadsheet',
   Strings.spreadsheetRowDeleted: 'Row deleted from spreadsheet',
-  Strings.spreadsheetRowDeletedWithId:
-      'Row deleted from spreadsheet (id: @id)',
+  Strings.spreadsheetRowDeletedWithId: 'Row deleted from spreadsheet (id: @id)',
   Strings.spreadsheetStats: 'Spreadsheet statistics',
   Strings.spreadsheetStatsSummary: 'Statistics from "@fileName"',
   Strings.spreadsheetTotal: 'Total',
@@ -309,7 +314,8 @@ const Map<String, String> deDe = {
   Strings.typeYourAnswer: 'Geben Sie Ihre Antwort ein...',
   Strings.suggestedChoice: 'Vorgeschlagene Wahl',
   Strings.identifyToContinue: 'Identifizieren Sie sich, um fortzufahren',
-  Strings.authRequired: 'Sie müssen sich authentifizieren, um dieses Tool zu verwenden',
+  Strings.authRequired:
+      'Sie müssen sich authentifizieren, um dieses Tool zu verwenden',
   Strings.authenticate: 'Authentifizieren',
   Strings.promptSuggestionsForYou: 'Prompt-Vorschläge für dich',
   Strings.googleMapsApiKeyNotConfigured:

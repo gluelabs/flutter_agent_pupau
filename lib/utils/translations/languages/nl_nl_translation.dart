@@ -76,7 +76,8 @@ const Map<String, String> nlNl = {
   Strings.attachmentUploadFailed: 'Uploaden van bijlage mislukt!',
   Strings.attachmentTrimmingSnackbar:
       'Om binnen de contextlimieten te blijven zijn sommige bijlagen ingekort.',
-  Strings.attachmentTrimmingDetailBoth: '@truncated ingekort, @removed verwijderd.',
+  Strings.attachmentTrimmingDetailBoth:
+      '@truncated ingekort, @removed verwijderd.',
   Strings.attachmentTrimmingDetailTruncated: '@truncated ingekort.',
   Strings.attachmentTrimmingDetailRemoved: '@removed verwijderd.',
   Strings.attachmentTrimmingTitle: 'Bijlagen inkorten',
@@ -146,6 +147,7 @@ const Map<String, String> nlNl = {
       'Weet u zeker dat u deze bron wilt verwijderen: ',
   Strings.documents: 'Documenten',
   Strings.databases: 'Databases',
+  Strings.terminal: 'Terminal',
   Strings.database: 'Database',
   Strings.columns: 'Kolommen',
   Strings.images: 'Afbeeldingen',
@@ -263,12 +265,15 @@ const Map<String, String> nlNl = {
       '"@fileName" wordt gelezen (regels @fromLine-@toLine)',
   Strings.attachmentToolGrepLabel: 'Zoeken naar "@pattern" in @fileName',
   Strings.attachmentToolGrepAllLabel: 'Zoeken naar "@pattern" in bijlagen',
-  Strings.attachmentToolSearchLabel:
-      'Bijlagen doorzoeken naar "@searchText"',
-  Strings.attachmentToolOutlineLabel:
-      'Structuur van "@fileName" wordt gelezen',
+  Strings.attachmentToolSearchLabel: 'Bijlagen doorzoeken naar "@searchText"',
+  Strings.attachmentToolOutlineLabel: 'Structuur van "@fileName" wordt gelezen',
   Strings.attachmentToolTruncatedNote: 'Resultaat afgekapt',
   Strings.attachmentToolSoftNoteTitle: 'Opmerking',
+  Strings.shellCommandLabel: 'Opdracht',
+  Strings.toolArtifactSavedSubtitle: 'Opgeslagen als gespreksbijlage',
+  Strings.toolArtifactAttachFailedTitle: 'Bijvoegen mislukt',
+  Strings.toolImportedSubtitle: 'Geïmporteerd in de werkruimte op @path',
+  Strings.toolImportToSandboxFailedTitle: 'Importeren mislukt',
   Strings.citationOriginKnowledgeBase: 'Kennisbank',
   Strings.citationOriginWebSearch: 'Webzoekopdracht',
   Strings.citationOpenAttachment: 'Bijlage openen',
@@ -287,8 +292,7 @@ const Map<String, String> nlNl = {
   Strings.spreadsheetRowAdded: 'Row added to spreadsheet',
   Strings.spreadsheetRowUpdated: 'Row updated in spreadsheet',
   Strings.spreadsheetRowDeleted: 'Row deleted from spreadsheet',
-  Strings.spreadsheetRowDeletedWithId:
-      'Row deleted from spreadsheet (id: @id)',
+  Strings.spreadsheetRowDeletedWithId: 'Row deleted from spreadsheet (id: @id)',
   Strings.spreadsheetStats: 'Spreadsheet statistics',
   Strings.spreadsheetStatsSummary: 'Statistics from "@fileName"',
   Strings.spreadsheetTotal: 'Total',

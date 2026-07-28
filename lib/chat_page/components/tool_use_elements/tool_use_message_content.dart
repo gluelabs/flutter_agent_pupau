@@ -4,14 +4,19 @@ import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/messa
 import 'package:flutter_agent_pupau/models/tool_use_message_model.dart';
 import 'package:flutter_agent_pupau/services/tool_use_service.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_ask_user.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_attach_artifact.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_attachment_tool.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_browser_use.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_code_interpreter.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_document.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_import_attachment.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_import_tool_result.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_knowledge_base.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_mail.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_memory_profile.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_native_database.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_shell_tool.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_skill_tool.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_thinking.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_to_do_list.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/tool_use_info_list.dart';
@@ -30,10 +35,13 @@ class ToolUseMessageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isNativeTool = (ToolUseService.isNativeTool(toolUseMessage?.type)) &&
+    final bool isNativeTool =
+        (ToolUseService.isNativeTool(toolUseMessage?.type)) &&
         toolUseMessage?.nativeToolData != null;
     return Padding(
-      padding: showContentOnly ? EdgeInsets.zero : const EdgeInsets.only(left: 4),
+      padding: showContentOnly
+          ? EdgeInsets.zero
+          : const EdgeInsets.only(left: 4),
       child: switch (toolUseMessage?.type) {
         ToolUseType.nativeToolsWebSearch ||
         ToolUseType.pipeline ||
@@ -41,65 +49,88 @@ class ToolUseMessageContent extends StatelessWidget {
         ToolUseType.nativeToolsSMTP ||
         ToolUseType.nativeToolsGoogleDrive ||
         ToolUseType.nativeToolsWebReader ||
-        ToolUseType.nativeToolsPassthrough =>
-          SizedBox(),
+        ToolUseType.nativeToolsPassthrough => SizedBox(),
         ToolUseType.nativeToolsNativeDatabase => MessageNativeDatabase(
-            toolUseMessage: toolUseMessage,
-            isAnonymous: isAnonymous,
-          ),
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
         ToolUseType.nativeToolsToDoList => MessageToDoList(
-            toolUseMessage: toolUseMessage,
-            isAnonymous: isAnonymous,
-          ),
-        ToolUseType.nativeToolsKnowledgeBase =>
-          MessageKnowledgeBase(toolUseMessage: toolUseMessage),
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
+        ToolUseType.nativeToolsKnowledgeBase => MessageKnowledgeBase(
+          toolUseMessage: toolUseMessage,
+        ),
         ToolUseType.nativeToolsDocument => MessageDocument(
-            toolUseMessage: toolUseMessage,
-            isAnonymous: isAnonymous,
-          ),
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
         ToolUseType.nativeToolsBrowserUse => MessageBrowserUse(
-            toolUseMessage: toolUseMessage,
-            isAnonymous: isAnonymous,
-          ),
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
         ToolUseType.nativeToolsAskUser => MessageAskUser(
-            toolUseMessage: toolUseMessage,
-            isAnonymous: isAnonymous
-          ),
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
         ToolUseType.nativeToolsTaskTool => MessageTaskTool(
-            toolUseMessage: toolUseMessage,
-            isAnonymous: isAnonymous,
-          ),
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
         ToolUseType.nativeToolsSubagent => MessageSubagent(
-            toolUseMessage: toolUseMessage!,
-            isAnonymous: isAnonymous,
-          ),
+          toolUseMessage: toolUseMessage!,
+          isAnonymous: isAnonymous,
+        ),
         ToolUseType.nativeToolsThinking => MessageThinking(
-            toolUseMessage: toolUseMessage,
-            isAnonymous: isAnonymous,
-          ),
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
+        ToolUseType.nativeToolsSkill => MessageSkillTool(
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
         ToolUseType.nativeToolsCodeInterpreter => MessageCodeInterpreter(
-            toolUseMessage: toolUseMessage,
-            isAnonymous: isAnonymous,
-          ),
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
         ToolUseType.nativeToolsMail => MessageMail(
-            toolUseMessage: toolUseMessage,
-            isAnonymous: isAnonymous,
-          ),
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
         ToolUseType.nativeToolsMemoryProfile => MessageMemoryProfile(
-            toolUseMessage: toolUseMessage,
-            isAnonymous: isAnonymous,
-          ),
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
         ToolUseType.nativeToolsAttachment => MessageAttachmentTool(
-            toolUseMessage: toolUseMessage,
-            isAnonymous: isAnonymous,
-          ),
-        _ => isNativeTool
-            ? ToolUseInfoList(
-                infoList: toolUseMessage?.nativeToolData ?? {},
-                isAnonymous: isAnonymous,
-                forceExpanded: ToolUseService.isInitiallyExpandedTool(toolUseMessage?.type),
-              )
-            : const SizedBox.shrink(),
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
+        ToolUseType.nativeToolsShell => MessageShellTool(
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
+        ToolUseType.nativeToolsAttachArtifact => MessageAttachArtifact(
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
+        ToolUseType.nativeToolsImportAttachment => MessageImportAttachment(
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
+        ToolUseType.nativeToolsImportToolResult => MessageImportToolResult(
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
+        _ =>
+          isNativeTool
+              ? ToolUseInfoList(
+                  infoList: toolUseMessage?.nativeToolData ?? {},
+                  isAnonymous: isAnonymous,
+                  forceExpanded: ToolUseService.isInitiallyExpandedTool(
+                    toolUseMessage?.type,
+                  ),
+                )
+              : const SizedBox.shrink(),
       },
     );
   }

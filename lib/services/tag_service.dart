@@ -303,7 +303,9 @@ class TagService {
     int blockIndex = 0;
     int searchEnd = 0;
 
-    for (final RegExpMatch match in _closedThinkingBlockRegex.allMatches(message)) {
+    for (final RegExpMatch match in _closedThinkingBlockRegex.allMatches(
+      message,
+    )) {
       blockIndex++;
       segments.add(
         ThinkingTagSegment(
@@ -344,7 +346,9 @@ class TagService {
         <({int start, int end, String raw, bool isOpen})>[];
     int searchEnd = 0;
 
-    for (final RegExpMatch match in _closedThinkingBlockRegex.allMatches(message)) {
+    for (final RegExpMatch match in _closedThinkingBlockRegex.allMatches(
+      message,
+    )) {
       blocks.add((
         start: match.start,
         end: match.end,
@@ -404,7 +408,8 @@ class TagService {
         in groups) {
       blockIndex++;
       final StringBuffer rawBuffer = StringBuffer();
-      for (final ({int start, int end, String raw, bool isOpen}) block in group) {
+      for (final ({int start, int end, String raw, bool isOpen}) block
+          in group) {
         rawBuffer.write(block.raw);
       }
       merged.add(
@@ -423,7 +428,9 @@ class TagService {
     String mergedRaw,
   ) {
     final List<ToolUseThinkingData> parts = <ToolUseThinkingData>[];
-    for (final RegExpMatch match in _closedThinkingBlockRegex.allMatches(mergedRaw)) {
+    for (final RegExpMatch match in _closedThinkingBlockRegex.allMatches(
+      mergedRaw,
+    )) {
       final ToolUseThinkingData? data = extractThinkingDataFromSegment(
         match.group(0) ?? '',
       );
@@ -432,14 +439,13 @@ class TagService {
       }
     }
 
-    final int lastClosedEnd = _closedThinkingBlockRegex
-            .allMatches(mergedRaw)
-            .lastOrNull
-            ?.end ??
-        0;
+    final int lastClosedEnd =
+        _closedThinkingBlockRegex.allMatches(mergedRaw).lastOrNull?.end ?? 0;
     final String tail = mergedRaw.substring(lastClosedEnd);
     if (tail.contains(thinkingOpeningTag)) {
-      final ToolUseThinkingData? openData = extractThinkingDataFromSegment(tail);
+      final ToolUseThinkingData? openData = extractThinkingDataFromSegment(
+        tail,
+      );
       if (openData != null) {
         parts.add(openData);
       }
@@ -482,7 +488,9 @@ class TagService {
   static ToolUseThinkingData? extractThinkingDataFromLLMMessage(
     String message,
   ) {
-    final List<ThinkingTagSegment> segments = enumerateThinkingTagSegments(message);
+    final List<ThinkingTagSegment> segments = enumerateThinkingTagSegments(
+      message,
+    );
     if (segments.isEmpty) {
       return null;
     }
@@ -642,6 +650,7 @@ class TagService {
   static String _markdownAstToPlainText(String markdown) {
     final md.Document doc = md.Document(
       extensionSet: md.ExtensionSet.gitHubFlavored,
+      encodeHtml: false,
     );
     final List<md.Node> nodes = doc.parseLines(markdown.split('\n'));
     return _markdownBlocksToPlainText(nodes);

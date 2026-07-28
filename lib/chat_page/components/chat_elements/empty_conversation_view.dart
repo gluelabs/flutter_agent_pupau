@@ -15,13 +15,13 @@ class EmptyConversationView extends GetView<PupauChatController> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context);
     return Obx(() {
       final bool isAnonymous = controller.isAnonymous;
       final Assistant? assistant = controller.assistant.value;
       final String assistantId = assistant?.id ?? controller.assistantId;
       final String assistantName = assistant?.name.trim() ?? "";
       final String assistantImageUuid = assistant?.imageUuid ?? "";
-
       final String welcome = TagService.addUserNameTag(
         controller.effectiveWelcomeMessage,
       ).trim(); 
@@ -30,7 +30,7 @@ class EmptyConversationView extends GetView<PupauChatController> {
           : MyStyles.pupauTheme(!Get.isDarkMode).black;
       final Color secondaryTextColor = isAnonymous
           ? AnonymousThemeColors.assistantText.withValues(alpha: 0.75)
-          : MyStyles.pupauTheme(!Get.isDarkMode).grey;
+          : MyStyles.pupauTheme(!Get.isDarkMode).black.withValues(alpha: 0.7);
 
       return Center(
         child: SingleChildScrollView(

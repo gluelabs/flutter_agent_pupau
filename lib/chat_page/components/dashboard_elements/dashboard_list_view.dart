@@ -4,6 +4,7 @@ import 'package:flutter_agent_pupau/chat_page/components/dashboard_elements/chat
 import 'package:flutter_agent_pupau/chat_page/components/dashboard_elements/chat_dashboard_document_tile.dart';
 import 'package:flutter_agent_pupau/chat_page/components/dashboard_elements/chat_dashboard_mail_tool_tile.dart';
 import 'package:flutter_agent_pupau/chat_page/components/dashboard_elements/chat_dashboard_smtp_tool_tile.dart';
+import 'package:flutter_agent_pupau/chat_page/components/dashboard_elements/chat_dashboard_terminal_tile.dart';
 import 'package:flutter_agent_pupau/chat_page/components/dashboard_elements/chat_dashboard_web_section_tile.dart';
 import 'package:flutter_agent_pupau/chat_page/components/dashboard_elements/dashboard_expandable_section.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/tool_use_bubble.dart';
@@ -73,11 +74,16 @@ class DashboardListView extends GetView<ChatDashboardController> {
           controller.latestNativeDatabaseMessages;
       final int nativeDatabaseCount = nativeDatabaseMessages.length;
 
+      final List<PupauMessage> terminalMessages =
+          controller.latestTerminalMessages;
+      final int terminalCount = terminalMessages.length;
+
       final bool isEmpty =
           !hasTodo &&
           documentsSectionCount == 0 &&
           webSectionCount == 0 &&
-          nativeDatabaseCount == 0;
+          nativeDatabaseCount == 0 &&
+          terminalCount == 0;
 
       if (isEmpty) return const SizedBox.shrink();
 
@@ -155,6 +161,20 @@ class DashboardListView extends GetView<ChatDashboardController> {
                       nativeDatabaseMessages[index].toolUseMessage;
                   if (tool == null) return const SizedBox.shrink();
                   return ChatDashboardDatabaseTile(
+                    toolUseMessage: tool,
+                    isAnonymous: isAnonymous,
+                  );
+                },
+              ),
+            if (terminalCount > 0)
+              DashboardExpandableSection(
+                label: Strings.terminal.tr,
+                childCount: terminalCount,
+                childBuilder: (int index) {
+                  final ToolUseMessage? tool =
+                      terminalMessages[index].toolUseMessage;
+                  if (tool == null) return const SizedBox.shrink();
+                  return ChatDashboardTerminalTile(
                     toolUseMessage: tool,
                     isAnonymous: isAnonymous,
                   );

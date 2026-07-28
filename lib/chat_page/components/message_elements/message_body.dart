@@ -6,6 +6,8 @@ import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_eleme
 import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/code_builder.dart';
 import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/download_builder.dart';
 import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/download_syntax.dart';
+import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/emoji_builder.dart';
+import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/emoji_syntax.dart';
 import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/google_map_builder.dart';
 import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/google_map_syntax.dart';
 import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/link_builder.dart';
@@ -94,8 +96,9 @@ class MessageBody extends StatelessWidget {
                 MermaidSyntax(),
                 DownloadSyntax(),
                 CitationSyntax(grounding),
+                EmojiSyntax(),
               ]
-            : [],
+            : [EmojiSyntax()],
         builders: isFromAssistant
             ? {
                 'google-map': GoogleMapBuilder(),
@@ -108,6 +111,7 @@ class MessageBody extends StatelessWidget {
                   isFromAssistant: isFromAssistant,
                   isAnonymous: isAnonymous,
                 ),
+                'emoji': EmojiBuilder(),
               }
             : {
                 'code': CodeBuilder(),
@@ -116,6 +120,7 @@ class MessageBody extends StatelessWidget {
                   isFromAssistant: isFromAssistant,
                   isAnonymous: isAnonymous,
                 ),
+                'emoji': EmojiBuilder(),
               },
         styleSheet: _markdownStyleSheet(DeviceService.isTablet),
       ),

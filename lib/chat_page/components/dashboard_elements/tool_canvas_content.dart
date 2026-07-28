@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/chat_page/components/dashboard_elements/web_search_canvas_content.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_browser_use.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_code_interpreter.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_mail.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_native_database.dart';
+import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/message_shell_tool.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/smtp_tool_content.dart';
 import 'package:flutter_agent_pupau/chat_page/components/tool_use_elements/tool_use_info_list.dart';
 import 'package:flutter_agent_pupau/models/tool_use_message_model.dart';
@@ -41,6 +43,18 @@ class ToolCanvasContent extends StatelessWidget {
       ),
       ToolUseType.nativeToolsNativeDatabase => PaddedContent(
         child: MessageNativeDatabase(
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
+      ),
+      ToolUseType.nativeToolsShell => PaddedContent(
+        child: MessageShellTool(
+          toolUseMessage: toolUseMessage,
+          isAnonymous: isAnonymous,
+        ),
+      ),
+      ToolUseType.nativeToolsCodeInterpreter => PaddedContent(
+        child: MessageCodeInterpreter(
           toolUseMessage: toolUseMessage,
           isAnonymous: isAnonymous,
         ),

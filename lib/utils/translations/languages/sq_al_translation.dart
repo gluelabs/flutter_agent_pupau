@@ -77,7 +77,8 @@ const Map<String, String> sqAl = {
   Strings.attachmentUploadFailed: 'Ngarkimi i bashkëngjitjes dështoi!',
   Strings.attachmentTrimmingSnackbar:
       'Për të respektuar kufijtë e kontekstit, disa bashkëngjitje u zvogëluan.',
-  Strings.attachmentTrimmingDetailBoth: '@truncated të shkurtuara, @removed të hequra.',
+  Strings.attachmentTrimmingDetailBoth:
+      '@truncated të shkurtuara, @removed të hequra.',
   Strings.attachmentTrimmingDetailTruncated: '@truncated të shkurtuara.',
   Strings.attachmentTrimmingDetailRemoved: '@removed të hequra.',
   Strings.attachmentTrimmingTitle: 'Shkurtimi i bashkëngjitjeve',
@@ -147,6 +148,7 @@ const Map<String, String> sqAl = {
       'Jeni të sigurt që dëshironi të fshini këtë burim: ',
   Strings.documents: 'Dokumentet',
   Strings.databases: 'Baza të dhënash',
+  Strings.terminal: 'Terminali',
   Strings.database: 'Baza e të dhënave',
   Strings.columns: 'Kolona',
   Strings.images: 'Imazhet',
@@ -268,10 +270,14 @@ const Map<String, String> sqAl = {
       'Duke kërkuar "@pattern" në bashkëngjitje',
   Strings.attachmentToolSearchLabel:
       'Duke kërkuar "@searchText" në bashkëngjitje',
-  Strings.attachmentToolOutlineLabel:
-      'Duke lexuar strukturën e "@fileName"',
+  Strings.attachmentToolOutlineLabel: 'Duke lexuar strukturën e "@fileName"',
   Strings.attachmentToolTruncatedNote: 'Rezultat i shkurtuar',
   Strings.attachmentToolSoftNoteTitle: 'Shënim',
+  Strings.shellCommandLabel: 'Komanda',
+  Strings.toolArtifactSavedSubtitle: 'Ruajtur si bashkëngjitje e bisedës',
+  Strings.toolArtifactAttachFailedTitle: 'Bashkëngjitja dështoi',
+  Strings.toolImportedSubtitle: 'Importuar në hapësirën e punës te @path',
+  Strings.toolImportToSandboxFailedTitle: 'Importimi dështoi',
   Strings.citationOriginKnowledgeBase: 'Baza e njohurive',
   Strings.citationOriginWebSearch: 'Kërkim në ueb',
   Strings.citationOpenAttachment: 'Hap bashkëngjitjen',
@@ -290,8 +296,7 @@ const Map<String, String> sqAl = {
   Strings.spreadsheetRowAdded: 'Row added to spreadsheet',
   Strings.spreadsheetRowUpdated: 'Row updated in spreadsheet',
   Strings.spreadsheetRowDeleted: 'Row deleted from spreadsheet',
-  Strings.spreadsheetRowDeletedWithId:
-      'Row deleted from spreadsheet (id: @id)',
+  Strings.spreadsheetRowDeletedWithId: 'Row deleted from spreadsheet (id: @id)',
   Strings.spreadsheetStats: 'Spreadsheet statistics',
   Strings.spreadsheetStatsSummary: 'Statistics from "@fileName"',
   Strings.spreadsheetTotal: 'Total',

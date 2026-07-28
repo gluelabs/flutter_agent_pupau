@@ -7,12 +7,13 @@ import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
 import 'package:get/get.dart';
 
-/// Renders the Code Interpreter tool (nativeTool.id == "CODE_INTERPRETER").
-/// Code/Result are always expanded and rendered with [CodeBlock] (the same
-/// dark code-with-copy-button box used for fenced markdown code and for
-/// [MessageShellTool]) rather than an expand/collapse section.
-class MessageCodeInterpreter extends StatelessWidget {
-  const MessageCodeInterpreter({
+/// Renders the `shell` native tool (nativeTool.id == "SHELL"): runs a bash
+/// command inside the assistant's sandbox VM. Command/stdout/stderr are
+/// always expanded and rendered with [CodeBlock] (the same dark
+/// code-with-copy-button box used for fenced markdown code) rather than an
+/// expand/collapse section, since shell I/O reads as code/terminal output.
+class MessageShellTool extends StatelessWidget {
+  const MessageShellTool({
     super.key,
     required this.toolUseMessage,
     required this.isAnonymous,
@@ -23,7 +24,7 @@ class MessageCodeInterpreter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = toolUseMessage?.codeInterpreterData;
+    final data = toolUseMessage?.shellData;
     final bool isTablet = DeviceService.isTablet;
     final TextStyle labelStyle = TextStyle(
       fontSize: isTablet ? 15 : 14,
@@ -43,8 +44,8 @@ class MessageCodeInterpreter extends StatelessWidget {
           : CustomSelectableText(text: fallback, isAnonymous: isAnonymous);
     }
 
-    final bool hasOutput = data.output.trim().isNotEmpty;
-    final bool hasErrors = data.errors.isNotEmpty;
+    final bool hasStdout = data.stdout.trim().isNotEmpty;
+    final bool hasStderr = data.stderr.trim().isNotEmpty;
     final Color statusColor = data.success
         ? MyStyles.pupauTheme(!Get.isDarkMode).green
         : MyStyles.pupauTheme(!Get.isDarkMode).redAlarm;
@@ -63,21 +64,16 @@ class MessageCodeInterpreter extends StatelessWidget {
               Text('  •  ', style: secondaryTextStyle),
               Text('${data.executionTimeMs}ms', style: secondaryTextStyle),
             ],
+            if (!data.success || data.exitCode != 0) ...[
+              Text('  •  ', style: secondaryTextStyle),
+              Text('exit ${data.exitCode}', style: secondaryTextStyle),
+            ],
           ],
         ),
-        if (data.language.trim().isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Text('${Strings.language.tr}: ', style: labelStyle),
-              Text(data.language.trim(), style: secondaryTextStyle),
-            ],
-          ),
-        ],
         const SizedBox(height: 12),
-        Text(Strings.code.tr, style: labelStyle),
+        Text(Strings.shellCommandLabel.tr, style: labelStyle),
         const SizedBox(height: 6),
-        if (data.code.trim().isEmpty)
+        if (data.command.trim().isEmpty)
           Text(
             Strings.noCodeProvided.tr,
             style: TextStyle(
@@ -88,17 +84,12 @@ class MessageCodeInterpreter extends StatelessWidget {
             ),
           )
         else
-          CodeBlock(
-            text: data.code,
-            language: data.language.trim().isEmpty
-                ? null
-                : data.language.trim(),
-          ),
+          CodeBlock(text: data.command, language: 'bash'),
         const SizedBox(height: 10),
         Text(Strings.result.tr, style: labelStyle),
         const SizedBox(height: 6),
-        if (hasOutput) CodeBlock(text: data.output),
-        if (!hasOutput && !hasErrors)
+        if (hasStdout) CodeBlock(text: data.stdout),
+        if (!hasStdout && !hasStderr)
           Text(
             Strings.noOutput.tr,
             style: TextStyle(
@@ -108,8 +99,8 @@ class MessageCodeInterpreter extends StatelessWidget {
                   : Colors.black54,
             ),
           ),
-        if (hasErrors) ...[
-          if (hasOutput) const SizedBox(height: 10),
+        if (hasStderr) ...[
+          if (hasStdout) const SizedBox(height: 10),
           Text(
             Strings.errors.tr,
             style: TextStyle(
@@ -119,7 +110,7 @@ class MessageCodeInterpreter extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          CodeBlock(text: data.errors.join('\n\n')),
+          CodeBlock(text: data.stderr),
         ],
       ],
     );

@@ -1001,6 +1001,9 @@ class PupauChatController extends GetxController {
       if (pupauMessageQualifiesForDashboardNativeDatabase(message)) {
         return true;
       }
+      if (pupauMessageQualifiesForDashboardTerminalTool(message)) {
+        return true;
+      }
       if (pupauMessageQualifiesForDashboardMailTool(message)) {
         return true;
       }
@@ -1665,8 +1668,9 @@ class PupauChatController extends GetxController {
 
   void manageSSEData(Map<String, dynamic> data, bool isExternalSearch) {
     // Audio events from voice-mode responses must be routed before message parsing.
-    final VoiceSseEventType sseType =
-        voiceSseEventTypeFromString(getString(data['type']));
+    final VoiceSseEventType sseType = voiceSseEventTypeFromString(
+      getString(data['type']),
+    );
     if (MessageService.isVoiceAudioEvent(sseType)) {
       _handleVoiceAudioEvent(sseType, data);
       return;
@@ -1955,9 +1959,8 @@ class PupauChatController extends GetxController {
   }) {
     _groundingRefetchTimer?.cancel();
     _groundingRefetchTimer = Timer(delay, () async {
-      final GroundingInfo? grounding = await GroundingService.refetchQueryGrounding(
-        message.id,
-      );
+      final GroundingInfo? grounding =
+          await GroundingService.refetchQueryGrounding(message.id);
       if (grounding != null) {
         message.grounding = grounding;
         final String groupId = message.groupId;
@@ -4614,7 +4617,10 @@ class PupauChatController extends GetxController {
     }
   }
 
-  void _handleVoiceAudioEvent(VoiceSseEventType type, Map<String, dynamic> data) {
+  void _handleVoiceAudioEvent(
+    VoiceSseEventType type,
+    Map<String, dynamic> data,
+  ) {
     // Audio data is nested under the "data" key in each SSE event.
     final dynamic payload = data['data'];
     final Map<String, dynamic> eventData = payload is Map<String, dynamic>

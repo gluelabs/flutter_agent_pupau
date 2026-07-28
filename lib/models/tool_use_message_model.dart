@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_attach_artifact_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_attachment_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_code_interpreter_data.dart';
+import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_import_attachment_data.dart';
+import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_import_tool_result_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_native_database_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_spreadsheet_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_task_data.dart';
@@ -18,6 +21,7 @@ import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_mail_data.da
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_memory_profile_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_pipeline_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_s_m_t_p_data.dart';
+import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_shell_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_to_do_list_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_web_reader_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_web_search_data.dart';
@@ -58,6 +62,11 @@ class ToolUseMessage {
   ToolUseSubagentData? subagentData;
   ToolUseMemoryProfileData? memoryProfileData;
   ToolUseAttachmentData? attachmentToolData;
+  String? skillToolMessage;
+  ToolUseShellData? shellData;
+  ToolUseAttachArtifactData? attachArtifactData;
+  ToolUseImportAttachmentData? importAttachmentData;
+  ToolUseImportToolResultData? importToolResultData;
 
   ToolUseMessage({
     required this.id,
@@ -92,6 +101,11 @@ class ToolUseMessage {
     this.subagentData,
     this.memoryProfileData,
     this.attachmentToolData,
+    this.skillToolMessage,
+    this.shellData,
+    this.attachArtifactData,
+    this.importAttachmentData,
+    this.importToolResultData,
   });
 
   factory ToolUseMessage.fromJsonSSE(Map<String, dynamic> json) {
@@ -108,8 +122,10 @@ class ToolUseMessage {
     final bool isDocument = type == ToolUseType.nativeToolsDocument;
     final bool isSMTP = type == ToolUseType.nativeToolsSMTP;
     final bool isMail = type == ToolUseType.nativeToolsMail;
-    final bool isImageGeneration = type == ToolUseType.nativeToolsImageGeneration;
-    final bool isCodeInterpreter = type == ToolUseType.nativeToolsCodeInterpreter;
+    final bool isImageGeneration =
+        type == ToolUseType.nativeToolsImageGeneration;
+    final bool isCodeInterpreter =
+        type == ToolUseType.nativeToolsCodeInterpreter;
     final bool isNativeDatabase = type == ToolUseType.nativeToolsNativeDatabase;
     final String nativeDbToolName = getString(json["typeDetails"]?["toolName"]);
     final bool isSpreadsheetTool =
@@ -121,6 +137,13 @@ class ToolUseMessage {
     final bool isSubagent = type == ToolUseType.nativeToolsSubagent;
     final bool isMemoryProfile = type == ToolUseType.nativeToolsMemoryProfile;
     final bool isAttachmentTool = type == ToolUseType.nativeToolsAttachment;
+    final bool isSkillTool = type == ToolUseType.nativeToolsSkill;
+    final bool isShell = type == ToolUseType.nativeToolsShell;
+    final bool isAttachArtifact = type == ToolUseType.nativeToolsAttachArtifact;
+    final bool isImportAttachment =
+        type == ToolUseType.nativeToolsImportAttachment;
+    final bool isImportToolResult =
+        type == ToolUseType.nativeToolsImportToolResult;
     final Map<String, dynamic> data = ToolUseMessage.getMessage(json, true);
     Map<String, dynamic>? nativeForSubagent;
     if (isSubagent) {
@@ -218,6 +241,19 @@ class ToolUseMessage {
               typeDetails: json["typeDetails"],
             )
           : null,
+      skillToolMessage: isSkillTool ? getString(data['message']) : null,
+      shellData: isShell
+          ? ToolUseShellData.fromJson(data, json["typeDetails"])
+          : null,
+      attachArtifactData: isAttachArtifact
+          ? ToolUseAttachArtifactData.fromJson(data, json["typeDetails"])
+          : null,
+      importAttachmentData: isImportAttachment
+          ? ToolUseImportAttachmentData.fromJson(data, json["typeDetails"])
+          : null,
+      importToolResultData: isImportToolResult
+          ? ToolUseImportToolResultData.fromJson(data, json["typeDetails"])
+          : null,
     );
   }
 
@@ -235,8 +271,10 @@ class ToolUseMessage {
     final bool isDocument = type == ToolUseType.nativeToolsDocument;
     final bool isSMTP = type == ToolUseType.nativeToolsSMTP;
     final bool isMail = type == ToolUseType.nativeToolsMail;
-    final bool isImageGeneration = type == ToolUseType.nativeToolsImageGeneration;
-    final bool isCodeInterpreter = type == ToolUseType.nativeToolsCodeInterpreter;
+    final bool isImageGeneration =
+        type == ToolUseType.nativeToolsImageGeneration;
+    final bool isCodeInterpreter =
+        type == ToolUseType.nativeToolsCodeInterpreter;
     final bool isNativeDatabase = type == ToolUseType.nativeToolsNativeDatabase;
     final String nativeDbToolName = getString(
       json["extraInfo"]?["typeDetails"]?["toolName"],
@@ -250,6 +288,13 @@ class ToolUseMessage {
     final bool isSubagent = type == ToolUseType.nativeToolsSubagent;
     final bool isMemoryProfile = type == ToolUseType.nativeToolsMemoryProfile;
     final bool isAttachmentTool = type == ToolUseType.nativeToolsAttachment;
+    final bool isSkillTool = type == ToolUseType.nativeToolsSkill;
+    final bool isShell = type == ToolUseType.nativeToolsShell;
+    final bool isAttachArtifact = type == ToolUseType.nativeToolsAttachArtifact;
+    final bool isImportAttachment =
+        type == ToolUseType.nativeToolsImportAttachment;
+    final bool isImportToolResult =
+        type == ToolUseType.nativeToolsImportToolResult;
     final Map<String, dynamic> answer = getMessage(json, false);
     Map<String, dynamic>? nativeForSubagent;
     if (isSubagent) {
@@ -359,6 +404,28 @@ class ToolUseMessage {
               typeDetails: json["extraInfo"]?["typeDetails"],
             )
           : null,
+      skillToolMessage: isSkillTool ? getString(answer['message']) : null,
+      shellData: isShell
+          ? ToolUseShellData.fromJson(answer, json["extraInfo"]?["typeDetails"])
+          : null,
+      attachArtifactData: isAttachArtifact
+          ? ToolUseAttachArtifactData.fromJson(
+              answer,
+              json["extraInfo"]?["typeDetails"],
+            )
+          : null,
+      importAttachmentData: isImportAttachment
+          ? ToolUseImportAttachmentData.fromJson(
+              answer,
+              json["extraInfo"]?["typeDetails"],
+            )
+          : null,
+      importToolResultData: isImportToolResult
+          ? ToolUseImportToolResultData.fromJson(
+              answer,
+              json["extraInfo"]?["typeDetails"],
+            )
+          : null,
     );
   }
 
@@ -412,6 +479,32 @@ class ToolUseMessage {
       final String action = memoryProfileData!.action.trim();
       final String base = toolName.replaceAll("_", " ").capitalize ?? toolName;
       return action.isEmpty ? base : '$base (${action.toLowerCase()})';
+    }
+    if (shellData != null) {
+      final String base = toolName.replaceAll("_", " ").capitalize ?? toolName;
+      final String command = shellData!.command.trim();
+      return command.isEmpty ? base : '$base: $command';
+    }
+    if (attachArtifactData != null) {
+      final String base = toolName.replaceAll("_", " ").capitalize ?? toolName;
+      final String name = attachArtifactData!.fileName.trim().isNotEmpty
+          ? attachArtifactData!.fileName.trim()
+          : attachArtifactData!.path.trim();
+      return name.isEmpty ? base : '$base: $name';
+    }
+    if (importAttachmentData != null) {
+      final String base = toolName.replaceAll("_", " ").capitalize ?? toolName;
+      final String name = importAttachmentData!.fileName.trim().isNotEmpty
+          ? importAttachmentData!.fileName.trim()
+          : importAttachmentData!.requestedPath.trim();
+      return name.isEmpty ? base : '$base: $name';
+    }
+    if (importToolResultData != null) {
+      final String base = toolName.replaceAll("_", " ").capitalize ?? toolName;
+      final String name = importToolResultData!.path.trim().isNotEmpty
+          ? importToolResultData!.path.trim()
+          : importToolResultData!.requestedPath.trim();
+      return name.isEmpty ? base : '$base: $name';
     }
     if (attachmentToolData != null) {
       final String base = toolName.replaceAll("_", " ").capitalize ?? toolName;

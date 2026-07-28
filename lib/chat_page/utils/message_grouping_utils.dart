@@ -62,6 +62,15 @@ PupauMessage? representativeForGroupMembers(
   return bestMessage ?? members.last;
 }
 
+/// Identifies one *rendered row* within a group. [PupauMessage.id] alone
+/// isn't enough: the user and assistant "views" of the same turn share the
+/// same [PupauMessage.id] by design (see [MessageService.getUserLoadedMessage]
+/// / [MessageService.getAssistantLoadedMessage]), so a plain id-keyed dedup
+/// set would treat the assistant row as an already-seen duplicate of the
+/// user row and silently drop it.
+String _groupRowKey(PupauMessage m) =>
+    m.id.isEmpty ? '' : '${m.id}_${m.isMessageFromAssistant}';
+
 PupauMessage? firstUserMessageOldestToNewest(
   List<PupauMessage> membersOldestToNewest,
 ) {
@@ -124,13 +133,13 @@ List<PupauMessage> intermediateMessages(
     membersOldestToNewest,
     messagesInStorageOrder,
   );
-  final Set<String> keepIds = collapsed
-      .map((PupauMessage m) => m.id)
-      .where((String id) => id.isNotEmpty)
+  final Set<String> keepKeys = collapsed
+      .map(_groupRowKey)
+      .where((String key) => key.isNotEmpty)
       .toSet();
   final List<PupauMessage> out = <PupauMessage>[];
   for (final PupauMessage m in membersOldestToNewest) {
-    if (keepIds.contains(m.id)) continue;
+    if (keepKeys.contains(_groupRowKey(m))) continue;
     out.add(m);
   }
   out.removeWhere(
@@ -154,13 +163,14 @@ List<PupauMessage> collapsedFlatMessagesForGroupRow(
     membersOldestToNewest,
     messagesInStorageOrder,
   );
-  final Set<String> addedIds = <String>{};
+  final Set<String> addedKeys = <String>{};
   final List<PupauMessage> outMessages = <PupauMessage>[];
 
   void addIfNew(PupauMessage m) {
-    if (m.id.isNotEmpty && addedIds.contains(m.id)) return;
+    final String key = _groupRowKey(m);
+    if (key.isNotEmpty && addedKeys.contains(key)) return;
     outMessages.add(m);
-    if (m.id.isNotEmpty) addedIds.add(m.id);
+    if (key.isNotEmpty) addedKeys.add(key);
   }
 
   if (userMessage != null) addIfNew(userMessage);

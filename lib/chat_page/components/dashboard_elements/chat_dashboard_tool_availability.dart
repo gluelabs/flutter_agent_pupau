@@ -69,6 +69,16 @@ bool nativeDatabaseToolQualifiesForDashboard(ToolUseMessage tool) {
   return tool.nativeDatabaseData != null || tool.spreadsheetData != null;
 }
 
+bool terminalToolQualifiesForDashboard(ToolUseMessage tool) {
+  if (tool.type == ToolUseType.nativeToolsShell) {
+    return tool.shellData != null;
+  }
+  if (tool.type == ToolUseType.nativeToolsCodeInterpreter) {
+    return tool.codeInterpreterData != null;
+  }
+  return false;
+}
+
 bool mailToolQualifiesForDashboard(ToolUseMessage tool) {
   return tool.type == ToolUseType.nativeToolsMail && tool.mailData != null;
 }
@@ -119,6 +129,17 @@ bool pupauMessageQualifiesForDashboardSmtpTool(PupauMessage message) {
     return false;
   }
   return smtpToolQualifiesForDashboard(tool);
+}
+
+bool pupauMessageQualifiesForDashboardTerminalTool(PupauMessage message) {
+  if (message.sourceType != SourceType.toolUse) {
+    return false;
+  }
+  final ToolUseMessage? tool = message.toolUseMessage;
+  if (tool == null) {
+    return false;
+  }
+  return terminalToolQualifiesForDashboard(tool);
 }
 
 bool pupauMessageQualifiesForDashboardDocumentTool(PupauMessage message) {

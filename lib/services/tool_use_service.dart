@@ -70,6 +70,16 @@ class ToolUseService {
               return ToolUseType.nativeToolsMemoryProfile;
             case "ATTACHMENT":
               return ToolUseType.nativeToolsAttachment;
+            case "SKILL":
+              return ToolUseType.nativeToolsSkill;
+            case "SHELL":
+              return ToolUseType.nativeToolsShell;
+            case "ATTACH_ARTIFACT":
+              return ToolUseType.nativeToolsAttachArtifact;
+            case "IMPORT_ATTACHMENT":
+              return ToolUseType.nativeToolsImportAttachment;
+            case "IMPORT_TOOL_RESULT":
+              return ToolUseType.nativeToolsImportToolResult;
             default:
               return ToolUseType.nativeToolsGeneric;
           }
@@ -140,6 +150,16 @@ class ToolUseService {
         return ToolUseType.nativeToolsMemoryProfile;
       case "ATTACHMENT":
         return ToolUseType.nativeToolsAttachment;
+      case "SKILL":
+        return ToolUseType.nativeToolsSkill;
+      case "SHELL":
+        return ToolUseType.nativeToolsShell;
+      case "ATTACH_ARTIFACT":
+        return ToolUseType.nativeToolsAttachArtifact;
+      case "IMPORT_ATTACHMENT":
+        return ToolUseType.nativeToolsImportAttachment;
+      case "IMPORT_TOOL_RESULT":
+        return ToolUseType.nativeToolsImportToolResult;
       default:
         return ToolUseType.nativeToolsGeneric;
     }
@@ -204,6 +224,13 @@ class ToolUseService {
         return Symbols.psychology;
       case ToolUseType.nativeToolsAttachment:
         return Symbols.attach_file;
+      case ToolUseType.nativeToolsShell:
+        return Symbols.terminal;
+      case ToolUseType.nativeToolsAttachArtifact:
+        return Symbols.attach_file_add;
+      case ToolUseType.nativeToolsImportAttachment:
+      case ToolUseType.nativeToolsImportToolResult:
+        return Symbols.file_download;
       default:
         return Symbols.construction;
     }
@@ -392,6 +419,11 @@ enum ToolUseType {
   nativeToolsSubagent,
   nativeToolsMemoryProfile,
   nativeToolsAttachment,
+  nativeToolsSkill,
+  nativeToolsShell,
+  nativeToolsAttachArtifact,
+  nativeToolsImportAttachment,
+  nativeToolsImportToolResult,
   defaultTool,
 }
 

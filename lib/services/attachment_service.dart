@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:downloadsfolder/downloadsfolder.dart';
 import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -14,20 +15,21 @@ import 'package:flutter_agent_pupau/chat_page/components/shared/error_snackbar.d
 import 'package:flutter_agent_pupau/chat_page/components/shared/feedback_snackbar.dart';
 
 class AttachmentService {
-  static Future<Attachment?> postAttachment(File file,
-      {bool isNote = false}) async {
+  static Future<Attachment?> postAttachment(
+    File file, {
+    bool isNote = false,
+  }) async {
     Attachment? attachment;
     PupauChatController chatController = Get.find();
     String idConversation = chatController.conversation.value?.id ?? "";
     String idAssistant = chatController.assistant.value?.id ?? "";
-    String conversationToken =
-        chatController.conversation.value?.token ?? "";
+    String conversationToken = chatController.conversation.value?.token ?? "";
     dio.FormData formData = dio.FormData.fromMap({
       "type": isNote ? "NOTE" : FileService.getFileType(file.path),
       "file": dio.MultipartFile.fromBytes(
         file.readAsBytesSync(),
         filename: basename(file.path),
-      )
+      ),
     });
     if (idAssistant != "" && idConversation != "" && conversationToken != "") {
       await ApiService.call(
@@ -40,7 +42,8 @@ class AttachmentService {
         },
         onSuccess: (response) => attachment = Attachment.fromMap(response.data),
         onError: (e) => showErrorSnackbar(
-            "${Strings.apiErrorGeneric.tr} ${Strings.attachmentUploadFailed.tr}"),
+          "${Strings.apiErrorGeneric.tr} ${Strings.attachmentUploadFailed.tr}",
+        ),
       );
       return attachment;
     }
@@ -48,14 +51,16 @@ class AttachmentService {
   }
 
   static Future<Attachment?> patchAttachment(
-      String idAttachment, String fileName, File file,
-      {bool isNote = false}) async {
+    String idAttachment,
+    String fileName,
+    File file, {
+    bool isNote = false,
+  }) async {
     Attachment? attachment;
     PupauChatController chatController = Get.find();
     String idConversation = chatController.conversation.value?.id ?? "";
     String idAssistant = chatController.assistant.value?.id ?? "";
-    String conversationToken =
-        chatController.conversation.value?.token ?? "";
+    String conversationToken = chatController.conversation.value?.token ?? "";
     dio.FormData formData = dio.FormData.fromMap({
       "type": isNote ? "NOTE" : FileService.getFileType(file.path),
       "file": dio.MultipartFile.fromBytes(
@@ -67,7 +72,10 @@ class AttachmentService {
     if (idAssistant != "" && idConversation != "" && conversationToken != "") {
       await ApiService.call(
         ApiUrls.conversationAttachmentUrl(
-            idAssistant, idConversation, idAttachment),
+          idAssistant,
+          idConversation,
+          idAttachment,
+        ),
         RequestType.patch,
         data: formData,
         headers: {
@@ -76,7 +84,8 @@ class AttachmentService {
         },
         onSuccess: (response) => attachment = Attachment.fromMap(response.data),
         onError: (e) => showErrorSnackbar(
-            "${Strings.apiErrorGeneric.tr} ${Strings.attachmentUploadFailed.tr}"),
+          "${Strings.apiErrorGeneric.tr} ${Strings.attachmentUploadFailed.tr}",
+        ),
       );
       return attachment;
     }
@@ -88,8 +97,7 @@ class AttachmentService {
     PupauChatController chatController = Get.find();
     String idConversation = chatController.conversation.value?.id ?? "";
     String idAssistant = chatController.assistant.value?.id ?? "";
-    String conversationToken =
-        chatController.conversation.value?.token ?? "";
+    String conversationToken = chatController.conversation.value?.token ?? "";
     if (idAssistant != "" && idConversation != "" && conversationToken != "") {
       await ApiService.call(
         ApiUrls.conversationAttachmentsUrl(idAssistant, idConversation),
@@ -110,74 +118,92 @@ class AttachmentService {
     PupauChatController chatController = Get.find();
     String idConversation = chatController.conversation.value?.id ?? "";
     String idAssistant = chatController.assistant.value?.id ?? "";
-    String conversationToken =
-        chatController.conversation.value?.token ?? "";
+    String conversationToken = chatController.conversation.value?.token ?? "";
     await ApiService.call(
-        ApiUrls.conversationAttachmentUrl(
-            idAssistant, idConversation, idAttachment),
-        RequestType.delete,
-        headers: {"Conversation-Token": conversationToken},
-        onSuccess: (response) {
-          success = true;
-          showFeedbackSnackbar(
-              Strings.resourceDeletedSuccess.tr, Symbols.delete);
-        },
-        onError: (e) => showErrorSnackbar(Strings.apiErrorGeneric.tr));
+      ApiUrls.conversationAttachmentUrl(
+        idAssistant,
+        idConversation,
+        idAttachment,
+      ),
+      RequestType.delete,
+      headers: {"Conversation-Token": conversationToken},
+      onSuccess: (response) {
+        success = true;
+        _imageBytesCache.remove(idAttachment);
+        showFeedbackSnackbar(Strings.resourceDeletedSuccess.tr, Symbols.delete);
+      },
+      onError: (e) => showErrorSnackbar(Strings.apiErrorGeneric.tr),
+    );
     return success;
   }
 
   static AttachmentCategory getAttachmentCategory(Attachment attachment) {
     if (attachment.link != "") return AttachmentCategory.link;
-    switch (extension(attachment.fileName)) {
-      case '.png':
-      case '.jpg':
-      case '.jpeg':
-      case '.webp':
-      case '.gif':
+    // `fileName` never carries the extension (it's assembled separately as
+    // `'$fileName.$extension'` everywhere else, e.g. dashboard_canvas_item.dart)
+    // — matching on `attachment.extension` instead of `extension(fileName)`.
+    switch (attachment.extension.toLowerCase()) {
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+      case 'webp':
+      case 'gif':
+      case 'heic':
+      case 'heif':
         return AttachmentCategory.image;
       default:
         return AttachmentCategory.document;
     }
   }
 
-  static int getTokensUsed(List<Attachment> attachments) => attachments.fold(0,
-      (acc, attachment) => acc + (attachment.selected ? attachment.tokens : 0));
+  static int getTokensUsed(List<Attachment> attachments) => attachments.fold(
+    0,
+    (acc, attachment) => acc + (attachment.selected ? attachment.tokens : 0),
+  );
 
   static Future<Attachment?> postNoteAttachment(
-      String title, String content) async {
+    String title,
+    String content,
+  ) async {
     File? file = await FileService.createMdFile(title, content);
     if (file == null) return null;
     return await postAttachment(file, isNote: true);
   }
 
   static Future<Attachment?> patchNoteAttachment(
-      String idAttachment, String title, String content) async {
+    String idAttachment,
+    String title,
+    String content,
+  ) async {
     File? file = await FileService.createMdFile(title, content);
     if (file == null) return null;
     return await patchAttachment(idAttachment, title, file, isNote: true);
   }
 
   static Future<Attachment?> patchAttachmentSelected(
-      String idAttachment, bool selected) async {
+    String idAttachment,
+    bool selected,
+  ) async {
     Attachment? attachment;
     PupauChatController chatController = Get.find();
     String idConversation = chatController.conversation.value?.id ?? "";
     String idAssistant = chatController.assistant.value?.id ?? "";
-    String conversationToken =
-        chatController.conversation.value?.token ?? "";
+    String conversationToken = chatController.conversation.value?.token ?? "";
 
     if (idAssistant != "" && idConversation != "" && conversationToken != "") {
       await ApiService.call(
         ApiUrls.conversationAttachmentUrl(
-            idAssistant, idConversation, idAttachment),
+          idAssistant,
+          idConversation,
+          idAttachment,
+        ),
         RequestType.patch,
         data: {"selected": selected},
-        headers: {
-          "Conversation-Token": conversationToken,
-        },
+        headers: {"Conversation-Token": conversationToken},
         onSuccess: (response) => attachment = Attachment.fromMap(response.data),
         onError: (e) => showErrorSnackbar(
-            "${Strings.apiErrorGeneric.tr} ${Strings.attachmentUploadFailed.tr}"),
+          "${Strings.apiErrorGeneric.tr} ${Strings.attachmentUploadFailed.tr}",
+        ),
       );
       return attachment;
     }
@@ -190,11 +216,13 @@ class AttachmentService {
       PupauChatController chatController = Get.find();
       String idConversation = chatController.conversation.value?.id ?? "";
       String idAssistant = chatController.assistant.value?.id ?? "";
-      String conversationToken =
-          chatController.conversation.value?.token ?? "";
+      String conversationToken = chatController.conversation.value?.token ?? "";
       await ApiService.call(
         ApiUrls.conversationAttachmentViewUrl(
-            idAssistant, idConversation, idAttachment),
+          idAssistant,
+          idConversation,
+          idAttachment,
+        ),
         RequestType.get,
         headers: {"Conversation-Token": conversationToken},
         onSuccess: (response) => content = response.data,
@@ -207,12 +235,56 @@ class AttachmentService {
     }
   }
 
+  /// In-memory, app-lifetime cache of decoded attachment image bytes, keyed
+  /// by attachment id — attachments are immutable once uploaded, so once
+  /// fetched a byte array never goes stale and reopening the same image in
+  /// the dashboard canvas shouldn't re-hit the network.
+  static final Map<String, Uint8List> _imageBytesCache = <String, Uint8List>{};
+
+  /// Same endpoint as [readAttachmentContent] but read as raw bytes —
+  /// needed for image previews, since the generic `ApiService.call` path
+  /// decodes every response as text/JSON and would corrupt binary data.
+  static Future<Uint8List?> readAttachmentImageBytes(
+    String idAttachment,
+  ) async {
+    final Uint8List? cached = _imageBytesCache[idAttachment];
+    if (cached != null) return cached;
+    try {
+      PupauChatController chatController = Get.find();
+      String idConversation = chatController.conversation.value?.id ?? "";
+      String idAssistant = chatController.assistant.value?.id ?? "";
+      String conversationToken = chatController.conversation.value?.token ?? "";
+      final dio.Response<List<int>> response = await ApiService.dio
+          .get<List<int>>(
+            ApiUrls.conversationAttachmentViewUrl(
+              idAssistant,
+              idConversation,
+              idAttachment,
+            ),
+            options: dio.Options(
+              headers: {"Conversation-Token": conversationToken},
+              responseType: dio.ResponseType.bytes,
+            ),
+          );
+      final List<int>? bytes = response.data;
+      if (bytes == null) return null;
+      final Uint8List result = Uint8List.fromList(bytes);
+      _imageBytesCache[idAttachment] = result;
+      return result;
+    } catch (e) {
+      return null;
+    }
+  }
+
   static Future<void> downloadAttachment(Attachment? attachment) async {
     if (attachment == null) return;
     String? content = await readAttachmentContent(attachment.id);
     if (content == null) return;
     FileService.saveToDownloads(
-        content, attachment.fileName, attachment.extension);
+      content,
+      attachment.fileName,
+      attachment.extension,
+    );
   }
 }
 

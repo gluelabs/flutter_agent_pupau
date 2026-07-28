@@ -49,5 +49,3 @@ app.*.map.json
 # Project-specific
 AGENTS.md
 skills/
-.claude/
-scripts/commit-public.sh

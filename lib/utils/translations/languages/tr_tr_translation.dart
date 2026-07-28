@@ -76,7 +76,8 @@ const Map<String, String> trTr = {
   Strings.attachmentUploadFailed: 'Ek yükleme başarısız!',
   Strings.attachmentTrimmingSnackbar:
       'Bağlam sınırlarına uymak için bazı ekler kısaltıldı.',
-  Strings.attachmentTrimmingDetailBoth: '@truncated kısaltıldı, @removed kaldırıldı.',
+  Strings.attachmentTrimmingDetailBoth:
+      '@truncated kısaltıldı, @removed kaldırıldı.',
   Strings.attachmentTrimmingDetailTruncated: '@truncated kısaltıldı.',
   Strings.attachmentTrimmingDetailRemoved: '@removed kaldırıldı.',
   Strings.attachmentTrimmingTitle: 'Ek kısaltma',
@@ -88,7 +89,8 @@ const Map<String, String> trTr = {
   Strings.attachmentTrimmingReasonFallbackOverBudget:
       'Kaldırıldı (bağlam sınırı aşıldı)',
   Strings.attachmentTrimmingReasonOverBudget: 'Bağlam sınırı aşıldı',
-  Strings.attachmentTrimmingReasonBelowMinUseful: 'Minimum kullanılabilir altında',
+  Strings.attachmentTrimmingReasonBelowMinUseful:
+      'Minimum kullanılabilir altında',
   Strings.contextResources: 'Bağlam Kaynakları',
   Strings.addResource: 'Kaynak Ekle',
   Strings.totalResources: 'Toplam aktif kaynak',
@@ -146,6 +148,7 @@ const Map<String, String> trTr = {
       'Bu kaynağı silmek istediğinizden emin misiniz: ',
   Strings.documents: 'Belgeler',
   Strings.databases: 'Veritabanları',
+  Strings.terminal: 'Terminal',
   Strings.database: 'Veritabanı',
   Strings.columns: 'Sütunlar',
   Strings.images: 'Görseller',
@@ -267,6 +270,11 @@ const Map<String, String> trTr = {
   Strings.attachmentToolOutlineLabel: '"@fileName" yapısı okunuyor',
   Strings.attachmentToolTruncatedNote: 'Sonuç kısaltıldı',
   Strings.attachmentToolSoftNoteTitle: 'Not',
+  Strings.shellCommandLabel: 'Komut',
+  Strings.toolArtifactSavedSubtitle: 'Sohbet eki olarak kaydedildi',
+  Strings.toolArtifactAttachFailedTitle: 'Ekleme başarısız',
+  Strings.toolImportedSubtitle: '@path konumundaki çalışma alanına aktarıldı',
+  Strings.toolImportToSandboxFailedTitle: 'İçe aktarma başarısız',
   Strings.citationOriginKnowledgeBase: 'Bilgi bankası',
   Strings.citationOriginWebSearch: 'Web araması',
   Strings.citationOpenAttachment: 'Eki aç',
@@ -285,8 +293,7 @@ const Map<String, String> trTr = {
   Strings.spreadsheetRowAdded: 'Row added to spreadsheet',
   Strings.spreadsheetRowUpdated: 'Row updated in spreadsheet',
   Strings.spreadsheetRowDeleted: 'Row deleted from spreadsheet',
-  Strings.spreadsheetRowDeletedWithId:
-      'Row deleted from spreadsheet (id: @id)',
+  Strings.spreadsheetRowDeletedWithId: 'Row deleted from spreadsheet (id: @id)',
   Strings.spreadsheetStats: 'Spreadsheet statistics',
   Strings.spreadsheetStatsSummary: 'Statistics from "@fileName"',
   Strings.spreadsheetTotal: 'Total',

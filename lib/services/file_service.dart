@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_agent_pupau/chat_page/utils/modal_utils.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -35,32 +36,83 @@ class FileService {
   static final SafUtil safUtil = SafUtil();
   static final DateFormat fileFormat = DateFormat("dd-MM-yyyy-HH-mm-ss");
 
+  /// Extensions Flutter's built-in image codec can actually decode
+  static const Set<String> _editableImageExtensions = {
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.webp',
+    '.gif',
+  };
+
   static Future<List<Uint8ListWithName>> getImageFromGallery({
     bool allowMultiple = false,
   }) async {
-    FilePickerResult? result = await FilePicker.pickFiles(
-      type: FileType.media,
-      allowMultiple: allowMultiple,
-      withData: true,
-    );
+    FilePickerResult? result;
+    try {
+      result = await FilePicker.pickFiles(
+        type: FileType.media,
+        allowMultiple: allowMultiple,
+        withData: true,
+      );
+    } on PlatformException catch (e) {
+      // file_picker cancels an in-flight pick when a second one starts.
+      if (e.code == 'multiple_request') return [];
+      rethrow;
+    }
     if (result == null) return [];
     if (result.files.length == 1) {
-      File imageFile = File(result.files.single.path!);
+      PlatformFile pickedFile = result.files.single;
+      File imageFile = File(pickedFile.path!);
+      if (!_editableImageExtensions.contains(
+        extension(pickedFile.name).toLowerCase(),
+      )) {
+        return [await _readNonEditableImage(imageFile, pickedFile.name)];
+      }
       Uint8List? image = await editImage(imageFile);
       return image != null
-          ? [Uint8ListWithName(image: image, name: result.files.single.name)]
+          ? [Uint8ListWithName(image: image, name: pickedFile.name)]
           : [];
     }
     return Future.wait(
       result.files
           .where((file) => file.path != null)
-          .map(
-            (file) async => Uint8ListWithName(
-              image: await File(file.path!).readAsBytes(),
-              name: file.name,
-            ),
-          ),
+          .map((file) => _readNonEditableImage(File(file.path!), file.name)),
     );
+  }
+
+  /// Reads a picked file that either isn't a standard bitmap format or
+  /// wasn't run through [editImage] (multi-select never opens the editor).
+  /// `.heic`/`.heif` (the default capture format on iOS) is transcoded to
+  /// JPEG via native platform decoders so it uploads as a normal,
+  /// previewable image instead of a format neither the editor, the server,
+  /// nor most viewers can decode. Anything else is uploaded as-is.
+  static Future<Uint8ListWithName> _readNonEditableImage(
+    File file,
+    String name,
+  ) async {
+    final Uint8List rawBytes = await file.readAsBytes();
+    final String ext = extension(name).toLowerCase();
+    if (ext == '.heic' || ext == '.heif') {
+      try {
+        final Uint8List jpegBytes = await FlutterImageCompress.compressWithList(
+          rawBytes,
+          format: CompressFormat.jpeg,
+        );
+        final bool looksLikeJpeg =
+            jpegBytes.length > 100 &&
+            jpegBytes[0] == 0xFF &&
+            jpegBytes[1] == 0xD8 &&
+            jpegBytes[2] == 0xFF;
+        if (looksLikeJpeg) {
+          return Uint8ListWithName(
+            image: jpegBytes,
+            name: '${basenameWithoutExtension(name)}.jpg',
+          );
+        }
+      } catch (_) {}
+    }
+    return Uint8ListWithName(image: rawBytes, name: name);
   }
 
   static Future<Uint8ListWithName?> getImageFromCamera() async {
@@ -162,7 +214,11 @@ class FileService {
       // On web, sharing a file isn't reliably supported; clipboard is used by caller.
       if (kIsWeb) {
         Clipboard.setData(ClipboardData(text: contents));
-        showFeedbackSnackbar(Strings.copiedClipboard.tr, Symbols.content_copy, isInfo: true);
+        showFeedbackSnackbar(
+          Strings.copiedClipboard.tr,
+          Symbols.content_copy,
+          isInfo: true,
+        );
         return;
       }
       final Directory dir = await getTemporaryDirectory();
@@ -175,7 +231,11 @@ class FileService {
       );
     } catch (_) {
       Clipboard.setData(ClipboardData(text: contents));
-      showFeedbackSnackbar(Strings.copiedClipboard.tr, Symbols.content_copy, isInfo: true);
+      showFeedbackSnackbar(
+        Strings.copiedClipboard.tr,
+        Symbols.content_copy,
+        isInfo: true,
+      );
       return;
     }
   }
@@ -191,11 +251,15 @@ class FileService {
     if (rows.isEmpty) return;
     final List<String> headers = rows.first.keys.toList();
     final StringBuffer buffer = StringBuffer();
-    buffer.writeln(headers.map((String header) => escapeCsvCell(header)).join(','));
+    buffer.writeln(
+      headers.map((String header) => escapeCsvCell(header)).join(','),
+    );
     for (final Map<String, dynamic> row in rows) {
       buffer.writeln(
         headers
-            .map((String header) => escapeCsvCell((row[header] ?? '').toString()))
+            .map(
+              (String header) => escapeCsvCell((row[header] ?? '').toString()),
+            )
             .join(','),
       );
     }
@@ -289,6 +353,8 @@ class FileService {
       case '.webp':
       case '.gif':
       case '.dng':
+      case '.heic':
+      case '.heif':
         return Symbols.image;
       case '.csv':
       case '.xlsx':
@@ -307,6 +373,8 @@ class FileService {
       case '.webp':
       case '.gif':
       case '.dng':
+      case '.heic':
+      case '.heif':
         return "IMAGE";
       case '.csv':
       case '.xlsx':

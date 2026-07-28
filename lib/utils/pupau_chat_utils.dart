@@ -13,10 +13,18 @@ import 'package:get/get.dart';
 
 /// Utility class for programmatically interacting with the chat
 class PupauChatUtils {
+  /// Guards against re-entrant [openChat] calls — e.g. a double tap on the
+  /// host's open button — racing each other during the async setup before
+  /// [Navigator.push] fires, which used to push the chat screen twice.
+  static bool _isOpeningChat = false;
+
   /// Opens the chat page programmatically using the provided config
   ///
   /// If a conversation already exists, a new conversation will be created by resetting
   /// the chat state. This ensures a fresh conversation every time openChat is called.
+  ///
+  /// While a call is already in flight (registering bindings through pushing the
+  /// route), subsequent calls are ignored until that call finishes opening.
   ///
   /// Example:
   /// ```dart
@@ -31,25 +39,31 @@ class PupauChatUtils {
   /// )
   /// ```
   static Future<void> openChat(BuildContext context, PupauConfig config) async {
-    // Register controller before any await so [PupauChatController.onInit] can run.
-    ChatBinding(config: config).dependencies();
+    if (_isOpeningChat) return;
+    _isOpeningChat = true;
+    try {
+      // Register controller before any await so [PupauChatController.onInit] can run.
+      ChatBinding(config: config).dependencies();
 
-    // Always sync the controller before the route builds. Previously we only did this
-    // when a conversation already existed, so reopening the same assistant often
-    // skipped [openChatWithConfig] until a post-frame callback — one stale frame and
-    // inconsistent resets on 2nd+ open.
-    if (Get.isRegistered<PupauChatController>()) {
-      await Get.find<PupauChatController>().openChatWithConfig(config);
+      // Always sync the controller before the route builds. Previously we only did this
+      // when a conversation already existed, so reopening the same assistant often
+      // skipped [openChatWithConfig] until a post-frame callback — one stale frame and
+      // inconsistent resets on 2nd+ open.
+      if (Get.isRegistered<PupauChatController>()) {
+        await Get.find<PupauChatController>().openChatWithConfig(config);
+      }
+
+      if (!context.mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (BuildContext routeContext) =>
+              PupauAgentChat(config: config, skipOpenChatOnAttach: true),
+        ),
+      );
+    } finally {
+      _isOpeningChat = false;
     }
-
-    if (!context.mounted) return;
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (BuildContext routeContext) =>
-            PupauAgentChat(config: config, skipOpenChatOnAttach: true),
-      ),
-    );
   }
 
   /// **Experimental.** Preloads the assistants list via [getAssistantsQuick] and

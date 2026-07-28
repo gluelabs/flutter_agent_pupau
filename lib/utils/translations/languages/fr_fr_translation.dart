@@ -12,7 +12,8 @@ const Map<String, String> frFr = {
   Strings.description: 'Description',
   Strings.noSearchFound: 'Rien trouvé...',
   Strings.noItemsFound: 'Aucun élément trouvé...',
-  Strings.thinkingNotSupported: 'Ce modèle ne prend pas en charge la réflexion.',
+  Strings.thinkingNotSupported:
+      'Ce modèle ne prend pas en charge la réflexion.',
   Strings.enableThinking: 'Activer la réflexion',
   Strings.effort: 'Effort',
   Strings.notSelected: 'Non sélectionné',
@@ -78,7 +79,8 @@ const Map<String, String> frFr = {
       'Échec du téléchargement de la pièce jointe !',
   Strings.attachmentTrimmingSnackbar:
       'Pour respecter les limites de contexte, certains fichiers joints ont été réduits.',
-  Strings.attachmentTrimmingDetailBoth: '@truncated tronqués, @removed supprimés.',
+  Strings.attachmentTrimmingDetailBoth:
+      '@truncated tronqués, @removed supprimés.',
   Strings.attachmentTrimmingDetailTruncated: '@truncated tronqués.',
   Strings.attachmentTrimmingDetailRemoved: '@removed supprimés.',
   Strings.attachmentTrimmingTitle: 'Réduction des pièces jointes',
@@ -86,7 +88,8 @@ const Map<String, String> frFr = {
   Strings.attachmentTrimmingEstimatedTokens: 'Tokens estimés',
   Strings.attachmentTrimmingTokensDetail:
       'Tokens de contexte (env.) : @before avant → @after après · @saved économisés',
-  Strings.attachmentTrimmingReasonProportionalShare: 'Réduction proportionnelle',
+  Strings.attachmentTrimmingReasonProportionalShare:
+      'Réduction proportionnelle',
   Strings.attachmentTrimmingReasonFallbackOverBudget:
       'Supprimé (limite de contexte dépassée)',
   Strings.attachmentTrimmingReasonOverBudget: 'Limite de contexte dépassée',
@@ -148,10 +151,11 @@ const Map<String, String> frFr = {
       'Êtes-vous sûr de vouloir supprimer cette ressource: ',
   Strings.documents: 'Documents',
   Strings.databases: 'Bases de données',
+  Strings.terminal: 'Terminal',
   Strings.database: 'Base de données',
   Strings.columns: 'Colonnes',
   Strings.images: 'Images',
-  Strings.generatedImages: "Image générée", 
+  Strings.generatedImages: "Image générée",
   Strings.links: 'Links',
   Strings.noResourcesFound: 'Aucune ressource trouvée...',
   Strings.news: 'Nouvelles',
@@ -261,8 +265,7 @@ const Map<String, String> frFr = {
       'Lecture de la structure de la pièce jointe...',
   Strings.attachmentToolLoadingRead: 'Lecture de la pièce jointe...',
   Strings.attachmentToolLoadingGrep: 'Recherche dans la pièce jointe...',
-  Strings.attachmentToolLoadingSearch:
-      'Recherche dans les pièces jointes...',
+  Strings.attachmentToolLoadingSearch: 'Recherche dans les pièces jointes...',
   Strings.attachmentToolReadLabel: 'Lecture de "@fileName"',
   Strings.attachmentToolReadRangeLabel:
       'Lecture de "@fileName" (lignes @fromLine-@toLine)',
@@ -271,10 +274,15 @@ const Map<String, String> frFr = {
       'Recherche de "@pattern" dans les pièces jointes',
   Strings.attachmentToolSearchLabel:
       'Recherche de "@searchText" dans les pièces jointes',
-  Strings.attachmentToolOutlineLabel:
-      'Lecture de la structure de "@fileName"',
+  Strings.attachmentToolOutlineLabel: 'Lecture de la structure de "@fileName"',
   Strings.attachmentToolTruncatedNote: 'Résultat tronqué',
   Strings.attachmentToolSoftNoteTitle: 'Remarque',
+  Strings.shellCommandLabel: 'Commande',
+  Strings.toolArtifactSavedSubtitle:
+      'Enregistré comme pièce jointe de la conversation',
+  Strings.toolArtifactAttachFailedTitle: "Échec de l'ajout",
+  Strings.toolImportedSubtitle: "Importé dans l'espace de travail à @path",
+  Strings.toolImportToSandboxFailedTitle: "Échec de l'importation",
   Strings.citationOriginKnowledgeBase: 'Base de connaissances',
   Strings.citationOriginWebSearch: 'Recherche web',
   Strings.citationOpenAttachment: 'Ouvrir la pièce jointe',
@@ -293,8 +301,7 @@ const Map<String, String> frFr = {
   Strings.spreadsheetRowAdded: 'Row added to spreadsheet',
   Strings.spreadsheetRowUpdated: 'Row updated in spreadsheet',
   Strings.spreadsheetRowDeleted: 'Row deleted from spreadsheet',
-  Strings.spreadsheetRowDeletedWithId:
-      'Row deleted from spreadsheet (id: @id)',
+  Strings.spreadsheetRowDeletedWithId: 'Row deleted from spreadsheet (id: @id)',
   Strings.spreadsheetStats: 'Spreadsheet statistics',
   Strings.spreadsheetStatsSummary: 'Statistics from "@fileName"',
   Strings.spreadsheetTotal: 'Total',
@@ -315,7 +322,8 @@ const Map<String, String> frFr = {
   Strings.typeYourAnswer: 'Écrivez votre réponse...',
   Strings.suggestedChoice: 'Choix suggéré',
   Strings.identifyToContinue: 'Identifier pour continuer',
-  Strings.authRequired: 'Vous devez vous authentifier pour utiliser cette fonctionnalité',
+  Strings.authRequired:
+      'Vous devez vous authentifier pour utiliser cette fonctionnalité',
   Strings.authenticate: 'Authentifier',
   Strings.promptSuggestionsForYou: 'Suggestions de prompt pour vous',
   Strings.googleMapsApiKeyNotConfigured:
