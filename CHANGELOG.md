@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.8+1] - 29/07/2026
+
+### Changes
+- Improved text for simulators
+
 ## [1.0.8] - 28/07/2026
 
 ### Changes

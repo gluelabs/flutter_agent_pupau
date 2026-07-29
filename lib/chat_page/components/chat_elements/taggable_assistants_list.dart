@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/assistant_avatar.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/my_mention_tag_text_editing_controller.dart';
+import 'package:flutter_agent_pupau/chat_page/components/shared/emoji_text.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/marketplace_icon.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/models/assistant_model.dart';
@@ -97,7 +98,7 @@ class TaggableAssistantsList extends GetView<PupauChatController> {
                                           Expanded(
                                             child: Row(
                                               children: [
-                                                Text(
+                                                EmojiText(
                                                   assistant.name,
                                                   maxLines: 2,
                                                   style: TextStyle(

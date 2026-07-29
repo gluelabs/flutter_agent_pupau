@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart' as m;
 import 'package:get/get.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/assistant_avatar.dart';
+import 'package:flutter_agent_pupau/chat_page/components/shared/emoji_text.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/marketplace_icon.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/models/assistant_model.dart';
@@ -38,7 +38,7 @@ class MessageSenderInfo extends GetView<PupauChatController> {
                 ),
                 SizedBox(width: 10),
                 Flexible(
-                  child: m.Text(
+                  child: EmojiText(
                     assistant?.name ?? "",
                     style: TextStyle(
                       fontWeight: FontWeight.w600,

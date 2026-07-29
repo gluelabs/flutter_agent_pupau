@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_agent_pupau/chat_page/components/shared/emoji_text.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/my_styles.dart';
@@ -32,7 +33,7 @@ class ConversationStarterChip extends GetView<PupauChatController> {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: isAnonymous ? Colors.grey : darkBlue),
           ),
-          child: Text(
+          child: EmojiText(
             starter,
             style: TextStyle(
               fontSize: isTablet ? 17 : 15,

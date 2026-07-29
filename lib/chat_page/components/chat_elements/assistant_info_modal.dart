@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/assistant_avatar.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/assistant_capabilities.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/close_icon.dart';
+import 'package:flutter_agent_pupau/chat_page/components/shared/emoji_text.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/info_row.dart';
 import 'package:flutter_agent_pupau/chat_page/utils/modal_utils.dart';
 import 'package:flutter_agent_pupau/models/assistant_model.dart';
@@ -59,7 +60,7 @@ void showAssistantInfoModal(Assistant assistant) {
                                   bottom: 12,
                                   top: 12,
                                 ),
-                                child: Text(
+                                child: EmojiText(
                                   assistant.name,
                                   overflow: TextOverflow.visible,
                                   maxLines: 5,

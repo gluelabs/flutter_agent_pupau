@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/scroll_button.dart';
+import 'package:flutter_agent_pupau/chat_page/components/shared/emoji_text.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
@@ -89,7 +90,7 @@ class ConversationTitle extends GetView<PupauChatController> {
                                 ),
                             ],
                           )
-                        : Text(
+                        : EmojiText(
                             isAnonymous
                                 ? Strings.anonymousConversation.tr
                                 : conversationTitle,

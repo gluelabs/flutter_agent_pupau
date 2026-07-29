@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/assistant_avatar.dart';
+import 'package:flutter_agent_pupau/chat_page/components/shared/emoji_text.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/models/assistant_model.dart';
 import 'package:flutter_agent_pupau/services/assistant_service.dart';
@@ -40,7 +41,7 @@ class AssistantChip extends GetView<PupauChatController> {
               format: ImageFormat.low),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
+            child: EmojiText(
               assistant.name,
               style: TextStyle(
                   fontSize: isTablet ? 17 : 15,

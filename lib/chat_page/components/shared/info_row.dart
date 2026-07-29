@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_agent_pupau/chat_page/components/shared/emoji_text.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/feedback_snackbar.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
@@ -49,7 +50,7 @@ class InfoRow extends StatelessWidget {
                           ).bodyMedium?.color,
                         ),
                       ),
-                      Text(
+                      EmojiText(
                         info,
                         style: TextStyle(fontSize: isTablet ? 18 : 14),
                       ),

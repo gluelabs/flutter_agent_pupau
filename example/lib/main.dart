@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/flutter_agent_pupau.dart';
 
-
 // Replace with your assistant API key
 const String assistantApiKey = 'your-api-key-here';
 

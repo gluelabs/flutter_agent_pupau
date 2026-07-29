@@ -4,6 +4,7 @@ import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/assistant_avatar.dart';
+import 'package:flutter_agent_pupau/chat_page/components/shared/emoji_text.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/marketplace_icon.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/config/pupau_config.dart';
@@ -261,7 +262,7 @@ class ChatAppBar extends GetView<PupauChatController>
                   child: Row(
                     children: [
                       Flexible(
-                        child: Text(
+                        child: EmojiText(
                           assistant?.name ?? "Assistant Name ",
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
