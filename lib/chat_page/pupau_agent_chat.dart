@@ -6,6 +6,7 @@ import 'package:flutter_agent_pupau/chat_page/components/chat_elements/chat_app_
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/chat_input_field.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/chat_tools_fab.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/empty_conversation_view.dart';
+import 'package:flutter_agent_pupau/chat_page/components/chat_elements/empty_conversation_view_skeleton.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/messages_list.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/api_error_widget.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
@@ -262,9 +263,16 @@ class _PupauAgentChatView extends GetView<PupauChatController> {
                                                 controller
                                                     .isChatEntryResolving
                                                     .value;
+                                            // Chat screen is already open (see
+                                            // PupauChatUtils.openChat / PupauAgentAvatar) while
+                                            // assistant/conversation data is still loading —
+                                            // show a skeleton instead of a blank/empty screen.
                                             if (messagesEmpty &&
-                                                !conversationLoading &&
-                                                !entryResolving) {
+                                                (conversationLoading ||
+                                                    entryResolving)) {
+                                              return const EmptyConversationViewSkeleton();
+                                            }
+                                            if (messagesEmpty) {
                                               return const EmptyConversationView();
                                             }
                                             return const MessagesList();

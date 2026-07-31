@@ -104,6 +104,15 @@ class PupauChatController extends GetxController {
   bool get isAnonymous => _isAnonymousRx.value;
   bool get hideAudioRecordingButton =>
       pupauConfig?.hideAudioRecordingButton ?? false;
+  bool get showAgentInfoOnTap =>
+      pupauConfig?.showAgentInfoOnTap ?? true;
+  ChatInputAction get inputFieldAction =>
+      pupauConfig?.inputFieldAction ?? ChatInputAction.newline;
+
+  /// Force-hide switch for the KB references chip — never forces it to
+  /// show; [Assistant.kbSettings] still applies as-is when this is false.
+  /// Nerd stats have their own dedicated toggle, [showNerdStats].
+  bool get hideKbInfo => pupauConfig?.hideKbInfo ?? false;
   bool get isLiveVoiceAvailable =>
       (assistant.value?.voiceEnabled ?? false) &&
       (assistant.value?.sttAvailable ?? false) &&

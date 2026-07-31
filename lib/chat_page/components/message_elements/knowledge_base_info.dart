@@ -22,11 +22,14 @@ class KnowledgeBaseInfo extends GetView<PupauChatController> {
     return Obx(() {
       final bool isAnonymous = controller.isAnonymous;
       final KBSettings? kbSettings = controller.assistant.value?.kbSettings;
-      final bool showKbChip = kbSettings?.showKbChip ?? false;
-      final bool showKbResources = kbSettings?.showKbResources ?? false;
+      final bool hideKbInfo = controller.hideKbInfo;
+      final bool showKbChip = !hideKbInfo && (kbSettings?.showKbChip ?? false);
+      final bool showKbResources =
+          !hideKbInfo && (kbSettings?.showKbResources ?? false);
       final bool hasKb = message.kbReferences.isNotEmpty;
       return Visibility(
-        visible: hasKb && message.status != MessageStatus.loading,
+        visible:
+            hasKb && !hideKbInfo && message.status != MessageStatus.loading,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(

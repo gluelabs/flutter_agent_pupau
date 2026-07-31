@@ -23,6 +23,12 @@ class PupauChatUtils {
   /// If a conversation already exists, a new conversation will be created by resetting
   /// the chat state. This ensures a fresh conversation every time openChat is called.
   ///
+  /// The chat screen is pushed immediately — it does not wait for the
+  /// assistant/conversation fetch. While that's in flight,
+  /// [PupauAgentChat] shows `EmptyConversationViewSkeleton` in place of the
+  /// empty-conversation view; once loading finishes it swaps to the real
+  /// empty conversation or the loaded conversation, same as any other open path.
+  ///
   /// While a call is already in flight (registering bindings through pushing the
   /// route), subsequent calls are ignored until that call finishes opening.
   ///
@@ -45,12 +51,15 @@ class PupauChatUtils {
       // Register controller before any await so [PupauChatController.onInit] can run.
       ChatBinding(config: config).dependencies();
 
-      // Always sync the controller before the route builds. Previously we only did this
-      // when a conversation already existed, so reopening the same assistant often
-      // skipped [openChatWithConfig] until a post-frame callback — one stale frame and
-      // inconsistent resets on 2nd+ open.
+      // Kick off the fetch but don't await it — the route is pushed
+      // immediately below and the chat screen shows its own loading
+      // skeleton meanwhile. Not awaiting here is safe: the first line of
+      // [PupauChatController.openChatWithConfig] sets `isChatEntryResolving`
+      // synchronously (before its first `await`), so by the time
+      // [PupauAgentChat] builds, the loading flag is already true — no
+      // stale "everything empty" frame.
       if (Get.isRegistered<PupauChatController>()) {
-        await Get.find<PupauChatController>().openChatWithConfig(config);
+        Get.find<PupauChatController>().openChatWithConfig(config);
       }
 
       if (!context.mounted) return;

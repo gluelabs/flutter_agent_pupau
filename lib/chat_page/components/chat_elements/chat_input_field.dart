@@ -10,6 +10,7 @@ import 'package:flutter_agent_pupau/chat_page/components/chat_elements/send_mess
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/taggable_assistants_list.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/tagged_assistants_list.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
+import 'package:flutter_agent_pupau/config/pupau_config.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:flutter_agent_pupau/utils/translations/theme/anonymous_theme_colors.dart';
@@ -26,9 +27,9 @@ class ChatInputField extends GetView<PupauChatController> {
       if (controller.hideInputBox.value) return const SizedBox();
       // Voice mode replaces the entire input area — no border, no FABs.
       if (controller.isVoiceMode.value) return const VoiceModeInput();
-      bool isTablet = DeviceService.isTablet;
-      bool isAnonymous = controller.isAnonymous;
-      bool hideAudioRecordingButton = controller.hideAudioRecordingButton;
+      final bool isTablet = DeviceService.isTablet;
+      final bool isAnonymous = controller.isAnonymous;
+      final bool hideAudioRecordingButton = controller.hideAudioRecordingButton;
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -78,8 +79,9 @@ class ChatInputField extends GetView<PupauChatController> {
                           border: Border.all(
                             color: isAnonymous
                                 ? (isFocused
-                                      ? AnonymousThemeColors.primary
-                                            .withValues(alpha: 0.6)
+                                      ? AnonymousThemeColors.primary.withValues(
+                                          alpha: 0.6,
+                                        )
                                       : Colors.transparent)
                                 : isFocused
                                 ? MyStyles.pupauTheme(
@@ -114,7 +116,10 @@ class ChatInputField extends GetView<PupauChatController> {
                                             controller.inputMessageController,
                                         keyboardType: TextInputType.multiline,
                                         textInputAction:
-                                            TextInputAction.newline,
+                                            controller.inputFieldAction ==
+                                                ChatInputAction.send
+                                            ? TextInputAction.send
+                                            : TextInputAction.newline,
                                         minLines: 1,
                                         maxLines: 12,
                                         style: TextStyle(
@@ -150,7 +155,13 @@ class ChatInputField extends GetView<PupauChatController> {
                                             width: stopIsActive ? 82 : 0,
                                           ),
                                         ),
-                                        onFieldSubmitted: sendIsActive
+                                        // With ChatInputAction.newline (the default), Enter/return
+                                        // inserts a line break and never invokes this callback;
+                                        // ChatInputAction.send submits on Enter/return instead.
+                                        onFieldSubmitted:
+                                            sendIsActive &&
+                                                controller.inputFieldAction ==
+                                                    ChatInputAction.send
                                             ? (_) {
                                                 controller.sendMessage(
                                                   controller
@@ -185,7 +196,7 @@ class ChatInputField extends GetView<PupauChatController> {
                                       if (leftIconCount > 0)
                                         Positioned(
                                           left: 0,
-                                          bottom: 0,
+                                          bottom: isTablet ? 4 : 0,
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
@@ -235,7 +246,7 @@ class ChatInputField extends GetView<PupauChatController> {
                                         ),
                                       Positioned(
                                         right: 0,
-                                        bottom: 0,
+                                        bottom: isTablet ? 4 : 0,
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [

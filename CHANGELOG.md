@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.9] - 31/07/2026
+
+### Changes
+- Added `showAgentInfoOnTap` config option to control whether tapping the agent avatar/name opens the info dialog
+- Added `inputFieldAction` config option to choose Enter/return behavior on the chat input (newline or send)
+- Added `hideKbInfo` config option to force-hide the KB references chip
+
 ## [1.0.8+1] - 29/07/2026
 
 ### Changes

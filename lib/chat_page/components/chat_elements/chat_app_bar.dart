@@ -35,6 +35,10 @@ class ChatAppBar extends GetView<PupauChatController>
     AppBarConfig? appBarConfig =
         config?.appBarConfig ?? controller.pupauConfig?.appBarConfig;
     bool showAppBar = appBarConfig?.showAppBar ?? true;
+    bool showAgentInfoOnTap =
+        config?.showAgentInfoOnTap ??
+        controller.pupauConfig?.showAgentInfoOnTap ??
+        true;
 
     if (!showAppBar) return const SafeArea(child: SizedBox.shrink());
 
@@ -215,7 +219,7 @@ class ChatAppBar extends GetView<PupauChatController>
                 effect: StyleService.skeletonEffect(Get.isDarkMode),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(100),
-                  onTap: assistant == null
+                  onTap: assistant == null || !showAgentInfoOnTap
                       ? null
                       : () {
                           controller.keyboardFocusNode.unfocus();
@@ -225,12 +229,16 @@ class ChatAppBar extends GetView<PupauChatController>
                     height: isTablet ? 48 : 40,
                     width: isTablet ? 48 : 40,
                     decoration: BoxDecoration(
-                      color: isAnonymous
+                      color: assistant == null
+                          ? MyStyles.pupauTheme(!Get.isDarkMode).grey
+                          : isAnonymous
                           ? Colors.white
                           : MyStyles.pupauTheme(!Get.isDarkMode).primary,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: isAnonymous
+                        color: assistant == null
+                            ? MyStyles.pupauTheme(!Get.isDarkMode).grey
+                            : isAnonymous
                             ? Colors.white
                             : MyStyles.pupauTheme(!Get.isDarkMode).primary,
                         width: 1.5,
@@ -256,7 +264,7 @@ class ChatAppBar extends GetView<PupauChatController>
               child: Skeletonizer(
                 enabled: assistant == null,
                 child: InkWell(
-                  onTap: assistant == null
+                  onTap: assistant == null || !showAgentInfoOnTap
                       ? null
                       : () => showAssistantInfoModal(assistant),
                   child: Row(

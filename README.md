@@ -60,6 +60,9 @@ final config = PupauConfig.createWithApiKey(
   showNerdStats: false,                        // Show token/credit stats
   hideAudioRecordingButton: false,             // Hide audio recording button
   resetChatOnOpen: true,                       // Reset chat state when opening
+  showAgentInfoOnTap: true,                    // Tapping the agent avatar/name opens the info dialog
+  inputFieldAction: ChatInputAction.newline,   // Enter/return behavior: newline (default) or send
+  hideKbInfo: false,                           // Force-hide KB references chip (never forces it on); nerd stats use showNerdStats
   conversationStarters: [                      // Predefined starter messages
     'Tell me about your features',
     'How can you help me?',

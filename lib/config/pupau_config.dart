@@ -74,6 +74,22 @@ class PupauConfig {
   /// returns a welcome message.
   final String? initialWelcomeMessage;
 
+  /// Whether tapping the agent avatar/name in the app bar opens the
+  /// assistant info dialog. Defaults to true.
+  final bool showAgentInfoOnTap;
+
+  /// Keyboard/IME action for the chat input field. Defaults to
+  /// [ChatInputAction.newline] (Enter/return inserts a new line, as today).
+  /// Set to [ChatInputAction.send] to have Enter/return submit the message
+  /// instead.
+  final ChatInputAction inputFieldAction;
+
+  /// When true, hides the KB references chip regardless of
+  /// [Assistant.kbSettings]. Defaults to false. This is only a force-hide
+  /// switch — leaving it false never forces the chip to show; the
+  /// assistant's own KB settings still apply as-is.
+  final bool hideKbInfo;
+
   /// Private constructor - use [createWithApiKey] or [createWithToken] instead
   PupauConfig._internal({
     this.apiKey,
@@ -97,6 +113,9 @@ class PupauConfig {
     this.drawerConfig,
     this.resetChatOnOpen = true,
     this.initialWelcomeMessage,
+    this.showAgentInfoOnTap = true,
+    this.inputFieldAction = ChatInputAction.newline,
+    this.hideKbInfo = false,
   });
 
   /// Factory constructor for creating config with API key
@@ -129,6 +148,9 @@ class PupauConfig {
     DrawerConfig? drawerConfig,
     bool resetChatOnOpen = true,
     String? initialWelcomeMessage,
+    bool showAgentInfoOnTap = true,
+    ChatInputAction inputFieldAction = ChatInputAction.newline,
+    bool hideKbInfo = false,
   }) {
     return PupauConfig._internal(
       apiKey: apiKey,
@@ -151,6 +173,9 @@ class PupauConfig {
       drawerConfig: drawerConfig,
       resetChatOnOpen: resetChatOnOpen,
       initialWelcomeMessage: initialWelcomeMessage,
+      showAgentInfoOnTap: showAgentInfoOnTap,
+      inputFieldAction: inputFieldAction,
+      hideKbInfo: hideKbInfo,
     );
   }
 
@@ -185,6 +210,9 @@ class PupauConfig {
     DrawerConfig? drawerConfig,
     bool resetChatOnOpen = true,
     String? initialWelcomeMessage,
+    bool showAgentInfoOnTap = true,
+    ChatInputAction inputFieldAction = ChatInputAction.newline,
+    bool hideKbInfo = false,
   }) {
     return PupauConfig._internal(
       bearerToken: bearerToken,
@@ -207,6 +235,9 @@ class PupauConfig {
       drawerConfig: drawerConfig,
       resetChatOnOpen: resetChatOnOpen,
       initialWelcomeMessage: initialWelcomeMessage,
+      showAgentInfoOnTap: showAgentInfoOnTap,
+      inputFieldAction: inputFieldAction,
+      hideKbInfo: hideKbInfo,
     );
   }
 
@@ -254,6 +285,9 @@ class PupauConfig {
     DrawerConfig? drawerConfig,
     bool? resetChatOnOpen,
     String? initialWelcomeMessage,
+    bool? showAgentInfoOnTap,
+    ChatInputAction? inputFieldAction,
+    bool? hideKbInfo,
   }) {
     if (apiKey != null) {
       return PupauConfig.createWithApiKey(
@@ -276,6 +310,9 @@ class PupauConfig {
         drawerConfig: drawerConfig ?? this.drawerConfig,
         resetChatOnOpen: resetChatOnOpen ?? this.resetChatOnOpen,
         initialWelcomeMessage: initialWelcomeMessage ?? this.initialWelcomeMessage,
+        showAgentInfoOnTap: showAgentInfoOnTap ?? this.showAgentInfoOnTap,
+        inputFieldAction: inputFieldAction ?? this.inputFieldAction,
+        hideKbInfo: hideKbInfo ?? this.hideKbInfo,
       );
     } else if (bearerToken != null) {
       return PupauConfig.createWithToken(
@@ -300,6 +337,9 @@ class PupauConfig {
         drawerConfig: drawerConfig ?? this.drawerConfig,
         resetChatOnOpen: resetChatOnOpen ?? this.resetChatOnOpen,
         initialWelcomeMessage: initialWelcomeMessage ?? this.initialWelcomeMessage,
+        showAgentInfoOnTap: showAgentInfoOnTap ?? this.showAgentInfoOnTap,
+        inputFieldAction: inputFieldAction ?? this.inputFieldAction,
+        hideKbInfo: hideKbInfo ?? this.hideKbInfo,
       );
     } else {
       throw Exception(
@@ -400,6 +440,15 @@ enum WidgetMode { full, sized, floating }
 enum CloseStyle { arrow, cross, none }
 
 enum CloseButtonPosition { left, right }
+
+/// Keyboard/IME action for the chat input field's Enter/return key.
+enum ChatInputAction {
+  /// Enter/return inserts a new line (default, current behavior).
+  newline,
+
+  /// Enter/return submits the message.
+  send,
+}
 
 /// Supported languages for the plugin.
 enum PupauLanguage {

@@ -24,8 +24,8 @@ class ChatBottomButton extends GetView<PupauChatController> {
           isVisible: true,
           tooltip: isAtBottom
               ? (magnetEnabled
-                    ? Strings.autoScrollMagnetOnTapToTurnOff
-                    : Strings.autoScrollMagnetOffTapToTurnOn)
+                    ? Strings.autoScrollMagnetOnTapToTurnOff.tr
+                    : Strings.autoScrollMagnetOffTapToTurnOn.tr)
               : Strings.scrollToBottom.tr,
           keepSvgColor: magnetEnabled,
           svgAssetPath: isAtBottom

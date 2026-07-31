@@ -71,7 +71,7 @@ class AssistantService {
       return "https://cdn.pupau.ai$target/assistants/$env/$assistantId/$imageUuid-$formatString.jpg";
     }
     String baseUrl = "${ApiUrls.apiUrl}/local/files/public";
-      return "$baseUrl/$target/assistants/$env/$assistantId/$imageUuid-$formatString.jpg";
+      return "$baseUrl$target/assistants/$env/$assistantId/$imageUuid-$formatString.jpg";
     } catch (e) {
       return getAssistantFallbackImage(assistantId);
     }
