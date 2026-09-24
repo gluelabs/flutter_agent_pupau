@@ -2,6 +2,55 @@ import 'dart:convert';
 
 import 'package:flutter_agent_pupau/services/json_parse_service.dart';
 
+/// One inline image returned by the code interpreter (e.g. a matplotlib
+/// chart saved by the executed code). Only [isRenderableImage] data URIs
+/// should ever be decoded/rendered — anything else must be treated as
+/// untrusted and shown as raw text, never as HTML.
+class ToolUseCodeInterpreterImage {
+  final String dataUri;
+  final String description;
+  final String format;
+
+  ToolUseCodeInterpreterImage({
+    required this.dataUri,
+    required this.description,
+    required this.format,
+  });
+
+  factory ToolUseCodeInterpreterImage.fromJson(Map<String, dynamic> json) =>
+      ToolUseCodeInterpreterImage(
+        dataUri: getString(json['dataUri']),
+        description: getString(json['description']),
+        format: getString(json['format']),
+      );
+
+  static const List<String> _allowedImageSubtypes = [
+    'data:image/png',
+    'data:image/jpg',
+    'data:image/jpeg',
+    'data:image/gif',
+    'data:image/webp',
+    'data:image/svg',
+  ];
+
+  /// Whether [dataUri] is safe to decode/render as an image. Anything that
+  /// doesn't start with an allow-listed `data:image/...` prefix must never
+  /// be rendered (e.g. as HTML) — show it as raw text instead.
+  bool get isRenderableImage {
+    final String lower = dataUri.trim().toLowerCase();
+    return _allowedImageSubtypes.any(lower.startsWith);
+  }
+
+  bool get isSvg => dataUri.trim().toLowerCase().startsWith('data:image/svg');
+
+  /// The base64 payload with the `data:...;base64,` prefix stripped, ready
+  /// for `base64Decode`. Only meaningful when [isRenderableImage] is true.
+  String get base64Payload {
+    final int commaIndex = dataUri.indexOf(',');
+    return commaIndex == -1 ? dataUri : dataUri.substring(commaIndex + 1);
+  }
+}
+
 class ToolUseCodeInterpreterData {
   final String language;
   final String code;
@@ -14,6 +63,7 @@ class ToolUseCodeInterpreterData {
   final bool sandboxCreated;
   final bool resumeFailed;
   final int executionTimeMs;
+  final List<ToolUseCodeInterpreterImage> images;
 
   final int tokensUsed;
   final double creditsUsed;
@@ -29,6 +79,7 @@ class ToolUseCodeInterpreterData {
     required this.sandboxCreated,
     required this.resumeFailed,
     required this.executionTimeMs,
+    required this.images,
     required this.tokensUsed,
     required this.creditsUsed,
   });
@@ -52,6 +103,16 @@ class ToolUseCodeInterpreterData {
         : null;
 
     final List<String> errors = _stringList(response['errors']);
+    final List<ToolUseCodeInterpreterImage> images = response['images'] is List
+        ? (response['images'] as List)
+              .whereType<Map>()
+              .map(
+                (e) => ToolUseCodeInterpreterImage.fromJson(
+                  Map<String, dynamic>.from(e),
+                ),
+              )
+              .toList()
+        : const [];
 
     return ToolUseCodeInterpreterData(
       language: language,
@@ -66,6 +127,7 @@ class ToolUseCodeInterpreterData {
       executionTimeMs: getInt(
         response['executionTimeMs'] ?? response['executionTime'],
       ),
+      images: images,
       tokensUsed: getInt(metadata?['tokensUsed']),
       creditsUsed: getDouble(metadata?['creditsUsed']),
     );

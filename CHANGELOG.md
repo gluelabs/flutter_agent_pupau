@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0] - 24/09/2026
+
+### Changes
+- Added Living Agent, a third agent mode alongside assistant and marketplace
+- Added knowledge base images and tools images shown inline in answers, tappable to open full screen
+- Improved citations
+- Redesigned the voice and recording experience
+- Added `showDashboardButton` config option to force-hide the dashboard button
+- Added support for a custom HTTP client
+- Expanded programmatic chat controls for sending messages, sending audio and attaching files
+- Performance improvements
+
 ## [1.0.9] - 31/07/2026
 
 ### Changes

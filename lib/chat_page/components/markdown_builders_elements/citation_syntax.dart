@@ -40,7 +40,7 @@ class CitationSyntax extends md.InlineSyntax {
 
   @override
   bool onMatch(md.InlineParser parser, Match match) {
-    final int citationNumber = int.tryParse(match[1] ?? '') ?? -1;
+    final int citationNumber = int.tryParse(match[1] ?? match[2] ?? '') ?? -1;
     final GroundingInfo? g = grounding;
 
     if (citationNumber <= 0 || g == null || g.overridden || !_isAuthoritativelyCited(citationNumber)) {
@@ -68,6 +68,9 @@ class CitationSyntax extends md.InlineSyntax {
       attachmentId: source?.attachmentId,
       type: source?.type,
       verdict: verdict?.verdict,
+      quote: source?.quote,
+      quoteKind: source?.quoteKind ?? GroundingQuoteKind.source,
+      mediaType: source?.mediaType,
     );
     final md.Element element = md.Element.withTag('citation-chip');
     element.attributes.addAll(data.toAttributes());

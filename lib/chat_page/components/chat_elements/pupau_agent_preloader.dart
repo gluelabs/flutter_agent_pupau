@@ -85,7 +85,7 @@ class _PupauAgentPreloaderState extends State<PupauAgentPreloader> {
       if (existing == null && isApiKey) {
         await assistantsController.getSingleAssistant(
           widget.config.assistantId,
-          widget.config.isMarketplace,
+          widget.config.agentMode,
         );
       }
     }

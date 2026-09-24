@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_agent_pupau/chat_page/components/web_elements/organic_info_modal.dart';
+import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
 import 'package:flutter_agent_pupau/services/conversation_service.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
@@ -58,13 +59,19 @@ class OrganicInfoContainer extends StatelessWidget {
                             imageUrl: ConversationService.getFaviconUrl(
                               organicInfo[i].link,
                             ),
+                            cacheManager:
+                                PupauChatController.currentImageCacheManager,
                             width: isTablet ? 32 : 28,
                             height: isTablet ? 32 : 28,
                             memCacheWidth: DeviceService.memCachePixels(
-                                context, isTablet ? 32 : 28),
+                              context,
+                              isTablet ? 32 : 28,
+                            ),
                             memCacheHeight: DeviceService.memCachePixels(
-                                context, isTablet ? 32 : 28),
-                            errorListener: (error) => print,
+                              context,
+                              isTablet ? 32 : 28,
+                            ),
+                            errorListener: (_) => (),
                             errorWidget: (context, url, error) =>
                                 Image.asset(Constants.missingImage),
                           ),

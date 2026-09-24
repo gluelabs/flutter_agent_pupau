@@ -32,6 +32,9 @@ class MessageImportAttachment extends StatelessWidget {
     final bool isDark = Get.isDarkMode || isAnonymous;
 
     if (!data.success) {
+      final String errorText = data.error.trim().isNotEmpty
+          ? data.error.trim()
+          : Strings.toolImportToSandboxFailedTitle.tr;
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -43,7 +46,7 @@ class MessageImportAttachment extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              Strings.toolImportToSandboxFailedTitle.tr,
+              errorText,
               style: StyleService.toolHeaderTextStyle(isDark),
             ),
           ),
@@ -58,12 +61,21 @@ class MessageImportAttachment extends StatelessWidget {
         ? data.path.trim()
         : data.requestedPath.trim();
 
+    final TextStyle normalStyle = StyleService.toolNormalTextStyle(isDark);
+    // @path is at a different position per language (e.g. Korean/Turkish
+    // put it before the rest of the sentence), so split on the placeholder
+    // rather than assuming it's a trailing suffix.
+    final List<String> subtitleParts = Strings.toolImportedSubtitle.tr.split(
+      '@path',
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            Text('📎 ', style: StyleService.toolHeaderTextStyle(isDark)),
             Flexible(
               child: Text(
                 displayName,
@@ -75,15 +87,27 @@ class MessageImportAttachment extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 '(${StringService.formatBytes(data.sizeBytes)})',
-                style: StyleService.toolNormalTextStyle(isDark),
+                style: normalStyle,
               ),
             ],
           ],
         ),
         const SizedBox(height: 4),
-        Text(
-          Strings.toolImportedSubtitle.tr.replaceAll('@path', workspacePath),
-          style: StyleService.toolNormalTextStyle(isDark),
+        Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(text: subtitleParts.first, style: normalStyle),
+              TextSpan(
+                text: workspacePath,
+                style: normalStyle.copyWith(fontFamily: 'monospace'),
+              ),
+              if (subtitleParts.length > 1)
+                TextSpan(
+                  text: subtitleParts.sublist(1).join('@path'),
+                  style: normalStyle,
+                ),
+            ],
+          ),
         ),
       ],
     );

@@ -15,6 +15,7 @@ class ToolUseAttachArtifactData {
   final int sizeBytes;
   final String attachmentId;
   final String workspaceId;
+  final String error;
 
   ToolUseAttachArtifactData({
     required this.path,
@@ -24,6 +25,7 @@ class ToolUseAttachArtifactData {
     required this.sizeBytes,
     required this.attachmentId,
     required this.workspaceId,
+    required this.error,
   });
 
   factory ToolUseAttachArtifactData.fromJson(
@@ -44,6 +46,7 @@ class ToolUseAttachArtifactData {
       sizeBytes: getInt(response['sizeBytes']),
       attachmentId: getString(response['attachmentId']),
       workspaceId: getString(response['workspaceId']),
+      error: getString(response['error']),
     );
   }
 

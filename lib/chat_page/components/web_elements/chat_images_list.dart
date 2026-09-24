@@ -87,14 +87,20 @@ class ChatImagesList extends GetView<PupauChatController> {
                                 )
                               : CachedNetworkImage(
                                   imageUrl: url,
+                                  cacheManager: PupauChatController
+                                      .currentImageCacheManager,
                                   width: isTablet ? 200 : 125,
                                   height: isTablet ? 200 : 125,
                                   memCacheWidth: DeviceService.memCachePixels(
-                                      context, isTablet ? 200 : 125),
+                                    context,
+                                    isTablet ? 200 : 125,
+                                  ),
                                   memCacheHeight: DeviceService.memCachePixels(
-                                      context, isTablet ? 200 : 125),
+                                    context,
+                                    isTablet ? 200 : 125,
+                                  ),
                                   fit: BoxFit.cover,
-                                  errorListener: (error) {},
+                                  errorListener: (_) => (),
                                   errorWidget: (context, url, error) =>
                                       Image.asset(Constants.missingImage),
                                 ),

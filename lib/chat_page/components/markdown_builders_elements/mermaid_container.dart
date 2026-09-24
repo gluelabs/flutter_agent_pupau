@@ -89,14 +89,21 @@ class _MermaidContainerState extends State<MermaidContainer>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          body { 
-            margin: 0; 
-            padding: 0; 
+          body {
+            margin: 0;
+            padding: 0;
             ${isDarkMode ? 'background-color: transparent; color: white;' : ''}
           }
-          .mermaid { 
-            width: 100%; 
+          .mermaid {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
             ${isDarkMode ? 'color: white;' : ''}
+          }
+          .mermaid svg {
+            max-width: 100% !important;
+            height: auto !important;
           }
         </style>
         <script type="module">

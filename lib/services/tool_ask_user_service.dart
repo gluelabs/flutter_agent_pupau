@@ -1,3 +1,4 @@
+import 'package:flutter_agent_pupau/config/pupau_agent_mode.dart';
 import 'dart:convert';
 import 'package:flutter_agent_pupau/models/conversation_model.dart';
 import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
@@ -21,7 +22,7 @@ class ToolAskUserService {
     PupauMessage message = chatController.messages.firstWhere(
       (element) => element.id == messageId,
     );
-    bool isMarketplace = chatController.isMarketplace;
+    final PupauAgentMode mode = chatController.agentMode;
     final Map<String, String>? authParams = chatController.pupauConfig?.authHeaders;
     if (authParams == null) return null;
 
@@ -29,7 +30,7 @@ class ToolAskUserService {
       assistantId,
       conversation.id,
       message.id,
-      isMarketplace: isMarketplace,
+      mode: mode,
     );
     Stream<SSEModel> messageSendStream = SSEClient.subscribeToSSE(
       method: SSERequestType.POST,

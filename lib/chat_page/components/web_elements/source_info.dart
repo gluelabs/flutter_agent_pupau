@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
 import 'package:flutter_agent_pupau/services/conversation_service.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
@@ -13,10 +14,7 @@ import 'package:flutter_agent_pupau/chat_page/components/shared/feedback_snackba
 
 class SourceInfo extends StatelessWidget {
   final OrganicInfo organicInfo;
-  const SourceInfo({
-    super.key,
-    required this.organicInfo,
-  });
+  const SourceInfo({super.key, required this.organicInfo});
 
   @override
   Widget build(BuildContext context) {
@@ -30,49 +28,66 @@ class SourceInfo extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(100),
                 child: CachedNetworkImage(
-                    imageUrl:
-                        ConversationService.getFaviconUrl(organicInfo.link),
-                    width: isTablet ? 32 : 28,
-                    height: isTablet ? 32 : 28,
-                    memCacheWidth: DeviceService.memCachePixels(
-                        context, isTablet ? 32 : 28),
-                    memCacheHeight: DeviceService.memCachePixels(
-                        context, isTablet ? 32 : 28),
-                    errorListener: (e) {},
-                    errorWidget: (context, url, error) =>
-                        Image.asset(Constants.missingImage)),
+                  imageUrl: ConversationService.getFaviconUrl(organicInfo.link),
+                  cacheManager: PupauChatController.currentImageCacheManager,
+                  width: isTablet ? 32 : 28,
+                  height: isTablet ? 32 : 28,
+                  memCacheWidth: DeviceService.memCachePixels(
+                    context,
+                    isTablet ? 32 : 28,
+                  ),
+                  memCacheHeight: DeviceService.memCachePixels(
+                    context,
+                    isTablet ? 32 : 28,
+                  ),
+                  errorListener: (_) => (),
+                  errorWidget: (context, url, error) =>
+                      Image.asset(Constants.missingImage),
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                  child: InkWell(
-                onTap: () => DeviceService.openLink(organicInfo.link),
-                child: Text(organicInfo.title,
+                child: InkWell(
+                  onTap: () => DeviceService.openLink(organicInfo.link),
+                  child: Text(
+                    organicInfo.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: isTablet ? 15 : 13,
                       color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
                       decoration: TextDecoration.underline,
-                      decorationColor:
-                          MyStyles.pupauTheme(!Get.isDarkMode).primary,
-                    )),
-              )),
+                      decorationColor: MyStyles.pupauTheme(
+                        !Get.isDarkMode,
+                      ).primary,
+                    ),
+                  ),
+                ),
+              ),
               IconButton(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: organicInfo.link));
-                    showFeedbackSnackbar(
-                        Strings.copiedClipboard.tr, Symbols.content_copy,
-                        isInfo: true);
-                  },
-                  icon: Icon(Symbols.content_copy,
-                      size: isTablet ? 26 : 24,
-                      color: MyStyles.pupauTheme(!Get.isDarkMode).primary)),
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: organicInfo.link));
+                  showFeedbackSnackbar(
+                    Strings.copiedClipboard.tr,
+                    Symbols.content_copy,
+                    isInfo: true,
+                  );
+                },
+                icon: Icon(
+                  Symbols.content_copy,
+                  size: isTablet ? 26 : 24,
+                  color: MyStyles.pupauTheme(!Get.isDarkMode).primary,
+                ),
+              ),
             ],
           ),
           Transform.translate(
             offset: const Offset(0, -4),
-            child: Text(organicInfo.snippet,
-                maxLines: 2, style: TextStyle(fontSize: isTablet ? 15 : 13)),
+            child: Text(
+              organicInfo.snippet,
+              maxLines: 2,
+              style: TextStyle(fontSize: isTablet ? 15 : 13),
+            ),
           ),
         ],
       ),

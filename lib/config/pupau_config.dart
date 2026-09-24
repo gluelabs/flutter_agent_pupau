@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:flutter_agent_pupau/config/pupau_agent_mode.dart';
+import 'package:http/http.dart' as http;
 
 /// Configuration class for Pupau Agent package
 class PupauConfig {
@@ -14,10 +17,16 @@ class PupauConfig {
   /// The id of the assistant to use.
   final String assistantId;
 
-  /// Whether the assistant is a marketplace assistant. Defaults to false.
+  /// Which kind of agent [assistantId] refers to. Defaults to
+  /// [PupauAgentMode.assistant].
   ///
-  /// Settable only on bearer token creation.
-  final bool isMarketplace;
+  /// The three kinds are mutually exclusive - an agent is a normal assistant,
+  /// a marketplace one, or a Living Agent - so this is one setting rather than
+  /// a set of flags that could contradict each other.
+  final PupauAgentMode agentMode;
+
+  /// Whether the assistant is a marketplace assistant.
+  bool get isMarketplace => agentMode == PupauAgentMode.marketplace;
 
   /// If set when entering the chat page, the conversation with this id will be loaded. If not set, a new conversation will be created on first message sent.
   final String? conversationId;
@@ -90,13 +99,30 @@ class PupauConfig {
   /// assistant's own KB settings still apply as-is.
   final bool hideKbInfo;
 
+  /// Optional HTTP client override used for every network call the plugin
+  /// makes on its own (REST calls and the chat SSE stream), instead of its
+  /// default clients. Defaults to null (no change in behavior) - only hosts
+  /// that need their own network routing (e.g. a private network tunnel)
+  /// need to set this.
+  final http.Client? httpClient;
+
+  /// Optional cache manager override used by every image the plugin loads
+  /// (assistant avatars, web-search-result images, etc.) instead of the
+  /// default `cached_network_image` cache. Defaults to null (library
+  /// default) - only hosts that need custom image routing need to set this.
+  final BaseCacheManager? imageCacheManager;
+
+  /// Whether [assistantId] is a Living Agent id. When true the plugin drives
+  /// every call on the `living-agents` base path.
+  bool get isLivingAgent => agentMode == PupauAgentMode.livingAgent;
+
   /// Private constructor - use [createWithApiKey] or [createWithToken] instead
   PupauConfig._internal({
     this.apiKey,
     this.bearerToken,
     this.apiUrl,
     required this.assistantId,
-    this.isMarketplace = false,
+    this.agentMode = PupauAgentMode.assistant,
     this.conversationId,
     this.isAnonymous = false,
     this.language = PupauLanguage.en,
@@ -116,12 +142,16 @@ class PupauConfig {
     this.showAgentInfoOnTap = true,
     this.inputFieldAction = ChatInputAction.newline,
     this.hideKbInfo = false,
+    this.httpClient,
+    this.imageCacheManager,
   });
 
   /// Factory constructor for creating config with API key
   ///
   /// Get the API key from Pupau web or mobile app, navigate to your agent configuration page and then under the "Integrations - API Key" you will find your agent's API keys.
-  /// For marketplace assistants, pass [assistantId] and [isMarketplace: true] so the correct API path is used.
+  /// For marketplace assistants pass [agentMode] = [PupauAgentMode.marketplace],
+  /// and for the user's own Living Agent [PupauAgentMode.livingAgent], so the
+  /// correct API path is used.
   ///
   /// Example:
   /// ```dart
@@ -151,12 +181,14 @@ class PupauConfig {
     bool showAgentInfoOnTap = true,
     ChatInputAction inputFieldAction = ChatInputAction.newline,
     bool hideKbInfo = false,
+    http.Client? httpClient,
+    BaseCacheManager? imageCacheManager,
   }) {
     return PupauConfig._internal(
       apiKey: apiKey,
       apiUrl: apiUrl,
       assistantId: assistantIdFromApiKey(apiKey),
-      isMarketplace: false,
+      agentMode: PupauAgentMode.assistant,
       conversationId: conversationId,
       isAnonymous: isAnonymous,
       language: language,
@@ -176,6 +208,8 @@ class PupauConfig {
       showAgentInfoOnTap: showAgentInfoOnTap,
       inputFieldAction: inputFieldAction,
       hideKbInfo: hideKbInfo,
+      httpClient: httpClient,
+      imageCacheManager: imageCacheManager,
     );
   }
 
@@ -193,7 +227,7 @@ class PupauConfig {
     required String bearerToken,
     required String assistantId,
     String? apiUrl,
-    bool isMarketplace = false,
+    PupauAgentMode agentMode = PupauAgentMode.assistant,
     String? conversationId,
     bool isAnonymous = false,
     PupauLanguage language = PupauLanguage.en,
@@ -213,12 +247,14 @@ class PupauConfig {
     bool showAgentInfoOnTap = true,
     ChatInputAction inputFieldAction = ChatInputAction.newline,
     bool hideKbInfo = false,
+    http.Client? httpClient,
+    BaseCacheManager? imageCacheManager,
   }) {
     return PupauConfig._internal(
       bearerToken: bearerToken,
       assistantId: assistantId,
       apiUrl: apiUrl,
-      isMarketplace: isMarketplace,
+      agentMode: agentMode,
       conversationId: conversationId,
       isAnonymous: isAnonymous,
       language: language,
@@ -238,6 +274,8 @@ class PupauConfig {
       showAgentInfoOnTap: showAgentInfoOnTap,
       inputFieldAction: inputFieldAction,
       hideKbInfo: hideKbInfo,
+      httpClient: httpClient,
+      imageCacheManager: imageCacheManager,
     );
   }
 
@@ -268,7 +306,7 @@ class PupauConfig {
   /// ```
   PupauConfig copyWith({
     String? apiUrl,
-    bool? isMarketplace,
+    PupauAgentMode? agentMode,
     String? conversationId,
     bool? isAnonymous,
     PupauLanguage? language,
@@ -288,6 +326,8 @@ class PupauConfig {
     bool? showAgentInfoOnTap,
     ChatInputAction? inputFieldAction,
     bool? hideKbInfo,
+    http.Client? httpClient,
+    BaseCacheManager? imageCacheManager,
   }) {
     if (apiKey != null) {
       return PupauConfig.createWithApiKey(
@@ -313,13 +353,15 @@ class PupauConfig {
         showAgentInfoOnTap: showAgentInfoOnTap ?? this.showAgentInfoOnTap,
         inputFieldAction: inputFieldAction ?? this.inputFieldAction,
         hideKbInfo: hideKbInfo ?? this.hideKbInfo,
+        httpClient: httpClient ?? this.httpClient,
+        imageCacheManager: imageCacheManager ?? this.imageCacheManager,
       );
     } else if (bearerToken != null) {
       return PupauConfig.createWithToken(
         bearerToken: bearerToken!,
         assistantId: assistantId,
         apiUrl: apiUrl ?? this.apiUrl,
-        isMarketplace: isMarketplace ?? this.isMarketplace,
+        agentMode: agentMode ?? this.agentMode,
         conversationId: conversationId ?? this.conversationId,
         isAnonymous: isAnonymous ?? this.isAnonymous,
         language: language ?? this.language,
@@ -340,6 +382,8 @@ class PupauConfig {
         showAgentInfoOnTap: showAgentInfoOnTap ?? this.showAgentInfoOnTap,
         inputFieldAction: inputFieldAction ?? this.inputFieldAction,
         hideKbInfo: hideKbInfo ?? this.hideKbInfo,
+        httpClient: httpClient ?? this.httpClient,
+        imageCacheManager: imageCacheManager ?? this.imageCacheManager,
       );
     } else {
       throw Exception(
@@ -405,11 +449,20 @@ class AppBarConfig {
   /// Position of the close button. Defaults to [CloseButtonPosition.left] for Full mode, [CloseButtonPosition.right] for Sized and Floating modes.
   final CloseButtonPosition? closeButtonPosition;
 
+  /// Whether the chat dashboard button may appear in the app bar.
+  ///
+  /// It is otherwise content-driven: it shows itself once a conversation has
+  /// tool messages or attachments to display. Set this to `false` to keep it
+  /// hidden regardless — the app bar is the only way into the dashboard, so
+  /// this turns the feature off for the host.
+  final bool showDashboardButton;
+
   const AppBarConfig({
     this.showAppBar = true,
     this.actions,
     this.closeStyle,
     this.closeButtonPosition,
+    this.showDashboardButton = true,
   });
 }
 

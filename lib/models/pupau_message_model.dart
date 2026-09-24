@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_agent_pupau/models/assistant_model.dart';
 import 'package:flutter_agent_pupau/models/attachment_model.dart';
 import 'package:flutter_agent_pupau/models/grounding_model.dart';
+import 'package:flutter_agent_pupau/models/kb_image_model.dart';
 import 'package:flutter_agent_pupau/models/memory_always_model.dart';
 import 'package:flutter_agent_pupau/models/memory_reference_model.dart';
 import 'package:flutter_agent_pupau/models/skill_loaded_info.dart';
@@ -45,6 +46,22 @@ class PupauMessage {
   /// [grounding] the same way `kbReferences` is, see
   /// `PupauChatController.handleKbMessage`.
   List<GroundingSource> liveGroundingSources = const [];
+
+  /// `<kb-image>` allowlist for this turn — from
+  /// `extraInfo.kbImages` (history/refetch) or forward-filled live from the
+  /// `kb` frame's `kbImages[]` the same way [liveGroundingSources] is, see
+  /// `PupauChatController.handleKbMessage`. An id not in this list must
+  /// never render, never fetch.
+  List<KbImageRef> kbImages = const [];
+
+  /// `queryId` for [kbImages]' byte fetch (`GET /rag/images/...`) — the
+  /// group's FINAL row id, same rule as a citation's snippet fetch (§5.2/
+  /// §2.2): an intermediate row backfilled with the group's `kbImages` must
+  /// still fetch against the row that actually carries the persisted
+  /// allowlist, not its own id. Kept as its own field (not reused from
+  /// [grounding]'s `queryId`) because a turn can have `<kb-image>` tags with
+  /// no `[n]` citations at all — `grounding` may be entirely null then.
+  String? kbImagesQueryId;
   List<UrlInfo> urls = [];
   List<OrganicInfo> organicInfo = [];
   List<WebSearchImage> images = [];
@@ -99,6 +116,8 @@ class PupauMessage {
     this.contextInfo,
     this.grounding,
     this.liveGroundingSources = const [],
+    this.kbImages = const [],
+    this.kbImagesQueryId,
     this.urls = const [],
     this.organicInfo = const [],
     this.images = const [],
@@ -162,6 +181,15 @@ class PupauMessage {
       MessageType? messageType = ConversationService.getMessageTypeEnum(
         json["type"],
       );
+      final List<KbImageRef> kbImagesFromFrame = json["kbImages"] != null
+          ? List<KbImageRef>.from(
+              (json["kbImages"] as List).map(
+                (dynamic x) => KbImageRef.fromMap(Map<String, dynamic>.from(x)),
+              ),
+            )
+          : const [];
+      if (json["type"] == "kb") {
+      }
       return PupauMessage(
         id: getString(json["id"]),
         groupId: '',
@@ -193,6 +221,7 @@ class PupauMessage {
                 ),
               )
             : const [],
+        kbImages: kbImagesFromFrame,
         memoryReferences: json["memoryReferences"] != null
             ? List<MemoryReference>.from(
                 json["memoryReferences"].map(
@@ -325,6 +354,16 @@ class PupauMessage {
           ? SkillEventDetail.fromHistoryNativeToolItem(json)
           : null;
       isSkillItem = parsedSkillEventDetail != null;
+      final List<KbImageRef> kbImagesFromHistory =
+          json["extraInfo"]?["kbImages"] != null
+          ? List<KbImageRef>.from(
+              json["extraInfo"]["kbImages"].map(
+                (x) => KbImageRef.fromMap(Map<String, dynamic>.from(x)),
+              ),
+            )
+          : const [];
+      if (json["extraInfo"]?["kbImages"] != null) {
+      }
       return PupauMessage(
         id: getString(json["id"]),
         answer: isSkillItem ? '' : getString(json["answer"]),
@@ -351,6 +390,12 @@ class PupauMessage {
             ? GroundingInfo.fromMap(
                 Map<String, dynamic>.from(json["extraInfo"]["grounding"]),
               ).withQueryId(getString(json["id"]))
+            : null,
+        // Only the images actually CITED in this row — the
+        // allowlist for history reload / post-turn refetch.
+        kbImages: kbImagesFromHistory,
+        kbImagesQueryId: json["extraInfo"]?["kbImages"] != null
+            ? getString(json["id"])
             : null,
         attachmentTrimming: AttachmentTrimmingInfo.fromMap(
           json["extraInfo"]?["contextInfo"]?["contextEngineering"]?["attachmentTrimming"] !=
@@ -509,6 +554,14 @@ class PupauMessage {
       List<KbReference> newKbReferences = List<KbReference>.from(kbReferences);
       newKbReferences.addAll(messageFromSse.kbReferences);
       kbReferences = newKbReferences;
+    }
+    if (messageFromSse.kbImages.isNotEmpty) {
+      List<KbImageRef> newKbImages = List<KbImageRef>.from(kbImages);
+      newKbImages.addAll(messageFromSse.kbImages);
+      kbImages = newKbImages;
+    }
+    if (messageFromSse.kbImagesQueryId != null) {
+      kbImagesQueryId = messageFromSse.kbImagesQueryId;
     }
     if (messageFromSse.memoryReferences.isNotEmpty) {
       List<MemoryReference> newReferences = List<MemoryReference>.from(

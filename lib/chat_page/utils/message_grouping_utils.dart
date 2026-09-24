@@ -20,22 +20,33 @@ Map<String, List<PupauMessage>> groupMessagesByGroupId(
   return groups;
 }
 
-/// The authoritative `grounding` block only lives on the final row of a
-/// `queryGroupId` (§1.1/§5 of the citations spec). Copies that one member's
-/// `.grounding` onto every other member sharing the same group id, in place,
-/// so `[n]` markers on earlier rows resolve against it too — both live
-/// (after the debounced refetch) and on history load (REST pagination + SSE
-/// reconnect `history` event). Single-row turns (no shared group, or the
-/// group's only grounded member) are a no-op.
+/// The authoritative `grounding` block — and the `kbImages` allowlist —
+/// only live on the final row of a `queryGroupId`. Copies each onto every
+/// other member sharing the same
+/// group id, in place, so `[n]` markers and `<kb-image>` tags on earlier rows
+/// resolve against them too — both live (after the debounced refetch) and on
+/// history load (REST pagination + SSE reconnect `history` event). Single-row
+/// turns (no shared group, or the group's only grounded/imaged member) are a
+/// no-op for that field.
 void backfillGroupGrounding(List<PupauMessage> messages) {
   final Map<String, List<PupauMessage>> groups = groupMessagesByGroupId(messages);
   for (final List<PupauMessage> members in groups.values) {
     final PupauMessage? withGrounding = members.firstWhereOrNull(
       (PupauMessage m) => m.grounding != null,
     );
-    if (withGrounding == null) continue;
-    for (final PupauMessage m in members) {
-      m.grounding = withGrounding.grounding;
+    if (withGrounding != null) {
+      for (final PupauMessage m in members) {
+        m.grounding = withGrounding.grounding;
+      }
+    }
+    final PupauMessage? withKbImages = members.firstWhereOrNull(
+      (PupauMessage m) => m.kbImages.isNotEmpty,
+    );
+    if (withKbImages != null) {
+      for (final PupauMessage m in members) {
+        m.kbImages = withKbImages.kbImages;
+        m.kbImagesQueryId = withKbImages.kbImagesQueryId;
+      }
     }
   }
 }

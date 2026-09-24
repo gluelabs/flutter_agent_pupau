@@ -10,6 +10,7 @@ import 'package:flutter_agent_pupau/chat_page/components/message_elements/prompt
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/reflection_tag_container.dart';
 import 'package:flutter_agent_pupau/models/assistant_model.dart';
 import 'package:flutter_agent_pupau/models/grounding_model.dart';
+import 'package:flutter_agent_pupau/models/kb_image_model.dart';
 import 'package:flutter_agent_pupau/models/prompt_option_model.dart';
 import 'package:flutter_agent_pupau/models/prompt_reflection_model.dart';
 import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
@@ -32,6 +33,8 @@ class MessageContent extends StatelessWidget {
     this.assistant,
     this.contextInfo,
     this.grounding,
+    this.kbImages = const [],
+    this.kbImagesQueryId,
     this.isAudioInput = false,
     this.onRegisterUserBubbleToggle,
     this.userBubbleExpandTap,
@@ -46,6 +49,8 @@ class MessageContent extends StatelessWidget {
   final Assistant? assistant;
   final ContextInfo? contextInfo;
   final GroundingInfo? grounding;
+  final List<KbImageRef> kbImages;
+  final String? kbImagesQueryId;
   final bool isAudioInput;
 
   /// When non-null and [isAssistant] is false, the child registers a toggle
@@ -111,6 +116,8 @@ class MessageContent extends StatelessWidget {
               isFromAssistant: true,
               isAnonymous: isAnonymous,
               grounding: grounding,
+              kbImages: kbImages,
+              kbImagesQueryId: kbImagesQueryId,
               wrapWithSelectionArea: status != MessageStatus.loading,
             ),
           ],

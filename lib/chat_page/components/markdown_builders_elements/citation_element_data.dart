@@ -3,6 +3,22 @@ import 'package:flutter_agent_pupau/models/grounding_model.dart';
 import 'package:flutter_agent_pupau/services/json_parse_service.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 
+/// Which tier resolves a citation's source-panel preview
+/// content, in priority order. A client that only ever reaches [fetchChunk]
+/// shows [unavailable] for every web-search/knowledge-graph/attachment
+/// citation.
+enum CitationPreviewTier {
+  /// §5.4: the cited chunk is an image (`mediaType: 'IMAGE'`) — show the
+  /// thumbnail (same byte endpoint as inline `<kb-image>`), never a text
+  /// snippet fetch.
+  kbImage,
+  fetchChunk,
+  quote,
+  url,
+  attachment,
+  unavailable,
+}
+
 /// Typed view over a `citation-chip` markdown element's string attributes
 /// (set by [CitationSyntax] in `citation_syntax.dart`), consumed by
 /// [CitationBuilder] to build a [CitationChip].
@@ -18,6 +34,9 @@ class CitationElementData {
     this.attachmentId,
     this.type,
     this.verdict,
+    this.quote,
+    this.quoteKind = GroundingQuoteKind.source,
+    this.mediaType,
   });
 
   final int citationNumber;
@@ -30,6 +49,16 @@ class CitationElementData {
   final String? attachmentId;
   final String? type;
   final GroundingVerdictType? verdict;
+
+  /// `'TEXT'` (default) or `'IMAGE'` — an IMAGE chunk with an
+  /// [embeddingId] shows a thumbnail instead of a text snippet, see
+  /// [previewTier].
+  final String? mediaType;
+
+  /// Wire-provided source text for sources without an
+  /// [embeddingId] to fetch. See [GroundingSource.quote].
+  final String? quote;
+  final GroundingQuoteKind quoteKind;
 
   /// [name], trimmed, or `[n]` when unresolved — used as the source panel's
   /// title.
@@ -64,6 +93,33 @@ class CitationElementData {
     return trimmed.isNotEmpty ? trimmed : originCategoryLabel;
   }
 
+  /// Tier 1 gate: only chunk-backed origins (IMPLICIT/KB_TOOL)
+  /// with both an [embeddingId] and a [queryId] can be resolved via the
+  /// on-demand snippet endpoint (`GET /grounding/chunks/:embeddingId`) —
+  /// everything else must fall through to [previewTier]'s next tier, never
+  /// straight to "unavailable".
+  bool get canFetchChunkSnippet =>
+      (origin == GroundingOrigin.implicit ||
+          origin == GroundingOrigin.kbTool) &&
+      (embeddingId ?? '').isNotEmpty &&
+      (queryId ?? '').isNotEmpty;
+
+  /// Which tier resolves this citation's source-panel preview. Pure and
+  /// independent of network state — [CitationPreviewTier.fetchChunk] and
+  /// [CitationPreviewTier.kbImage] still need their actual fetch to run
+  /// before they have content to show.
+  CitationPreviewTier get previewTier {
+    if (canFetchChunkSnippet) {
+      return mediaType?.toUpperCase() == 'IMAGE'
+          ? CitationPreviewTier.kbImage
+          : CitationPreviewTier.fetchChunk;
+    }
+    if ((quote ?? '').trim().isNotEmpty) return CitationPreviewTier.quote;
+    if ((url ?? '').isNotEmpty) return CitationPreviewTier.url;
+    if ((attachmentId ?? '').isNotEmpty) return CitationPreviewTier.attachment;
+    return CitationPreviewTier.unavailable;
+  }
+
   /// Null when [attributes] doesn't carry a valid citation number —
   /// defensive only, `CitationSyntax` always sets one.
   static CitationElementData? fromAttributes(Map<String, String> attributes) {
@@ -84,6 +140,11 @@ class CitationElementData {
       verdict: GroundingVerdictTypeParsing.fromWireValue(
         getString(attributes['verdict']),
       ),
+      quote: getStringOrNull(attributes['quote']),
+      quoteKind: GroundingQuoteKindParsing.fromWireValue(
+        attributes['quoteKind'],
+      ),
+      mediaType: getStringOrNull(attributes['mediaType']),
     );
   }
 
@@ -95,8 +156,9 @@ class CitationElementData {
       'n': citationNumber.toString(),
     };
     if ((queryId ?? '').isNotEmpty) attributes['queryId'] = queryId!;
-    if (origin != null && origin != GroundingOrigin.unknown) {
-      attributes['origin'] = origin!.name;
+    final String? wireOrigin = origin?.wireValue;
+    if (wireOrigin != null) {
+      attributes['origin'] = wireOrigin;
     }
     if ((name ?? '').isNotEmpty) attributes['name'] = name!;
     if ((embeddingId ?? '').isNotEmpty) attributes['embeddingId'] = embeddingId!;
@@ -109,6 +171,13 @@ class CitationElementData {
     if (verdict != null && verdict != GroundingVerdictType.unknown) {
       attributes['verdict'] = verdict!.name;
     }
+    if ((quote ?? '').isNotEmpty) {
+      attributes['quote'] = quote!;
+      if (quoteKind == GroundingQuoteKind.bestMatch) {
+        attributes['quoteKind'] = quoteKind.wireValue;
+      }
+    }
+    if ((mediaType ?? '').isNotEmpty) attributes['mediaType'] = mediaType!;
     return attributes;
   }
 }

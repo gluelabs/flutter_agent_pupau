@@ -14,6 +14,7 @@ class ToolUseImportAttachmentData {
   final int sizeBytes;
   final String path;
   final String workspaceId;
+  final String error;
 
   ToolUseImportAttachmentData({
     required this.attachmentId,
@@ -23,6 +24,7 @@ class ToolUseImportAttachmentData {
     required this.sizeBytes,
     required this.path,
     required this.workspaceId,
+    required this.error,
   });
 
   factory ToolUseImportAttachmentData.fromJson(
@@ -43,6 +45,7 @@ class ToolUseImportAttachmentData {
       sizeBytes: getInt(response['sizeBytes']),
       path: getString(response['path']),
       workspaceId: getString(response['workspaceId']),
+      error: getString(response['error']),
     );
   }
 

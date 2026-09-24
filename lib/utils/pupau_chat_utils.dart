@@ -1,6 +1,10 @@
+import 'package:flutter_agent_pupau/config/pupau_agent_mode.dart';
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/assistants_controller.dart';
+import 'package:flutter_agent_pupau/chat_page/controllers/attachments_controller.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/chat_page/pupau_agent_chat.dart';
 import 'package:flutter_agent_pupau/config/pupau_config.dart';
@@ -10,6 +14,7 @@ import 'package:flutter_agent_pupau/services/api_service.dart';
 import 'package:flutter_agent_pupau/services/assistant_service.dart';
 import 'package:flutter_agent_pupau/utils/api_urls.dart';
 import 'package:get/get.dart';
+import 'package:flutter_agent_pupau/models/pupau_living_agent_context.dart';
 
 /// Utility class for programmatically interacting with the chat
 class PupauChatUtils {
@@ -133,6 +138,8 @@ class PupauChatUtils {
         showNerdStats: existing?.showNerdStats ?? false,
         hideAudioRecordingButton: existing?.hideAudioRecordingButton ?? false,
         resetChatOnOpen: existing?.resetChatOnOpen ?? true,
+        httpClient: existing?.httpClient,
+        imageCacheManager: existing?.imageCacheManager,
       );
     }
     if (effectiveConfig == null && Get.isRegistered<PupauChatController>()) {
@@ -163,14 +170,20 @@ class PupauChatUtils {
       final String imageUrl = AssistantService.getAssistantImageUrl(
         assistant.id,
         assistant.imageUuid,
-        assistant.type == AssistantType.marketplace,
+        assistant.type == AssistantType.marketplace
+            ? PupauAgentMode.marketplace
+            : PupauAgentMode.assistant,
         ImageFormat.medium,
       );
       try {
         await precacheImage(
-          CachedNetworkImageProvider(imageUrl, errorListener: (error) {}),
+          CachedNetworkImageProvider(
+            imageUrl,
+            cacheManager: PupauChatController.currentImageCacheManager,
+            errorListener: (_) => (),
+          ),
           context,
-          onError: (exception, stackTrace) {},
+          onError: (_, _) => (),
         );
       } catch (_) {}
       if (!context.mounted) return list;
@@ -358,6 +371,10 @@ class PupauChatUtils {
   /// - host refreshes token
   /// - host calls this method with the new bearer token
   static Future<void> updateAuthToken(String bearerToken) async {
+    // A new bearer can mean a different user: the frozen Living Agent thread
+    // belongs to whoever was signed in when it was captured, so it must not
+    // survive into the next session.
+    PupauChatController.clearLivingAgentSession();
     final PupauChatController controller = Get.find<PupauChatController>();
     final PupauConfig? currentConfig = controller.pupauConfig;
 
@@ -374,7 +391,7 @@ class PupauChatUtils {
       bearerToken: bearerToken,
       assistantId: resolvedAssistantId,
       apiUrl: currentConfig.apiUrl,
-      isMarketplace: currentConfig.isMarketplace,
+      agentMode: currentConfig.agentMode,
       conversationId: currentConfig.conversationId,
       isAnonymous: currentConfig.isAnonymous,
       language: currentConfig.language,
@@ -391,6 +408,8 @@ class PupauChatUtils {
       drawerConfig: currentConfig.drawerConfig,
       resetChatOnOpen: currentConfig.resetChatOnOpen,
       initialWelcomeMessage: currentConfig.initialWelcomeMessage,
+      httpClient: currentConfig.httpClient,
+      imageCacheManager: currentConfig.imageCacheManager,
     );
 
     controller.pupauConfig = newConfig;
@@ -411,6 +430,22 @@ class PupauChatUtils {
   /// ```
   static Future<void> reloadCurrentAssistant() async =>
       await Get.find<PupauChatController>().reloadCurrentAssistant();
+
+  /// Starts audio recording immediately in the currently open chat, as if
+  /// the user had just tapped the mic button themselves - e.g. for a host
+  /// entry point that wants voice input to begin the instant the chat
+  /// opens (a home-screen widget's "record" action). No-ops if there's no
+  /// open chat yet, a recording is already in progress, or the chat is in
+  /// an error state (see [PupauChatController.startRecording]'s own guards).
+  ///
+  /// Example:
+  /// ```dart
+  /// PupauChatUtils.startRecording();
+  /// ```
+  static void startRecording() {
+    if (!Get.isRegistered<PupauChatController>()) return;
+    Get.find<PupauChatController>().startRecording();
+  }
 
   /// Sets the visibility of the input box in the chat.
   /// When set to true, the input field and related tools will be hidden.
@@ -440,4 +475,81 @@ class PupauChatUtils {
     controller.pupauConfig = updatedConfig;
     controller.hideInputBox.value = hide;
   }
+  /// Sends a text message to the open chat, exactly as tapping Send would.
+  ///
+  /// Programmatic entry point: the host can drive the conversation without the
+  /// chat's own input UI (which [setHideInputBox] can hide).
+  ///
+  /// Returns false instead of throwing when there is no chat open, when a turn
+  /// is already streaming, or when [text] is blank - so a caller can react
+  /// without guarding every call site.
+  ///
+  /// Example:
+  /// ```dart
+  /// await PupauChatUtils.sendTextMessage('Ciao');
+  /// ```
+  /// [context] attaches Living Agent `contextRefs` to THIS turn only — what
+  /// the conversation is about, e.g. the attention item it was started from.
+  /// Ignored outside Living Agent mode, where the backend has no such field.
+  static Future<bool> sendTextMessage(
+    String text, {
+    PupauLivingAgentContext? context,
+  }) async {
+    final String trimmed = text.trim();
+    if (trimmed.isEmpty) return false;
+    if (!Get.isRegistered<PupauChatController>()) return false;
+    final PupauChatController controller = Get.find<PupauChatController>();
+    // A second send while the first is still streaming would interleave two
+    // turns in the same thread.
+    if (controller.isStreaming.value) return false;
+    controller.setPendingLivingAgentContext(context);
+    await controller.sendMessage(trimmed, false);
+    return true;
+  }
+
+  /// Sends an already-recorded audio file as a voice message.
+  ///
+  /// Use this when the host records audio itself; [startRecording] is the
+  /// in-chat path that records and sends on stop.
+  ///
+  /// Returns false when there is no chat open, a turn is already streaming, or
+  /// the file does not exist.
+  ///
+  /// Example:
+  /// ```dart
+  /// await PupauChatUtils.sendAudioMessage(File(path));
+  /// ```
+  static Future<bool> sendAudioMessage(File audioFile) async {
+    if (!audioFile.existsSync()) return false;
+    if (!Get.isRegistered<PupauChatController>()) return false;
+    final PupauChatController controller = Get.find<PupauChatController>();
+    if (controller.isStreaming.value) return false;
+    await controller.sendAudioMessage(audioFile);
+    return true;
+  }
+
+  /// Attaches files to the next message, without opening the system picker.
+  ///
+  /// The attachments ride along with the following [sendTextMessage], the same
+  /// way files picked from the chat UI do. Returns how many the backend
+  /// accepted; 0 when there is no chat open or nothing could be uploaded.
+  ///
+  /// Example:
+  /// ```dart
+  /// await PupauChatUtils.attachFiles(<File>[File(path)]);
+  /// await PupauChatUtils.sendTextMessage('Guarda questo');
+  /// ```
+  static Future<int> attachFiles(List<File> files) async {
+    final List<File> existing =
+        files.where((File file) => file.existsSync()).toList();
+    if (existing.isEmpty) return 0;
+    if (!Get.isRegistered<PupauAttachmentsController>()) return 0;
+    return Get.find<PupauAttachmentsController>().uploadAttachmentFiles(
+      existing,
+    );
+  }
+
+  /// Convenience wrapper for a single file. See [attachFiles].
+  static Future<bool> attachFile(File file) async =>
+      (await attachFiles(<File>[file])) > 0;
 }

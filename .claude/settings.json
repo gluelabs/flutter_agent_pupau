@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(/Users/michaelpellegrino/**)",
+      "Edit(/Users/michaelpellegrino/**)",
+      "Read(/tmp/**)",
+      "Edit(/tmp/**)",
+      "Bash(cd *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(grep *)",
+      "Bash(flutter *)",
+      "Bash(dart *)",
+      "Bash(for *)",
+      "Bash(lib *)",
+      "Bash(while *)",
+      "Bash(echo *)",
+      "Bash(if *)",
+      "Bash(*)",
+      "Bash(awk '{print $2}')",
+      "Bash(dart format *)",
+      "Bash(dart analyze *)",
+      "Bash(echo \"=== exit code: $? \\(1 = no matches, expected\\) ===\")"
+    ],
+    "allowedTools": [
+      "Read",
+      "Edit",
+      "Bash"
+    ]
+  }
+}

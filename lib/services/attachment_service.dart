@@ -241,6 +241,13 @@ class AttachmentService {
   /// the dashboard canvas shouldn't re-hit the network.
   static final Map<String, Uint8List> _imageBytesCache = <String, Uint8List>{};
 
+  /// Synchronously returns already-decoded bytes for [idAttachment] if a
+  /// previous [readAttachmentImageBytes] call cached them, else null. Lets a
+  /// widget render an image on first build (no loading flash) when the bytes
+  /// are already in memory.
+  static Uint8List? cachedAttachmentImageBytes(String idAttachment) =>
+      _imageBytesCache[idAttachment];
+
   /// Same endpoint as [readAttachmentContent] but read as raw bytes —
   /// needed for image previews, since the generic `ApiService.call` path
   /// decodes every response as text/JSON and would corrupt binary data.

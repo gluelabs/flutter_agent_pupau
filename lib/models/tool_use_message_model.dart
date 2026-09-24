@@ -67,6 +67,7 @@ class ToolUseMessage {
   ToolUseAttachArtifactData? attachArtifactData;
   ToolUseImportAttachmentData? importAttachmentData;
   ToolUseImportToolResultData? importToolResultData;
+  bool succeeded;
 
   ToolUseMessage({
     required this.id,
@@ -106,6 +107,7 @@ class ToolUseMessage {
     this.attachArtifactData,
     this.importAttachmentData,
     this.importToolResultData,
+    this.succeeded = true,
   });
 
   factory ToolUseMessage.fromJsonSSE(Map<String, dynamic> json) {
@@ -151,6 +153,12 @@ class ToolUseMessage {
           ? getNativeToolData(json, true)
           : null;
     }
+    final ToolUseAttachArtifactData? attachArtifactData = isAttachArtifact
+        ? ToolUseAttachArtifactData.fromJson(data, json["typeDetails"])
+        : null;
+    final bool succeeded = attachArtifactData != null
+        ? attachArtifactData.success
+        : _readToolSuccess(json, _asMap(json['typeDetails']));
 
     return ToolUseMessage(
       id: getString(json["id"]),
@@ -245,15 +253,14 @@ class ToolUseMessage {
       shellData: isShell
           ? ToolUseShellData.fromJson(data, json["typeDetails"])
           : null,
-      attachArtifactData: isAttachArtifact
-          ? ToolUseAttachArtifactData.fromJson(data, json["typeDetails"])
-          : null,
+      attachArtifactData: attachArtifactData,
       importAttachmentData: isImportAttachment
           ? ToolUseImportAttachmentData.fromJson(data, json["typeDetails"])
           : null,
       importToolResultData: isImportToolResult
           ? ToolUseImportToolResultData.fromJson(data, json["typeDetails"])
           : null,
+      succeeded: succeeded,
     );
   }
 
@@ -302,6 +309,18 @@ class ToolUseMessage {
           ? getNativeToolData(json, false)
           : null;
     }
+    final ToolUseAttachArtifactData? attachArtifactData = isAttachArtifact
+        ? ToolUseAttachArtifactData.fromJson(
+            answer,
+            json["extraInfo"]?["typeDetails"],
+          )
+        : null;
+    final bool succeeded = attachArtifactData != null
+        ? attachArtifactData.success
+        : _readToolSuccess(
+            json,
+            _asMap(_asMap(json['extraInfo'])?['typeDetails']),
+          );
 
     return ToolUseMessage(
       id: getString(json["id"]),
@@ -408,12 +427,7 @@ class ToolUseMessage {
       shellData: isShell
           ? ToolUseShellData.fromJson(answer, json["extraInfo"]?["typeDetails"])
           : null,
-      attachArtifactData: isAttachArtifact
-          ? ToolUseAttachArtifactData.fromJson(
-              answer,
-              json["extraInfo"]?["typeDetails"],
-            )
-          : null,
+      attachArtifactData: attachArtifactData,
       importAttachmentData: isImportAttachment
           ? ToolUseImportAttachmentData.fromJson(
               answer,
@@ -426,6 +440,7 @@ class ToolUseMessage {
               json["extraInfo"]?["typeDetails"],
             )
           : null,
+      succeeded: succeeded,
     );
   }
 
@@ -575,6 +590,24 @@ class ToolUseMessage {
           value.toString().trim() == "[]",
     );
     return message;
+  }
+
+  /// Safely coerces an untyped JSON value into a string-keyed map, or `null`
+  /// if it isn't one — avoids `NoSuchMethodError`/`TypeError` from indexing
+  /// or casting a value the caller only assumed was a map (missing key,
+  /// unexpected shape, wrong type from the backend, ...).
+  static Map<String, dynamic>? _asMap(dynamic value) =>
+      value is Map ? Map<String, dynamic>.from(value) : null;
+
+  static bool _readToolSuccess(
+    Map<String, dynamic> json,
+    Map<String, dynamic>? typeDetails,
+  ) {
+    final dynamic value =
+        json['toolSuccess'] ??
+        typeDetails?['toolSuccess'] ??
+        _asMap(json['extraInfo'])?['toolSuccess'];
+    return getBool(value, defaultValue: true);
   }
 
   static IconData getToolUseSuffixIcon(ToolUseType type) {

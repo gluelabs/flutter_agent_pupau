@@ -26,7 +26,7 @@ class CustomBadge extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(
-          fontSize: isTablet ? 14 : 12,
+          fontSize: isTablet ? 14 : 12.5,
           fontWeight: FontWeight.w500,
           color: foreground,
         ),

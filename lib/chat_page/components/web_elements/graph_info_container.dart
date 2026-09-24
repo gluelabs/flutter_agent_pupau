@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cached_network_svg_image/cached_network_svg_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/services/style_service.dart';
@@ -57,13 +58,19 @@ class GraphInfoContainer extends StatelessWidget {
                         )
                       : CachedNetworkImage(
                           imageUrl: graphInfo.imageUrl,
+                          cacheManager:
+                              PupauChatController.currentImageCacheManager,
                           width: isTablet ? 150 : 95,
                           height: isTablet ? 150 : 95,
                           memCacheWidth: DeviceService.memCachePixels(
-                              context, isTablet ? 150 : 95),
+                            context,
+                            isTablet ? 150 : 95,
+                          ),
                           memCacheHeight: DeviceService.memCachePixels(
-                              context, isTablet ? 150 : 95),
-                          errorListener: (error) {},
+                            context,
+                            isTablet ? 150 : 95,
+                          ),
+                          errorListener: (_) => (),
                           fit: BoxFit.cover,
                           errorWidget: (context, url, error) =>
                               Image.asset(Constants.missingImage),

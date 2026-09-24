@@ -22,6 +22,7 @@ class DashboardExpandableSection extends StatelessWidget {
         child: ConfigExpandableSection(
           initiallyExpanded: true,
           label: label,
+          itemCount: childCount,
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: List<Widget>.generate(childCount, (int index) {

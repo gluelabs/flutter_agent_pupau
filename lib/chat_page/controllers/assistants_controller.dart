@@ -1,6 +1,8 @@
+import 'package:flutter_agent_pupau/config/pupau_agent_mode.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:get/get.dart';
 import 'package:flutter_agent_pupau/models/assistant_model.dart';
+import 'package:flutter_agent_pupau/services/assistant_cache_service.dart';
 import 'package:flutter_agent_pupau/services/assistant_service.dart';
 
 class PupauAssistantsController extends GetxController {
@@ -10,10 +12,10 @@ class PupauAssistantsController extends GetxController {
     PupauChatController chatController = Get.find<PupauChatController>();
     bool isApiKey = chatController.pupauConfig?.apiKey != null;
     final String id = chatController.pupauConfig?.assistantId ?? "";
-    final bool isMarketplace =
-        chatController.pupauConfig?.isMarketplace ?? false;
+    final PupauAgentMode mode =
+        chatController.pupauConfig?.agentMode ?? PupauAgentMode.assistant;
     if (isApiKey) {
-      getSingleAssistant(id, isMarketplace);
+      getSingleAssistant(id, mode);
       return;
     }
     List<Assistant> assistantsList =
@@ -27,38 +29,55 @@ class PupauAssistantsController extends GetxController {
 
   Future<void> getSingleAssistant(
     String assistantId,
-    bool isMarketplace,
+    PupauAgentMode mode,
   ) async {
-    final AssistantType type = isMarketplace
+    final AssistantType type = mode == PupauAgentMode.marketplace
         ? AssistantType.marketplace
         : AssistantType.assistant;
-    final Assistant? existing = getAssistantById(assistantId, type);
 
-    // When not forcing refresh: skip if we already have this assistant with non-empty welcome
-    if (existing != null && existing.welcomeMessage.trim().isNotEmpty) {
-      // ignore: avoid_print
-      return;
-    }
-    Assistant? assistant = await AssistantService.getAssistant(
+    // Show whatever we already have (in-memory list, then the LRU cache)
+    // immediately, with no network call.
+    await _applyCachedAssistantImmediately(assistantId, type);
+
+    // Always hit the network so server-side changes are picked up; what was
+    // applied above is only a placeholder while this call is in flight.
+    final Assistant? assistant = await AssistantService.getAssistant(
       assistantId,
-      isMarketplace,
+      mode,
     );
     if (assistant == null) return;
 
-    if (existing != null) {
-      final int index = assistants.indexWhere(
-        (a) => a.id == assistantId && a.type == type,
-      );
-      if (index >= 0) {
-        assistants[index] = assistant;
-        assistants.refresh();
-        update();
-      }
+    final int index = assistants.indexWhere(
+      (a) => a.id == assistantId && a.type == type,
+    );
+    if (index >= 0) {
+      assistants[index] = assistant;
     } else {
       assistants.add(assistant);
-      assistants.refresh();
-      update();
     }
+    assistants.refresh();
+    update();
+  }
+
+  /// Applies whatever assistant data is already available — the in-memory
+  /// list first, then the [AssistantCacheService] LRU cache — to [assistants]
+  /// immediately, with no network call, so the UI has something to show
+  /// while [getSingleAssistant]'s fetch is in flight.
+  Future<void> _applyCachedAssistantImmediately(
+    String assistantId,
+    AssistantType type,
+  ) async {
+    if (getAssistantById(assistantId, type) != null) return;
+    final Assistant? cached = await AssistantCacheService.get(
+      assistantId,
+      type == AssistantType.marketplace
+          ? PupauAgentMode.marketplace
+          : PupauAgentMode.assistant,
+    );
+    if (cached == null) return;
+    assistants.add(cached);
+    assistants.refresh();
+    update();
   }
 
   Assistant? getAssistantById(

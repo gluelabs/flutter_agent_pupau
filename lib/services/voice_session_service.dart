@@ -1,3 +1,4 @@
+import 'package:flutter_agent_pupau/config/pupau_agent_mode.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -15,7 +16,7 @@ class VoiceSessionService {
     required String conversationId,
     required String conversationToken,
     required PupauConfig config,
-    bool isMarketplace = false,
+    PupauAgentMode mode = PupauAgentMode.assistant,
   }) async {
     final Map<String, String>? authHeaders = config.authHeaders;
     if (authHeaders == null) return null;
@@ -28,7 +29,7 @@ class VoiceSessionService {
             ApiUrls.voiceSessionsUrl(
               assistantId,
               conversationId,
-              isMarketplace: isMarketplace,
+              mode: mode,
             ),
           ),
         );
@@ -63,7 +64,7 @@ class VoiceSessionService {
     required String conversationId,
     required VoiceSession session,
     required PupauConfig config,
-    bool isMarketplace = false,
+    PupauAgentMode mode = PupauAgentMode.assistant,
   }) {
     final Map<String, String>? authHeaders = config.authHeaders;
     if (authHeaders == null) return null;
@@ -73,7 +74,7 @@ class VoiceSessionService {
         conversationId,
         session.voiceSessionId,
         session.voiceSessionToken,
-        isMarketplace: isMarketplace,
+        mode: mode,
       );
       return SSEClient.subscribeToSSE(
         method: SSERequestType.GET,
@@ -96,7 +97,7 @@ class VoiceSessionService {
     required PupauConfig config,
     required Uint8List bytes,
     required int seq,
-    bool isMarketplace = false,
+    PupauAgentMode mode = PupauAgentMode.assistant,
   }) async {
     final Map<String, String>? authHeaders = config.authHeaders;
     if (authHeaders == null) return false;
@@ -110,7 +111,7 @@ class VoiceSessionService {
               assistantId,
               conversationId,
               session.voiceSessionId,
-              isMarketplace: isMarketplace,
+              mode: mode,
             ),
           ),
         );
@@ -138,7 +139,7 @@ class VoiceSessionService {
     required String conversationId,
     required VoiceSession session,
     required PupauConfig config,
-    bool isMarketplace = false,
+    PupauAgentMode mode = PupauAgentMode.assistant,
   }) async {
     final Map<String, String>? authHeaders = config.authHeaders;
     if (authHeaders == null) return false;
@@ -152,7 +153,7 @@ class VoiceSessionService {
               assistantId,
               conversationId,
               session.voiceSessionId,
-              isMarketplace: isMarketplace,
+              mode: mode,
             ),
           ),
         );
@@ -178,7 +179,7 @@ class VoiceSessionService {
     required String conversationId,
     required VoiceSession session,
     required PupauConfig config,
-    bool isMarketplace = false,
+    PupauAgentMode mode = PupauAgentMode.assistant,
   }) async {
     final Map<String, String>? authHeaders = config.authHeaders;
     if (authHeaders == null) return;
@@ -192,7 +193,7 @@ class VoiceSessionService {
               assistantId,
               conversationId,
               session.voiceSessionId,
-              isMarketplace: isMarketplace,
+              mode: mode,
             ),
           ),
         );

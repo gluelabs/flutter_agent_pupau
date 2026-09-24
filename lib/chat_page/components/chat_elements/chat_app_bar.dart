@@ -156,7 +156,10 @@ class ChatAppBar extends GetView<PupauChatController>
         }).toList();
       }
 
-      final Widget? dashboardIconButton = controller.isDashboardAvailable.value
+      final bool showDashboardButton =
+          appBarConfig?.showDashboardButton ?? true;
+      final Widget? dashboardIconButton =
+          showDashboardButton && controller.isDashboardAvailable.value
           ? IconButton(
               icon: const Icon(Symbols.grid_layout_side),
               iconSize: isTablet ? 26 : 24,

@@ -266,6 +266,8 @@ class Strings {
   static const String toolPhaseLint = "Validating content...";
   static const String toolPhaseCreating = "Creating document...";
   static const String toolPhaseUpdating = "Updating document...";
+  static const String toolPhaseSandboxStarting = "Starting the machine...";
+  static const String toolPhaseSandboxExecuting = "Running on the machine...";
   static const String subagentAsyncPending =
       "Subagent accepted; results will appear in a follow-up message.";
   static const String subagentOpenChildConversation =
@@ -325,6 +327,9 @@ class Strings {
   static const String toolImportedSubtitle =
       "Imported into the workspace at @path";
   static const String toolImportToSandboxFailedTitle = "Import failed";
+  static const String toolSandboxCreatedBanner = "New sandbox started";
+  static const String toolSandboxResumeFailedBanner =
+      "Previous session not restored: sandbox restarted clean";
 
   // RAG GROUNDING CITATIONS
   // Note: panel title and attachment-origin label reuse the existing
@@ -333,8 +338,19 @@ class Strings {
   static const String citationOriginWebSearch = "Web search";
   static const String citationOpenAttachment = "Open attachment";
   static const String citationPreviewUnavailable = "Preview unavailable";
-  static const String citationVerificationPending = "Verifying…";
-  static const String citationVerificationGrounded = "grounded";
+  static const String citationVerificationPending = "Verifying sources…";
+  /// Score badge template — `@score` is the rounded percent.
+  static const String citationGroundedScore = "Grounded @score%";
+  /// Honesty disclaimer behind the score badge: the verifier
+  /// is a separate AI model and can be wrong.
+  static const String citationScoreInfo =
+      "This confidence score is produced by a separate AI model that checks whether the cited sources support the answer. AI can make mistakes: use it as an aid to verification, not as a replacement for it.";
+  /// Caption shown above a `BEST_MATCH` quote excerpt.
+  static const String citationQuoteKindBestMatch =
+      "Excerpt matched to the citation";
+  /// Longer explanation behind [citationQuoteKindBestMatch].
+  static const String citationQuoteKindBestMatchInfo =
+      "The whole file was given to the assistant: this is the passage that best supports the cited statement, not necessarily the one the assistant read.";
   static const String exportCsv = "Export CSV";
   static const String spreadsheetLoadingInfo =
       "Reading spreadsheet structure...";
@@ -612,6 +628,7 @@ class Strings {
   static const String generating184 = "Wrangling";
   static const String generating185 = "Zesting";
   static const String generating186 = "Zigzagging";
+  static const String navigateTo = "Navigate to";
 
   static const List<String> generatingPhrases = <String>[
     generating1,

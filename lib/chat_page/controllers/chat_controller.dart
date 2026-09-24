@@ -1,3 +1,4 @@
+import 'package:flutter_agent_pupau/config/pupau_agent_mode.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -8,8 +9,10 @@ import 'package:flutter_agent_pupau/chat_page/components/chat_elements/custom_ac
 import 'package:flutter_agent_pupau/chat_page/components/dashboard_elements/chat_dashboard_tool_availability.dart';
 import 'package:flutter_agent_pupau/chat_page/utils/message_grouping_utils.dart';
 import 'package:flutter_agent_pupau/chat_page/utils/modal_utils.dart';
+import 'package:flutter_agent_pupau/chat_page/controllers/living_agent_session.dart';
 import 'package:flutter_agent_pupau/config/pupau_config.dart';
 import 'package:flutter_agent_pupau/models/grounding_model.dart';
+import 'package:flutter_agent_pupau/models/kb_image_model.dart';
 import 'package:flutter_agent_pupau/models/memory_reference_model.dart';
 import 'package:flutter_agent_pupau/models/memory_always_model.dart';
 import 'package:flutter_agent_pupau/services/api_service.dart';
@@ -27,6 +30,7 @@ import 'package:flutter_agent_pupau/services/tool_args_delta_service.dart';
 import 'package:flutter_agent_pupau/utils/api_urls.dart';
 import 'package:flutter_agent_pupau/utils/pupau_shared_preferences.dart';
 import 'package:flutter_agent_pupau/utils/settings.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/my_mention_tag_text_editing_controller.dart';
@@ -53,12 +57,14 @@ import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_partial_resu
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_pending_data.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_ask_user_data.dart';
 import 'package:flutter_agent_pupau/models/ui_tool_message_model.dart';
+import 'package:flutter_agent_pupau/services/assistant_cache_service.dart';
 import 'package:flutter_agent_pupau/services/assistant_service.dart';
 import 'package:flutter_agent_pupau/services/conversation_service.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/services/tool_ask_user_service.dart';
 import 'package:flutter_agent_pupau/services/attachment_tool_label_service.dart';
 import 'package:flutter_agent_pupau/services/grounding_service.dart';
+import 'package:flutter_agent_pupau/services/kb_image_service.dart';
 import 'package:flutter_agent_pupau/services/tool_use_service.dart';
 import 'package:flutter_agent_pupau/services/user_service.dart';
 import 'package:flutter_agent_pupau/services/tts_service.dart';
@@ -74,6 +80,30 @@ import 'package:flutter_agent_pupau/chat_page/controllers/chat_dashboard_control
 import 'package:flutter_agent_pupau/chat_page/pages/chat_dashboard_page_view.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/error_snackbar.dart';
 import 'package:flutter_client_sse/flutter_client_sse.dart';
+import 'package:flutter_agent_pupau/models/pupau_living_agent_context.dart';
+
+/// Safely decodes an incoming [SSEModel]'s `data` as JSON.
+///
+/// A `jsonDecode` thrown directly inside a `Stream.listen` `onData`
+/// callback is NOT caught by that same `.listen`'s `onError` - it becomes
+/// an unhandled zone error instead, so a malformed/truncated chunk (e.g.
+/// from a buggy custom-httpClient SSE parser) would previously crash
+/// silently instead of surfacing anywhere. This routes that failure
+/// through [onDecodeError] instead, matching how a real stream error is
+/// already handled at each call site.
+Map<String, dynamic>? decodeSseEventData(
+  SSEModel event,
+  void Function(Object error) onDecodeError,
+) {
+  final String? raw = event.data;
+  if (raw == null) return null;
+  try {
+    return jsonDecode(raw) as Map<String, dynamic>;
+  } catch (e) {
+    onDecodeError(e);
+    return null;
+  }
+}
 
 class PupauChatController extends GetxController {
   PupauChatController({PupauConfig? config}) : pupauConfig = config {
@@ -100,12 +130,26 @@ class PupauChatController extends GetxController {
     return _cachedAssistantId ?? "";
   }
 
-  bool get isMarketplace => pupauConfig?.isMarketplace ?? false;
+  /// Mode of the open chat, handed to every URL built from this controller.
+  PupauAgentMode get agentMode =>
+      pupauConfig?.agentMode ?? PupauAgentMode.assistant;
+
+  bool get isMarketplace => agentMode == PupauAgentMode.marketplace;
   bool get isAnonymous => _isAnonymousRx.value;
+
+  /// Host-supplied cache manager override (see [PupauConfig.imageCacheManager])
+  /// for the currently active chat session, if any - used by every image
+  /// widget in the plugin instead of `cached_network_image`'s default cache.
+  /// Null (falls back to the library default) when no chat session is
+  /// registered or the host didn't supply one.
+  static BaseCacheManager? get currentImageCacheManager {
+    if (!Get.isRegistered<PupauChatController>()) return null;
+    return Get.find<PupauChatController>().pupauConfig?.imageCacheManager;
+  }
+
   bool get hideAudioRecordingButton =>
       pupauConfig?.hideAudioRecordingButton ?? false;
-  bool get showAgentInfoOnTap =>
-      pupauConfig?.showAgentInfoOnTap ?? true;
+  bool get showAgentInfoOnTap => pupauConfig?.showAgentInfoOnTap ?? true;
   ChatInputAction get inputFieldAction =>
       pupauConfig?.inputFieldAction ?? ChatInputAction.newline;
 
@@ -289,6 +333,15 @@ class PupauChatController extends GetxController {
   // Guard to prevent concurrent initializations
   bool _isInitializing = false;
   Completer<void>? _initializationCompleter;
+
+  /// Bumped on every [resetChatState] (new conversation / reopen / assistant
+  /// switch). Async flows that mutate conversation state after an `await`
+  /// (sendMessage, sendAudioMessage, createNewConversation) capture this
+  /// before their first await and compare it after — if it changed, a reset
+  /// happened while they were in flight, so they drop their result instead
+  /// of resurrecting a stale conversation/message/SSE stream into the fresh
+  /// state.
+  int _conversationGeneration = 0;
 
   MyMentionTagTextEditingController inputMessageController =
       MyMentionTagTextEditingController();
@@ -877,6 +930,25 @@ class PupauChatController extends GetxController {
     });
   }
 
+  /// Context for the NEXT Living Agent turn only.
+  ///
+  /// One-shot by design: `contextRefs` describe what a conversation was
+  /// started ABOUT. Leaving them set would re-attach the same item to every
+  /// later message in the thread, which the backend would keep re-reading.
+  PupauLivingAgentContext? _pendingLivingAgentContext;
+
+  void setPendingLivingAgentContext(PupauLivingAgentContext? context) {
+    _pendingLivingAgentContext =
+        (context == null || context.isEmpty) ? null : context;
+  }
+
+  /// Reads and CLEARS the pending context, so it applies to exactly one turn.
+  PupauLivingAgentContext? takePendingLivingAgentContext() {
+    final PupauLivingAgentContext? context = _pendingLivingAgentContext;
+    _pendingLivingAgentContext = null;
+    return context;
+  }
+
   // KB References
   List<KbReference> kbReferencesBackup =
       []; //Used in case first message is MessageType.kb and following messages are not SourceType.llm
@@ -888,6 +960,11 @@ class PupauChatController extends GetxController {
   // IMPLICIT `groundingSources` arrives before the LLM row exists yet.
   List<GroundingSource> groundingSourcesBackup = <GroundingSource>[];
   Timer? _groundingRefetchTimer;
+
+  // `<kb-image>` allowlist forward-fill: same idea as
+  // [groundingSourcesBackup], the `kb` frame's live `kbImages[]` arrives
+  // before the LLM row exists yet.
+  List<KbImageRef> kbImagesBackup = <KbImageRef>[];
 
   // Translations
   static bool _translationsInitialized = false;
@@ -903,6 +980,100 @@ class PupauChatController extends GetxController {
   DateTime? _currentMessageStartTime;
   bool _hasReceivedFirstToken = false;
   bool _isFirstMessage = true;
+
+  /// The Living Agent thread, kept alive across a switch to another agent.
+  ///
+  /// Static so it outlives the controller itself, not just a reconfiguration.
+  static LivingAgentSession? _livingAgentSession;
+
+  /// Freezes the Living Agent thread before another agent takes the controller.
+  ///
+  /// Skipped mid-turn: the run continues server-side, and the way back into it
+  /// is the transcript's reattach, not a replayed half-answer.
+  void _saveLivingAgentSession() {
+    if (agentMode != PupauAgentMode.livingAgent) return;
+    final String id = pupauConfig?.assistantId ?? "";
+    if (id.isEmpty) return;
+    if (isStreaming.value || assistantsReplying.value > 0) {
+      _livingAgentSession = null;
+      return;
+    }
+    _livingAgentSession = LivingAgentSession(
+      agentId: id,
+      assistant: assistant.value,
+      conversation: conversation.value,
+      messages: List<PupauMessage>.from(messages),
+      activeSkills: Map<String, SkillLoadedInfo>.from(conversationActiveSkills),
+      historyLoaded: isConversationHistoryLoaded,
+      isLastPage: isConversationLastPage,
+      page: conversationPage,
+      itemsLoaded: conversationItemsLoaded,
+      isFirstMessage: _isFirstMessage,
+    );
+  }
+
+  /// Whether opening [candidate] can be served from the frozen thread.
+  ///
+  /// Answered BEFORE any `await`, so the caller can keep the resolving flag
+  /// down and finish the restore inside the same microtask — a single yielded
+  /// frame is all it takes to paint a skeleton over a chat we already have.
+  bool _canRestoreLivingAgentSession(PupauConfig? candidate) {
+    if (candidate == null) return false;
+    if (candidate.agentMode != PupauAgentMode.livingAgent) return false;
+    final LivingAgentSession? saved = _livingAgentSession;
+    if (saved == null || !saved.canRestoreFor(candidate.assistantId)) {
+      return false;
+    }
+    final String requested = candidate.conversationId?.trim() ?? "";
+    return requested.isEmpty || requested == saved.conversation?.id;
+  }
+
+  /// Puts a frozen Living Agent thread back on screen, with no network call.
+  ///
+  /// Returns whether anything was restored, so the caller can skip the normal
+  /// load path.
+  bool _restoreLivingAgentSession() {
+    if (agentMode != PupauAgentMode.livingAgent) return false;
+    final LivingAgentSession? saved = _livingAgentSession;
+    final String id = pupauConfig?.assistantId ?? "";
+    if (saved == null || !saved.canRestoreFor(id)) return false;
+    // Opening a specific conversation asks for THAT thread; only a plain
+    // re-entry (the section's own tab) may resume where the user left off.
+    final String? requested = pupauConfig?.conversationId?.trim();
+    if (requested != null &&
+        requested.isNotEmpty &&
+        requested != saved.conversation?.id) {
+      return false;
+    }
+
+    assistant.value = saved.assistant;
+    assistant.refresh();
+    conversation.value = saved.conversation;
+    messages.assignAll(saved.messages);
+    messages.refresh();
+    conversationActiveSkills
+      ..clear()
+      ..addAll(saved.activeSkills)
+      ..refresh();
+    isConversationHistoryLoaded = saved.historyLoaded;
+    isConversationLastPage = saved.isLastPage;
+    conversationPage = saved.page;
+    conversationItemsLoaded = saved.itemsLoaded;
+    _isFirstMessage = saved.isFirstMessage;
+    if (saved.conversation != null) {
+      messageNotifier.setAssistantId(id);
+      messageNotifier.setConversationId(saved.conversation!.id);
+    }
+    isLoadingConversation.value = false;
+    isChatEntryResolving.value = false;
+    _cachedAssistantId = saved.assistant?.id ?? id;
+    update();
+    return true;
+  }
+
+  /// Drops the frozen thread. Call when it can no longer be trusted — a new
+  /// chat, a logout, an agent change.
+  static void clearLivingAgentSession() => _livingAgentSession = null;
 
   @override
   onInit() {
@@ -1074,6 +1245,11 @@ class PupauChatController extends GetxController {
   /// Resets all chat state when the chat is opened
   /// This ensures a fresh state each time the chat is opened
   void resetChatState({required bool clearConversationStarters}) {
+    // Invalidate any in-flight sendMessage/sendAudioMessage/createNewConversation
+    // from the previous conversation so their results are dropped instead of
+    // landing in this fresh state once they resolve.
+    _conversationGeneration++;
+    _lastFailedAudioFilePath = null;
     exitVoiceModeIfActive();
     if (isRecording.value) cancelRecording();
     _hasCompletedFirstInit = false;
@@ -1152,6 +1328,7 @@ class PupauChatController extends GetxController {
     selectedImage.value = null;
     cachedToolUseImages.clear();
     kbReferencesBackup.clear();
+    kbImagesBackup.clear();
     toolsFabExpanded.value = false;
     forkMessageId.value = "";
     forkConversationTitle.value = "";
@@ -1183,8 +1360,14 @@ class PupauChatController extends GetxController {
   /// Resets conversation state and updates config if assistant changed
   /// Re-initializes the chat every time it's called (even with same config)
   Future<void> openChatWithConfig(PupauConfig? newConfig) async {
-    isChatEntryResolving.value = true;
-    update();
+    // Decided up front: raising the flag and lowering it after the restore
+    // still lets one frame through, and that frame is the skeleton.
+    final bool willRestoreLivingAgent =
+        _canRestoreLivingAgentSession(newConfig);
+    if (!willRestoreLivingAgent) {
+      isChatEntryResolving.value = true;
+      update();
+    }
     PupauConfig? resolvedConfig = newConfig;
     if (resolvedConfig != null &&
         resolvedConfig.assistantId.trim().isEmpty &&
@@ -1198,7 +1381,7 @@ class PupauChatController extends GetxController {
           bearerToken: resolvedConfig.bearerToken!,
           assistantId: _cachedAssistantId!,
           apiUrl: resolvedConfig.apiUrl,
-          isMarketplace: resolvedConfig.isMarketplace,
+          agentMode: resolvedConfig.agentMode,
           conversationId: resolvedConfig.conversationId,
           isAnonymous: resolvedConfig.isAnonymous,
           language: resolvedConfig.language,
@@ -1215,6 +1398,8 @@ class PupauChatController extends GetxController {
           drawerConfig: resolvedConfig.drawerConfig,
           resetChatOnOpen: resolvedConfig.resetChatOnOpen,
           initialWelcomeMessage: resolvedConfig.initialWelcomeMessage,
+          httpClient: resolvedConfig.httpClient,
+          imageCacheManager: resolvedConfig.imageCacheManager,
         );
       }
     }
@@ -1227,10 +1412,18 @@ class PupauChatController extends GetxController {
 
     final bool assistantChanged =
         pupauConfig?.assistantId != resolvedConfig?.assistantId ||
-        pupauConfig?.isMarketplace != resolvedConfig?.isMarketplace;
+        pupauConfig?.agentMode != resolvedConfig?.agentMode;
+      final bool isSameLivingAgent =
+        pupauConfig?.isLivingAgent == resolvedConfig?.isLivingAgent &&
+        pupauConfig?.assistantId == resolvedConfig?.assistantId;
     final bool anonymousChanged =
         pupauConfig?.isAnonymous != resolvedConfig?.isAnonymous;
     final bool resetChatOnOpen = resolvedConfig?.resetChatOnOpen ?? true;
+
+    // Freeze the OUTGOING chat while `pupauConfig` still describes it — one
+    // line later it is the incoming one and the snapshot would read the wrong
+    // mode. No-op unless we are leaving a Living Agent.
+    if (!isSameLivingAgent) _saveLivingAgentSession();
 
     if (resolvedConfig != null) {
       pupauConfig = resolvedConfig;
@@ -1242,12 +1435,43 @@ class PupauChatController extends GetxController {
         UserService.syncUserProfileIfBearerChanged(bearerForProfile);
       }
     }
+    // Restored here, before anything below can yield: `resetChatState` empties
+    // `messages` and `applyCachedAssistantIfAvailable` is awaited, so doing
+    // this later means a frame is painted without the thread.
+    if (willRestoreLivingAgent && _restoreLivingAgentSession()) {
+      _updateBootStatus(BootState.ok);
+      _signalFirstInitComplete();
+      update();
+      return;
+    }
+
+    // This controller outlives the chat page that created it (ChatBinding
+    // reuses it when it is already registered), so `assistant` still holds the
+    // agent of the PREVIOUS chat at this point — and `resetChatState` below
+    // never touches it. The app bar renders `assistant.name` directly, so
+    // without this the header keeps showing the previous agent's name and
+    // avatar until the new one arrives over the network. For an assistant or
+    // marketplace agent the cache refills it a line later and nothing is
+    // visible; a Living Agent has no cache, so the stale name simply stayed.
+    // Null is the right intermediate state: the app bar skeletonizes on it.
+    if (!isSameLivingAgent) {
+      assistant.value = null;
+      assistant.refresh();
+      // Same staleness, one level down: this is the fallback the `assistantId`
+      // getter uses, and `initChatController` would otherwise re-seed it from
+      // the agent we just dropped.
+      _cachedAssistantId = null;
+    }
+
     // Show new agent in UI immediately from cache if available (no network delay)
-    applyCachedAssistantIfAvailable();
+    await applyCachedAssistantIfAvailable();
     if (resetChatOnOpen) {
       resetChatState(clearConversationStarters: assistantChanged);
     } else if (assistantChanged || anonymousChanged) {
       resetChatState(clearConversationStarters: assistantChanged);
+    }
+    if (_hasPendingConversationLoad()) {
+      isLoadingConversation.value = true;
     }
     _updateBootStatus(BootState.pending);
 
@@ -1280,7 +1504,7 @@ class PupauChatController extends GetxController {
       isChatEntryResolving.value = true;
       update();
       // Show cached assistant immediately so app bar updates before any network call
-      applyCachedAssistantIfAvailable();
+      await applyCachedAssistantIfAvailable();
       if (assistant.value?.id.trim().isNotEmpty == true) {
         _cachedAssistantId = assistant.value!.id;
       }
@@ -1295,7 +1519,7 @@ class PupauChatController extends GetxController {
         try {
           final Assistant? a = await AssistantService.getAssistant(
             assistantId,
-            isMarketplace,
+            agentMode,
           );
           if (a != null) {
             assistant.value = a;
@@ -1305,7 +1529,11 @@ class PupauChatController extends GetxController {
             _preserveInitialWelcomeIfAssistantEmpty();
             assistant.refresh();
             update();
-            if (Get.isRegistered<PupauAssistantsController>()) {
+            // A Living Agent never joins the assistants list: it is not one
+            // of the user's assistants, and being in that list would make it
+            // selectable and taggable alongside them.
+            if (agentMode != PupauAgentMode.livingAgent &&
+                Get.isRegistered<PupauAssistantsController>()) {
               final assistantsController =
                   Get.find<PupauAssistantsController>();
               assistants = assistantsController.assistants;
@@ -1364,6 +1592,7 @@ class PupauChatController extends GetxController {
             "stackTrace": stackTrace.toString(),
             "assistantId": assistantId,
             "isMarketplace": isMarketplace,
+            "agentMode": agentMode.name,
             "isAnonymous": isAnonymous,
             "conversationId": pupauConfig?.conversationId,
             "configExists": pupauConfig != null,
@@ -1400,16 +1629,68 @@ class PupauChatController extends GetxController {
     update();
   }
 
+  /// Adopts the conversation announced by `la_thread`.
+  ///
+  /// Only fills in what is missing: re-adopting the same id mid-stream would
+  /// otherwise look like a conversation change and reset the turn in flight.
+  void _adoptLivingAgentConversation(String id) {
+    if (id.isEmpty) return;
+    if (conversation.value?.id == id) return;
+    conversation.value = PupauConversation(
+      id: id,
+      createdAt: DateTime.now(),
+      title: "",
+      // Living Agent chat authenticates with the bearer alone.
+      token: "",
+      userId: "",
+      assistantId: assistantId,
+      queryCount: 0,
+      comment: "",
+      userName: "",
+      userSurname: "",
+    );
+    messageNotifier.setConversationId(id);
+    update();
+    // The first message is what creates a Living Agent conversation, so this
+    // is the only moment the host learns its id — without it a host list
+    // cannot tell which conversation the chat is now on.
+    PupauEventService.instance.emitPupauEvent(
+      PupauEvent(
+        type: UpdateConversationType.newConversation,
+        payload: {
+          "assistantId": assistantId,
+          "assistantType": assistant.value?.type ?? AssistantType.assistant,
+          "agentMode": agentMode.name,
+          "conversation": conversation.value!,
+        },
+      ),
+    );
+  }
+
   Future<void> createNewConversation() async {
+    // A Living Agent conversation is created by the backend on the first
+    // message - there is no endpoint that makes an empty one - and its id
+    // arrives in the opening `la_thread` frame.
+    if (pupauConfig?.isLivingAgent ?? false) {
+      return;
+    }
+    final int generation = _conversationGeneration;
     try {
       resetLoadingMessage();
       update();
       if (assistant.value != null) {
-        conversation.value = await ConversationService.createConversation(
-          assistantId,
-          isMarketplace,
-          isAnonymous: pupauConfig?.isAnonymous ?? false,
-        );
+        final PupauConversation? created =
+            await ConversationService.createConversation(
+              assistantId,
+              agentMode,
+              isAnonymous: pupauConfig?.isAnonymous ?? false,
+            );
+        if (generation != _conversationGeneration) {
+          // A new conversation/reset happened while this request was in
+          // flight — nothing local to attach the result to, drop it.
+          return;
+        }
+        conversation.value = created;
         if (conversation.value == null) resetConversation();
         PupauEventService.instance.emitPupauEvent(
           PupauEvent(
@@ -1417,6 +1698,7 @@ class PupauChatController extends GetxController {
             payload: {
               "assistantId": assistantId,
               "assistantType": assistant.value?.type ?? AssistantType.assistant,
+              "agentMode": agentMode.name,
               "conversation": conversation.value!,
             },
           ),
@@ -1476,24 +1758,59 @@ class PupauChatController extends GetxController {
     update();
   }
 
-  /// Applies the assistant from [PupauAssistantsController] cache if present for the current
-  /// [pupauConfig] assistantId. Synchronous, no network. Use so the UI shows the correct agent
-  /// immediately when opening or switching chat, before [getAssistant] returns.
-  void applyCachedAssistantIfAvailable() {
+  /// True when the current [pupauConfig] points at an existing, non-anonymous
+  /// conversation that [initChatController] will call [loadConversation] for
+  /// once the assistant fetch resolves. Shared by [applyCachedAssistantIfAvailable]
+  /// and [openChatWithConfig] so both agree on when it's safe to let
+  /// EmptyConversationViewSkeleton's gating flags relax.
+  bool _hasPendingConversationLoad() =>
+      !isAnonymous &&
+      pupauConfig?.conversationId != null &&
+      pupauConfig?.conversationId?.trim() != "";
+
+  /// Applies the assistant from [PupauAssistantsController]'s in-memory list,
+  /// falling back to the [AssistantCacheService] LRU cache, for the current
+  /// [pupauConfig] assistantId. No network call. Use so the UI shows the
+  /// correct agent immediately when opening or switching chat, before
+  /// [getAssistant] returns with the latest (possibly updated) data.
+  Future<void> applyCachedAssistantIfAvailable() async {
     final String? id = pupauConfig?.assistantId;
     if (id == null || id.isEmpty) return;
-    if (!Get.isRegistered<PupauAssistantsController>()) return;
+    // A Living Agent is not cached: there is exactly one per account, so a
+    // cache buys nothing - and looking one up by id in the assistants list or
+    // the assistant LRU can hand back a completely different agent that
+    // happens to share the id.
+    if (agentMode == PupauAgentMode.livingAgent) return;
     final AssistantType type = pupauConfig?.isMarketplace == true
         ? AssistantType.marketplace
         : AssistantType.assistant;
-    final Assistant? cached = Get.find<PupauAssistantsController>()
-        .getAssistantById(id, type);
-    if (cached != null) {
-      assistant.value = cached;
-      _preserveInitialWelcomeIfAssistantEmpty();
-      assistant.refresh();
-      update();
+
+    Assistant? cached;
+    if (Get.isRegistered<PupauAssistantsController>()) {
+      cached = Get.find<PupauAssistantsController>().getAssistantById(id, type);
     }
+    cached ??= await AssistantCacheService.get(
+      id,
+      type == AssistantType.marketplace
+          ? PupauAgentMode.marketplace
+          : PupauAgentMode.assistant,
+    );
+    if (cached == null) return;
+
+    assistant.value = cached;
+    _preserveInitialWelcomeIfAssistantEmpty();
+    assistant.refresh();
+    // We already have data to show (from the in-memory list or the LRU
+    // cache) — stop blocking the UI behind EmptyConversationViewSkeleton,
+    // UNLESS a conversation history load is coming right after (same
+    // condition initChatController uses to call loadConversation). In that
+    // case leave isChatEntryResolving true so the skeleton stays up
+    // continuously until isLoadingConversation takes over — otherwise the
+    // empty-conversation view flashes for a frame in between the two flags.
+    if (!_hasPendingConversationLoad()) {
+      isChatEntryResolving.value = false;
+    }
+    update();
   }
 
   Future<void> getAssistant() async {
@@ -1501,7 +1818,7 @@ class PupauChatController extends GetxController {
       isLoadingAssistant.value = true;
       final String id = pupauConfig?.assistantId ?? "";
       if (id.isEmpty) return;
-      assistant.value = await AssistantService.getAssistant(id, isMarketplace);
+      assistant.value = await AssistantService.getAssistant(id, agentMode);
       _preserveInitialWelcomeIfAssistantEmpty();
       assistant.refresh();
       if (assistant.value == null) {
@@ -1512,8 +1829,10 @@ class PupauChatController extends GetxController {
       }
       // Keep PupauAssistantsController cache in sync so future openings (and
       // applyCachedAssistantIfAvailable) have the latest welcomeMessage and
-      // other fields without waiting on the network again.
-      if (Get.isRegistered<PupauAssistantsController>()) {
+      // other fields without waiting on the network again. Not for a Living
+      // Agent: it is not cached and does not belong in that list.
+      if (agentMode != PupauAgentMode.livingAgent &&
+          Get.isRegistered<PupauAssistantsController>()) {
         final PupauAssistantsController assistantsController =
             Get.find<PupauAssistantsController>();
         final Assistant? current = assistant.value;
@@ -1544,6 +1863,7 @@ class PupauChatController extends GetxController {
             "stackTrace": stackTrace.toString(),
             "assistantId": assistantId,
             "isMarketplace": isMarketplace,
+            "agentMode": agentMode.name,
             "assistantType": assistant.value?.type ?? AssistantType.assistant,
             "configExists": pupauConfig != null,
             "configAssistantId": pupauConfig?.assistantId,
@@ -1566,6 +1886,7 @@ class PupauChatController extends GetxController {
   // MESSAGES
 
   Future<void> sendMessage(String query, bool isExternalSearch) async {
+    final int generation = _conversationGeneration;
     keyboardFocusNode.unfocus();
     resetLoadingMessage();
     currentWebSearchType.value = null;
@@ -1576,6 +1897,7 @@ class PupauChatController extends GetxController {
     inputMessageController.clear();
     inputMessage.value = "";
     kbReferencesBackup = [];
+    kbImagesBackup = [];
     isStreaming.value = true;
     chatExtraBottomPaddingActive.value = true;
     // Each new query: full bottom slack until this turn's assistant cluster is measured.
@@ -1609,8 +1931,12 @@ class PupauChatController extends GetxController {
     scrollToUserMessage(senderMessage.id);
     addTaggedAssistants();
     query = MessageService.generateMultiAgentMessage(query, taggedAssistants);
+    final bool isLivingAgent = pupauConfig?.isLivingAgent ?? false;
     if (conversation.value == null) await createNewConversation();
-    if (conversation.value == null) return;
+    if (generation != _conversationGeneration) return;
+    // A Living Agent turn legitimately starts with no conversation: the first
+    // message creates it.
+    if (conversation.value == null && !isLivingAgent) return;
     bool isFirstSSEData = true;
     listHeight =
         chatScrollController.positions.lastOrNull?.maxScrollExtent ??
@@ -1636,39 +1962,50 @@ class PupauChatController extends GetxController {
       isWebSearch: isWebSearchActive.value,
       chatController: this,
     );
+    if (generation != _conversationGeneration) {
+      // A new conversation/reset happened while the request was in flight —
+      // don't subscribe into the fresh state, just close the orphan stream.
+      sseStream?.listen((_) {}).cancel();
+      return;
+    }
     if (sseStream != null) {
       _bumpSseIdleTimer();
     }
+    void handleSendMessageStreamError(Object e) {
+      _cancelSseIdleTimer();
+      showErrorSnackbar(
+        "${Strings.apiErrorGeneric.tr} ${Strings.apiErrorSendMessage.tr}",
+      );
+      manageCancelAndErrorMessage();
+      PupauEventService.instance.emitPupauEvent(
+        PupauEvent(
+          type: UpdateConversationType.error,
+          payload: {
+            "error": "Erorr sending message: ${e.toString()}",
+            "assistantId": assistantId,
+            "assistantType": assistant.value?.type ?? AssistantType.assistant,
+            "conversationId": conversation.value?.id ?? "",
+          },
+        ),
+      );
+    }
+
     messageSendStream = sseStream?.listen(
       (event) {
         _bumpSseIdleTimer();
         setLastEventId(event);
-        if (event.data != null) {
-          Map<String, dynamic> data = jsonDecode(event.data!);
+        final Map<String, dynamic>? data = decodeSseEventData(
+          event,
+          handleSendMessageStreamError,
+        );
+        if (data != null) {
           manageSSEData(data, isExternalSearch);
           if (isFirstSSEData) {
             isFirstSSEData = false;
           }
         }
       },
-      onError: (e) {
-        _cancelSseIdleTimer();
-        showErrorSnackbar(
-          "${Strings.apiErrorGeneric.tr} ${Strings.apiErrorSendMessage.tr}",
-        );
-        manageCancelAndErrorMessage();
-        PupauEventService.instance.emitPupauEvent(
-          PupauEvent(
-            type: UpdateConversationType.error,
-            payload: {
-              "error": "Erorr sending message: ${e.toString()}",
-              "assistantId": assistantId,
-              "assistantType": assistant.value?.type ?? AssistantType.assistant,
-              "conversationId": conversation.value?.id ?? "",
-            },
-          ),
-        );
-      },
+      onError: handleSendMessageStreamError,
       onDone: () {
         _cancelSseIdleTimer();
       },
@@ -1676,6 +2013,14 @@ class PupauChatController extends GetxController {
   }
 
   void manageSSEData(Map<String, dynamic> data, bool isExternalSearch) {
+    // A Living Agent turn opens with `la_thread`, which announces the
+    // conversation the backend just created. It carries no `messageType`, so
+    // it has to be caught before the ordinary parser - and it is not a
+    // renderable message.
+    if (getString(data['type']) == 'la_thread') {
+      _adoptLivingAgentConversation(getString(data['conversationId']));
+      return;
+    }
     // Audio events from voice-mode responses must be routed before message parsing.
     final VoiceSseEventType sseType = voiceSseEventTypeFromString(
       getString(data['type']),
@@ -1893,6 +2238,9 @@ class PupauChatController extends GetxController {
         groundingSourcesBackup.isNotEmpty) {
       addGroundingSourcesBackupToMessage(newMessage);
     }
+    if (newMessage.sourceType == SourceType.llm && kbImagesBackup.isNotEmpty) {
+      addKbImagesBackupToMessage(newMessage);
+    }
     bool messageIsEmpty = newMessage.answer == "";
     PupauMessage updatedMessage = updateSSEMessages(newMessage);
     if (!messageIsEmpty) {
@@ -1942,36 +2290,64 @@ class PupauChatController extends GetxController {
   static const int _maxGroundingPollAttempts = 30;
 
   /// §1.2: after `last:true`, if the turn's text carries at least one `[n]`
-  /// marker, fetch the authoritative `grounding` block ~3s later (debounced).
-  /// No markers ⇒ skip entirely, so ordinary (non-grounded) turns never pay
-  /// for this call — keeps the feature "additive and invisible" when unused.
+  /// marker or a `<kb-image>` tag, fetch the authoritative `grounding`/
+  /// `kbImages` blocks ~3s later (debounced). Neither ⇒ skip entirely, so
+  /// ordinary turns never pay for this call — keeps the feature
+  /// "additive and invisible" when unused. The `<kb-image>` half matters on
+  /// its own: a KB-tool-only turn's image allowlist is known
+  /// only at turn-close, same as a KB-tool citation's source.
   void _maybeScheduleGroundingRefetch(PupauMessage message) {
-    if (!citationMarkerRegex.hasMatch(message.answer)) return;
+    final bool hasCitationMarker = citationMarkerRegex.hasMatch(message.answer);
+    final bool hasKbImageTag = kbImageTagRegex.hasMatch(message.answer);
+    if (!hasCitationMarker && !hasKbImageTag) return;
     _scheduleGroundingRefetch(
       message,
       delay: const Duration(seconds: 3),
       attempt: 1,
+      // A citation marker needs the poll loop below (verification can still
+      // be PENDING); a bare `<kb-image>` with no marker never gets a
+      // `grounding` block to wait on — stop as soon as the fetch succeeds
+      // once, instead of polling 30x/~5min for a status that will never
+      // arrive.
+      waitForVerification: hasCitationMarker,
     );
   }
 
-  /// Fetches `grounding` and backfills it across the turn's `queryGroupId`
-  /// (§1.1/§5). If the result is still `PENDING` (verification hasn't
-  /// finished) — or the fetch itself transiently failed — reschedules itself
-  /// every 10s until the status resolves or [_maxGroundingPollAttempts] is
-  /// hit, so a `CITATIONS_VERIFIED` turn can never get stuck showing
-  /// "Verifying…" forever just because the single one-shot refetch landed
-  /// too early.
+  /// Fetches `grounding`/`kbImages` and backfills both across the turn's
+  /// `queryGroupId`. When [waitForVerification], a still-`PENDING`
+  /// verification — or the fetch itself transiently failing — reschedules
+  /// every 10s until the status resolves or
+  /// [_maxGroundingPollAttempts] is hit, so a `CITATIONS_VERIFIED` turn can
+  /// never get stuck showing "Verifying…" forever just because the
+  /// single one-shot refetch landed too early. Otherwise (kb-image-only
+  /// trigger) only a transient fetch failure is retried.
   void _scheduleGroundingRefetch(
     PupauMessage message, {
     required Duration delay,
     required int attempt,
+    required bool waitForVerification,
   }) {
     _groundingRefetchTimer?.cancel();
     _groundingRefetchTimer = Timer(delay, () async {
-      final GroundingInfo? grounding =
+      final GroundingRefetchResult result =
           await GroundingService.refetchQueryGrounding(message.id);
-      if (grounding != null) {
-        message.grounding = grounding;
+      final GroundingInfo? grounding = result.grounding;
+      final bool fetchSucceeded =
+          grounding != null || result.kbImages.isNotEmpty;
+      if (fetchSucceeded) {
+        if (grounding != null) message.grounding = grounding;
+        if (result.kbImages.isNotEmpty) {
+          message.kbImages = result.kbImages;
+          message.kbImagesQueryId = result.kbImagesQueryId;
+        }
+        // The refetch returning is proof the turn was persisted server-side,
+        // so the 404s collected while it was still streaming (the cited-image
+        // set only exists from the answer sink onwards) are now stale.
+        KbImageService.forgetDenials(message.id);
+        final String? refetchedQueryId = result.kbImagesQueryId;
+        if (refetchedQueryId != null && refetchedQueryId != message.id) {
+          KbImageService.forgetDenials(refetchedQueryId);
+        }
         final String groupId = message.groupId;
         if (groupId.isNotEmpty) {
           backfillGroupGrounding(
@@ -1981,15 +2357,22 @@ class PupauChatController extends GetxController {
         messages.refresh();
         update();
       }
-      final bool stillPending =
-          grounding?.verificationStatus == GroundingVerificationStatus.pending;
-      if ((grounding == null || stillPending) &&
-          attempt < _maxGroundingPollAttempts) {
+      final bool needsRetry = waitForVerification
+          ? (grounding == null ||
+                grounding.verificationStatus ==
+                    GroundingVerificationStatus.pending)
+          : !fetchSucceeded;
+      if (needsRetry && attempt < _maxGroundingPollAttempts) {
         _scheduleGroundingRefetch(
           message,
           delay: const Duration(seconds: 10),
           attempt: attempt + 1,
+          waitForVerification: waitForVerification,
         );
+      } else {
+        // Done polling, successfully or not: close the streaming window so
+        // this turn's images stop bypassing the denial TTL.
+        KbImageService.forgetDenials(message.id);
       }
     });
   }
@@ -2250,6 +2633,12 @@ class PupauChatController extends GetxController {
         case "updating":
           status = Strings.toolPhaseUpdating.tr;
           break;
+        case "sandbox_starting":
+          status = Strings.toolPhaseSandboxStarting.tr;
+          break;
+        case "sandbox_executing":
+          status = Strings.toolPhaseSandboxExecuting.tr;
+          break;
         default:
           break;
       }
@@ -2397,11 +2786,19 @@ class PupauChatController extends GetxController {
     }
   }
 
+  static const Set<ToolUseType> _attachmentCreatingToolTypes = {
+    ToolUseType.nativeToolsAttachArtifact,
+    ToolUseType.nativeToolsGoogleDrive,
+  };
+
   void handleToolUseMessage(Map<String, dynamic> data) {
     ToolUseMessage toolUseMessage = ToolUseMessage.fromJsonSSE(data);
     bool isPipeline = toolUseMessage.type == ToolUseType.pipeline;
     bool isRemoteCall = toolUseMessage.type == ToolUseType.remoteCall;
     bool isDocument = toolUseMessage.type == ToolUseType.nativeToolsDocument;
+    bool createsAttachment = _attachmentCreatingToolTypes.contains(
+      toolUseMessage.type,
+    );
     PupauMessage message = PupauMessage(
       id: toolUseMessage.id,
       answer: isPipeline
@@ -2431,6 +2828,10 @@ class PupauChatController extends GetxController {
       conversation.value != null
           ? Get.find<PupauAttachmentsController>().loadAttachments()
           : Get.find<PupauAttachmentsController>().clearAttachments();
+    } else if (createsAttachment &&
+        conversation.value != null &&
+        toolUseMessage.succeeded) {
+      Get.find<PupauAttachmentsController>().loadAttachments();
     }
   }
 
@@ -2445,11 +2846,13 @@ class PupauChatController extends GetxController {
     if (isFirstLlmMessage) {
       kbReferencesBackup = message.kbReferences;
       groundingSourcesBackup = message.liveGroundingSources;
+      kbImagesBackup = message.kbImages;
     } else {
       if (kbReferencesBackup.isNotEmpty) addKbBackupToMessage(message);
       if (groundingSourcesBackup.isNotEmpty) {
         addGroundingSourcesBackupToMessage(message);
       }
+      if (kbImagesBackup.isNotEmpty) addKbImagesBackupToMessage(message);
       updateSSEMessages(message);
     }
   }
@@ -2511,6 +2914,18 @@ class PupauChatController extends GetxController {
         groundingSourcesBackup,
       ).withQueryId(message.id);
       groundingSourcesBackup = <GroundingSource>[];
+    }
+  }
+
+  void addKbImagesBackupToMessage(PupauMessage message) {
+    if (message.sourceType == SourceType.llm && kbImagesBackup.isNotEmpty) {
+      message.kbImages = List<KbImageRef>.from(message.kbImages);
+      message.kbImages.addAll(kbImagesBackup);
+      message.kbImagesQueryId = message.id;
+      // Live turn: its images can't be served until the answer sink runs, so
+      // a 404 before then means "not yet", not "gone".
+      KbImageService.markTurnStreaming(message.id);
+      kbImagesBackup = <KbImageRef>[];
     }
   }
 
@@ -2754,7 +3169,7 @@ class PupauChatController extends GetxController {
       final String url = ApiUrls.stopConversationRunUrl(
         assistantId,
         convId,
-        isMarketplace: isMarketplace,
+        mode: agentMode,
       );
 
       bool success = false;
@@ -2881,7 +3296,7 @@ class PupauChatController extends GetxController {
       assistantId,
       conversation.value!.id,
       message.id,
-      isMarketplace: isMarketplace,
+      mode: agentMode,
     );
     await ApiService.call(
       url,
@@ -2912,7 +3327,7 @@ class PupauChatController extends GetxController {
       assistantId,
       conversation.value!.id,
       message.id,
-      isMarketplace: isMarketplace,
+      mode: agentMode,
     );
     await ApiService.call(
       "$url/report",
@@ -2924,6 +3339,237 @@ class PupauChatController extends GetxController {
   }
 
   //CONVERSATIONS
+
+  /// Turns raw history rows (oldest first) into rendered messages.
+  ///
+  /// Shared by the SSE `history` frame and the Living Agent transcript so both
+  /// paths shape markdown/thinking/tool-use elements identically — REST
+  /// pagination uses the same primitives inline.
+  void hydrateHistoryRows(List<dynamic> items, {bool trackAsIncoming = true}) {
+    final List<PupauMessage> loadedMessages = items
+        .whereType<Map<String, dynamic>>()
+        .map(
+          (Map<String, dynamic> raw) =>
+              PupauMessage.fromLoadedChat(Map<String, dynamic>.from(raw)),
+        )
+        .toList();
+    // §1.1/§5: backfill the final row's `grounding` onto earlier rows in the
+    // same `queryGroupId` before splitting into user/assistant messages.
+    backfillGroupGrounding(loadedMessages);
+
+    for (final PupauMessage loadedMessage in loadedMessages) {
+      final PupauMessage userMessage = MessageService.getUserLoadedMessage(
+        loadedMessage,
+      );
+      final PupauMessage assistantMessage =
+          MessageService.getAssistantLoadedMessage(loadedMessage);
+      final String queryGroupId = InlineThinkingMessageService.queryGroupIdFor(
+        assistantMessage,
+      );
+      if (queryGroupId.isNotEmpty) {
+        userMessage.groupId = queryGroupId;
+        assistantMessage.groupId = queryGroupId;
+      }
+      if (isFirstMessageInGroup(queryGroupId)) {
+        messages.insert(0, userMessage);
+      }
+      messages.insert(0, assistantMessage);
+      if (trackAsIncoming) incomingMessages.add(assistantMessage);
+    }
+    _syncAllInlineThinkingMessages();
+  }
+
+  /// Handles one frame of the conversation catch-up/live SSE stream
+  /// (`GET .../queries?sse=true`), i.e. everything after the `history` frame.
+  ///
+  /// Shared with the Living Agent reattach, whose stream never emits `history`
+  /// at all — the transcript hydrates it instead — but is otherwise the same
+  /// envelope.
+  void handleReconnectFrame(String? data) {
+    if (data == null || data.trim().isEmpty) return;
+
+    try {
+      final Map<String, dynamic> decoded =
+          jsonDecode(data) as Map<String, dynamic>;
+
+      // Async SSE reconnection payloads are wrapped:
+      // { eventType: "...", payload: {...}, ... }
+      final String eventType = (decoded['eventType']?.toString() ?? '').trim();
+
+      // Terminal async events: stop streaming UI.
+      const List<String> terminalTypes = <String>[
+        'run_completed',
+        'run_stopped',
+        'run_error',
+      ];
+      if (terminalTypes.contains(eventType)) {
+        assistantsReplying.value = 0;
+        isStreaming.value = false;
+        resetLoadingMessage();
+        setDefaultMessageInputFieldHeight();
+        update();
+        return;
+      }
+
+      // §3.1 catch-up event: can arrive for a turn that finished long ago
+      // (stale reconnect cursor), so it must NOT be treated as "the run is
+      // active" like the generic branch below does.
+      if (eventType == 'grounding_verified') {
+        applyGroundingVerification(
+          GroundingVerificationFrame.fromJson(decoded),
+        );
+        return;
+      }
+
+      // Any non-terminal event after history means the run is active.
+      // Mirror the regular sendMessage() behavior (assistantsReplying=1).
+      if (!isStreaming.value) {
+        assistantsReplying.value = 1;
+        isStreaming.value = true;
+        update();
+      }
+
+      if (eventType == 'message') {
+        final Map<String, dynamic> payload = decoded['payload'];
+        manageSSEData(payload, false);
+        return;
+      }
+    } catch (_) {}
+  }
+
+  /// Loads a Living Agent conversation: rich transcript first, then — only if
+  /// the last run is still `running` — reattach to it.
+  ///
+  /// Order matters (ticket §4/§6): the reattach stream replays the answer
+  /// produced so far but emits no history, so hydrating from the transcript
+  /// must happen before subscribing.
+  Future<void> _loadLivingAgentConversation(String conversationId) async {
+    // Switching conversation from the host's history while a previous load is
+    // still in flight would otherwise let the SLOWER (older) transcript win:
+    // it would repaint the wrong history and, worse, leave `conversation` on
+    // the wrong id so the next message is posted into it. Every entry point
+    // bumps the generation first (resetChatState), so a stale load can tell.
+    final int generation = _conversationGeneration;
+    final LivingAgentTranscript? transcript =
+        await ConversationService.getLivingAgentTranscript(
+          assistantId,
+          conversationId,
+        );
+    if (generation != _conversationGeneration) return;
+
+    if (transcript == null || transcript.conversation.id.isEmpty) {
+      isLoadingConversation.value = false;
+      isConversationHistoryLoaded = false;
+      update();
+      return;
+    }
+
+    conversation.value = transcript.conversation;
+    messageNotifier.setAssistantId(assistantId);
+    messageNotifier.setConversationId(transcript.conversation.id);
+    Get.find<PupauAttachmentsController>().loadAttachments();
+
+    messages.clear();
+    resetExtraBottomScrollPadding();
+    _clearExpandedMessageGroups();
+    incomingMessages.clear();
+    // Settled history, not frames of a turn in flight: keeping these out of
+    // incomingMessages is what stops a reattach from re-animating them.
+    hydrateHistoryRows(transcript.messages, trackAsIncoming: false);
+    messages.refresh();
+    rebuildConversationSkillsFromHistory();
+
+    // The transcript is the whole history: there is no older page to fetch.
+    isConversationHistoryLoaded = true;
+    isConversationLastPage = true;
+    conversationPage = 0;
+    conversationItemsLoaded = transcript.messages.length;
+    if (messages.length > 1) _isFirstMessage = false;
+    isLoadingConversation.value = false;
+
+    final bool isRunning = transcript.isRunning;
+    assistantsReplying.value = isRunning ? 1 : 0;
+    isStreaming.value = isRunning;
+    if (!isRunning) {
+      resetLoadingMessage();
+      setDefaultMessageInputFieldHeight();
+    }
+    chatExtraBottomPaddingActive.value = false;
+    latestQueryAssistantClusterHeight.value = 0.0;
+    update();
+
+    PupauEventService.instance.emitPupauEvent(
+      PupauEvent(
+        type: UpdateConversationType.conversationChanged,
+        payload: {
+          "assistantId": assistantId,
+          "agentMode": agentMode.name,
+          "conversation": conversation.value!,
+        },
+      ),
+    );
+    setAssistantSettings();
+    _scrollToTrueBottomOnLoadConversation();
+
+    if (!isRunning) return;
+
+    // Reattach. `resumeEventId` is the transcript's exclusive cursor; the
+    // stored lastEventId is the fallback when the backend sent none.
+    final String? lastEventId =
+        transcript.resumeEventId ??
+        PupauSharedPreferences.getLastEventId(transcript.conversation.id);
+    final Stream<SSEModel>? sseStream =
+        await SSEService.createConversationSseGetStream(
+          assistantId,
+          transcript.conversation.id,
+          "",
+          lastEventId: lastEventId,
+          chatController: this,
+        );
+
+    // The probe inside createConversationSseGetStream is another await the
+    // user can switch conversation across: subscribing now would pipe this
+    // run's frames into whatever thread is on screen.
+    if (generation != _conversationGeneration) return;
+
+    if (sseStream == null) {
+      // Async execution disabled server-side: nothing to reattach to, so do
+      // not leave the composer blocked behind a spinner that never resolves.
+      assistantsReplying.value = 0;
+      isStreaming.value = false;
+      resetLoadingMessage();
+      setDefaultMessageInputFieldHeight();
+      update();
+      return;
+    }
+
+    _bumpSseIdleTimer();
+    conversationSseSubscription = sseStream.listen(
+      (SSEModel sseEvent) {
+        _bumpSseIdleTimer();
+        setLastEventId(sseEvent);
+        // This stream never emits `history` for a Living Agent — the
+        // transcript above already did.
+        handleReconnectFrame(sseEvent.data);
+      },
+      onError: (e) {
+        _cancelSseIdleTimer();
+        assistantsReplying.value = 0;
+        isStreaming.value = false;
+        resetLoadingMessage();
+        setDefaultMessageInputFieldHeight();
+        update();
+      },
+      onDone: () {
+        _cancelSseIdleTimer();
+        assistantsReplying.value = 0;
+        isStreaming.value = false;
+        resetLoadingMessage();
+        setDefaultMessageInputFieldHeight();
+        update();
+      },
+    );
+  }
 
   Future<void> loadConversation(String conversationId) async {
     try {
@@ -2941,10 +3587,19 @@ class PupauChatController extends GetxController {
         loadingType: LoadingType.dots,
       );
       update();
+
+      // A Living Agent reads its history from the transcript envelope, and has
+      // no paginated `queries` listing to fall back on (the backend serves that
+      // route SSE-only), so it takes its own path from here.
+      if (agentMode == PupauAgentMode.livingAgent) {
+        await _loadLivingAgentConversation(conversationId);
+        return;
+      }
+
       conversation.value = await ConversationService.getConversation(
         assistantId,
         conversationId,
-        isMarketplace,
+        agentMode,
       );
       if (conversation.value == null) {
         isLoadingConversation.value = false;
@@ -2988,6 +3643,7 @@ class PupauChatController extends GetxController {
             payload: {
               "assistantId": assistantId,
               "assistantType": assistant.value?.type ?? AssistantType.assistant,
+              "agentMode": agentMode.name,
               "conversation": conversation.value!,
             },
           ),
@@ -3038,41 +3694,7 @@ class PupauChatController extends GetxController {
                   ? decoded
                   : <dynamic>[];
 
-              // Use the exact same message shaping as REST pagination, so
-              // markdown/thinking/tool-use elements render identically.
-              final List<PupauMessage> loadedMessages = items
-                  .whereType<Map<String, dynamic>>()
-                  .map(
-                    (Map<String, dynamic> raw) => PupauMessage.fromLoadedChat(
-                      Map<String, dynamic>.from(raw),
-                    ),
-                  )
-                  .toList();
-              // §1.1/§5: backfill the final row's `grounding` onto earlier
-              // rows in the same `queryGroupId` before splitting into
-              // user/assistant messages.
-              backfillGroupGrounding(loadedMessages);
-
-              for (final PupauMessage loadedMessage in loadedMessages) {
-                final PupauMessage userMessage =
-                    MessageService.getUserLoadedMessage(loadedMessage);
-                final PupauMessage assistantMessage =
-                    MessageService.getAssistantLoadedMessage(loadedMessage);
-                final String queryGroupId =
-                    InlineThinkingMessageService.queryGroupIdFor(
-                      assistantMessage,
-                    );
-                if (queryGroupId.isNotEmpty) {
-                  userMessage.groupId = queryGroupId;
-                  assistantMessage.groupId = queryGroupId;
-                }
-                if (isFirstMessageInGroup(queryGroupId)) {
-                  messages.insert(0, userMessage);
-                }
-                messages.insert(0, assistantMessage);
-                incomingMessages.add(assistantMessage);
-              }
-              _syncAllInlineThinkingMessages();
+              hydrateHistoryRows(items);
             } catch (_) {
               // If parsing fails, keep whatever was loaded by the resetConversation.
             }
@@ -3103,56 +3725,7 @@ class PupauChatController extends GetxController {
           }
 
           if (!historyLoaded) return;
-          if (data == null || data.trim().isEmpty) return;
-
-          try {
-            final Map<String, dynamic> decoded =
-                jsonDecode(data) as Map<String, dynamic>;
-
-            // Async SSE reconnection payloads are wrapped:
-            // { eventType: "...", payload: {...}, ... }
-            final String eventType = (decoded['eventType']?.toString() ?? '')
-                .trim();
-
-            // Terminal async events: stop streaming UI.
-            const List<String> terminalTypes = <String>[
-              'run_completed',
-              'run_stopped',
-              'run_error',
-            ];
-            if (terminalTypes.contains(eventType)) {
-              assistantsReplying.value = 0;
-              isStreaming.value = false;
-              resetLoadingMessage();
-              setDefaultMessageInputFieldHeight();
-              update();
-              return;
-            }
-
-            // §3.1 catch-up event: can arrive for a turn that finished long
-            // ago (stale reconnect cursor), so it must NOT be treated as
-            // "the run is active" like the generic branch below does.
-            if (eventType == 'grounding_verified') {
-              applyGroundingVerification(
-                GroundingVerificationFrame.fromJson(decoded),
-              );
-              return;
-            }
-
-            // Any non-terminal event after history means the run is active.
-            // Mirror the regular sendMessage() behavior (assistantsReplying=1).
-            if (!isStreaming.value) {
-              assistantsReplying.value = 1;
-              isStreaming.value = true;
-              update();
-            }
-
-            if (eventType == 'message') {
-              final Map<String, dynamic> payload = decoded['payload'];
-              manageSSEData(payload, false);
-              return;
-            }
-          } catch (_) {}
+          handleReconnectFrame(data);
         },
         onError: (e) {
           _cancelSseIdleTimer();
@@ -3198,6 +3771,7 @@ class PupauChatController extends GetxController {
           payload: {
             "assistantId": assistantId,
             "assistantType": assistant.value?.type ?? AssistantType.assistant,
+            "agentMode": agentMode.name,
             "conversation": conversation.value!,
           },
         ),
@@ -3239,7 +3813,7 @@ class PupauChatController extends GetxController {
       assistantId,
       conversation.value?.id ?? "",
       page: conversationPage,
-      isMarketplace: isMarketplace,
+      mode: agentMode,
     );
 
     try {
@@ -3829,7 +4403,7 @@ class PupauChatController extends GetxController {
             ],
           ),
         ],
-        isMarketplace: isMarketplace,
+        mode: agentMode,
       );
     }
     if (!enabled) return;
@@ -3855,7 +4429,7 @@ class PupauChatController extends GetxController {
               ],
             ),
           ],
-          isMarketplace: isMarketplace,
+          mode: agentMode,
         );
       }
     }
@@ -3885,7 +4459,7 @@ class PupauChatController extends GetxController {
             ],
           ),
         ],
-        isMarketplace: isMarketplace,
+        mode: agentMode,
       );
     }
   }
@@ -3957,6 +4531,17 @@ class PupauChatController extends GetxController {
           );
           manageForceBack();
         }
+      } else {
+        // No usage settings means no granted capabilities — NOT "keep whatever
+        // the previous agent had". These flags live on the controller, which
+        // outlives a chat, so leaving them alone carried the last assistant's
+        // composer into the next chat: a Living Agent (which has no
+        // usageSettings at all) would show an attachment button that its
+        // upload path refuses, and a web-search toggle its turn body ignores.
+        isAttachmentAvailable.value = false;
+        isWebSearchAvailable.value = false;
+        isMentionAvailable.value = false;
+        isActionBarAlwaysVisible.value = true;
       }
       List<String> newConversationStarters;
       if (pupauConfig?.conversationStarters.isNotEmpty ?? false) {
@@ -4007,14 +4592,14 @@ class PupauChatController extends GetxController {
             await SettingsService.readUserSettingById(
               settingId: Settings.assistantThinkingEnabledId,
               assistantId: assistantId,
-              isMarketplace: isMarketplace,
+              mode: agentMode,
             );
         fetchedEnabled = enabledSetting?[Settings.settingEnableName];
         final Map<String, dynamic>? effortSetting =
             await SettingsService.readUserSettingById(
               settingId: Settings.assistantThinkingEffortId,
               assistantId: assistantId,
-              isMarketplace: isMarketplace,
+              mode: agentMode,
             );
         fetchedEffort = effortSetting?[Settings.assistantThinkingEffortName];
       } catch (_) {}
@@ -4070,7 +4655,7 @@ class PupauChatController extends GetxController {
             conversation.value!.id,
             forkConversationTitle.value,
             forkMessageId.value,
-            isMarketplace,
+            agentMode,
           );
       if (forkConversation != null) await loadConversation(forkConversation.id);
       showFeedbackSnackbar(
@@ -4145,7 +4730,7 @@ class PupauChatController extends GetxController {
             conversation.value!.id,
             title,
             previousMessageId,
-            isMarketplace,
+            agentMode,
           );
       if (forked == null) {
         showErrorSnackbar(Strings.apiErrorGeneric.tr);
@@ -4233,34 +4818,39 @@ class PupauChatController extends GetxController {
     if (sseStream != null) {
       _bumpSseIdleTimer();
     }
+    void handleToolApprovalStreamError(Object e) {
+      _cancelSseIdleTimer();
+      showErrorSnackbar(
+        "${Strings.apiErrorGeneric.tr} ${Strings.apiErrorSendMessage.tr}",
+      );
+      manageCancelAndErrorMessage();
+      PupauEventService.instance.emitPupauEvent(
+        PupauEvent(
+          type: UpdateConversationType.error,
+          payload: {
+            "error": "Erorr sending tool approval: ${e.toString()}",
+            "assistantId": assistantId,
+            "assistantType": assistant.value?.type ?? AssistantType.assistant,
+            "conversationId": conversation.value?.id ?? "",
+            "messageId": messageId,
+          },
+        ),
+      );
+    }
+
     messageSendStream = sseStream?.listen(
       (event) {
         _bumpSseIdleTimer();
         setLastEventId(event);
-        if (event.data != null) {
-          Map<String, dynamic> data = jsonDecode(event.data!);
+        final Map<String, dynamic>? data = decodeSseEventData(
+          event,
+          handleToolApprovalStreamError,
+        );
+        if (data != null) {
           manageSSEData(data, false);
         }
       },
-      onError: (e) {
-        _cancelSseIdleTimer();
-        showErrorSnackbar(
-          "${Strings.apiErrorGeneric.tr} ${Strings.apiErrorSendMessage.tr}",
-        );
-        manageCancelAndErrorMessage();
-        PupauEventService.instance.emitPupauEvent(
-          PupauEvent(
-            type: UpdateConversationType.error,
-            payload: {
-              "error": "Erorr sending tool approval: ${e.toString()}",
-              "assistantId": assistantId,
-              "assistantType": assistant.value?.type ?? AssistantType.assistant,
-              "conversationId": conversation.value?.id ?? "",
-              "messageId": messageId,
-            },
-          ),
-        );
-      },
+      onError: handleToolApprovalStreamError,
       onDone: () {
         _cancelSseIdleTimer();
       },
@@ -4282,34 +4872,39 @@ class PupauChatController extends GetxController {
     if (sseStream != null) {
       _bumpSseIdleTimer();
     }
+    void handleToolAnswerStreamError(Object e) {
+      _cancelSseIdleTimer();
+      showErrorSnackbar(
+        "${Strings.apiErrorGeneric.tr} ${Strings.apiErrorSendMessage.tr}",
+      );
+      manageCancelAndErrorMessage();
+      PupauEventService.instance.emitPupauEvent(
+        PupauEvent(
+          type: UpdateConversationType.error,
+          payload: {
+            "error": "Error sending tool answer: ${e.toString()}",
+            "assistantId": assistantId,
+            "assistantType": assistant.value?.type ?? AssistantType.assistant,
+            "conversationId": conversation.value?.id ?? "",
+            "messageId": messageId,
+          },
+        ),
+      );
+    }
+
     messageSendStream = sseStream?.listen(
       (event) {
         _bumpSseIdleTimer();
         setLastEventId(event);
-        if (event.data != null) {
-          Map<String, dynamic> data = jsonDecode(event.data!);
+        final Map<String, dynamic>? data = decodeSseEventData(
+          event,
+          handleToolAnswerStreamError,
+        );
+        if (data != null) {
           manageSSEData(data, false);
         }
       },
-      onError: (e) {
-        _cancelSseIdleTimer();
-        showErrorSnackbar(
-          "${Strings.apiErrorGeneric.tr} ${Strings.apiErrorSendMessage.tr}",
-        );
-        manageCancelAndErrorMessage();
-        PupauEventService.instance.emitPupauEvent(
-          PupauEvent(
-            type: UpdateConversationType.error,
-            payload: {
-              "error": "Error sending tool answer: ${e.toString()}",
-              "assistantId": assistantId,
-              "assistantType": assistant.value?.type ?? AssistantType.assistant,
-              "conversationId": conversation.value?.id ?? "",
-              "messageId": messageId,
-            },
-          ),
-        );
-      },
+      onError: handleToolAnswerStreamError,
       onDone: () => _cancelSseIdleTimer(),
     );
   }
@@ -4689,6 +5284,7 @@ class PupauChatController extends GetxController {
     File audioFile, {
     bool isVoiceMode = false,
   }) async {
+    final int generation = _conversationGeneration;
     keyboardFocusNode.unfocus();
     resetLoadingMessage();
     currentWebSearchType.value = null;
@@ -4697,6 +5293,7 @@ class PupauChatController extends GetxController {
     messageNotifier.setAssistantId(assistant.value?.id ?? "");
     incomingMessages = [];
     kbReferencesBackup = [];
+    kbImagesBackup = [];
     isStreaming.value = true;
     chatExtraBottomPaddingActive.value = true;
     latestQueryAssistantClusterHeight.value = 0.0;
@@ -4719,6 +5316,7 @@ class PupauChatController extends GetxController {
     scrollToUserMessage(senderMessage.id);
     addTaggedAssistants();
     if (conversation.value == null) await createNewConversation();
+    if (generation != _conversationGeneration) return;
     if (conversation.value == null) return;
     bool isFirstSSEData = true;
     listHeight =
@@ -4733,6 +5331,12 @@ class PupauChatController extends GetxController {
       isVoiceMode: isVoiceMode,
       chatController: this,
     );
+    if (generation != _conversationGeneration) {
+      // A new conversation/reset happened while the request was in flight —
+      // don't touch state or mark a retry path for the abandoned conversation.
+      sseStream?.listen((_) {}).cancel();
+      return;
+    }
     if (sseStream != null) {
       _bumpSseIdleTimer();
     }
@@ -4750,15 +5354,17 @@ class PupauChatController extends GetxController {
         _bumpSseIdleTimer();
         setLastEventId(event);
         if (event.data == null || event.data!.trim().isEmpty) return;
-        try {
-          final Map<String, dynamic> data = jsonDecode(event.data!);
-          manageSSEData(data, false);
-          // Stream accepted; we can clear the retry path.
-          _lastFailedAudioFilePath = null;
-          if (isFirstSSEData) {
-            isFirstSSEData = false;
-          }
-        } catch (_) {}
+        // Decode failures are logged (see decodeSseEventData) but otherwise
+        // swallowed here, same as the original bare try/catch - some audio
+        // stream chunks are intentionally non-JSON/empty.
+        final Map<String, dynamic>? data = decodeSseEventData(event, (_) {});
+        if (data == null) return;
+        manageSSEData(data, false);
+        // Stream accepted; we can clear the retry path.
+        _lastFailedAudioFilePath = null;
+        if (isFirstSSEData) {
+          isFirstSSEData = false;
+        }
       },
       onError: (e) {
         _cancelSseIdleTimer();

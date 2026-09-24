@@ -3,15 +3,13 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/models/chat_image_model.dart';
 import 'package:flutter_agent_pupau/utils/constants.dart';
 import 'package:photo_view/photo_view.dart';
 
 class ChatImageZoomable extends StatelessWidget {
-  const ChatImageZoomable({
-    super.key,
-    required this.image,
-  });
+  const ChatImageZoomable({super.key, required this.image});
 
   final ChatImage image;
 
@@ -19,7 +17,11 @@ class ChatImageZoomable extends StatelessWidget {
     late final ImageProvider imageProvider;
 
     if (image.type == ImageType.url) {
-      imageProvider = CachedNetworkImageProvider(image.value, errorListener: (error) {});
+      imageProvider = CachedNetworkImageProvider(
+        image.value,
+        cacheManager: PupauChatController.currentImageCacheManager,
+        errorListener: (_) => ()
+      );
     } else {
       Uint8List bytes = base64Decode(image.value);
       imageProvider = MemoryImage(bytes);
@@ -35,10 +37,7 @@ class ChatImageZoomable extends StatelessWidget {
             info.image.width.toDouble(),
             info.image.height.toDouble(),
           );
-          completer.complete({
-            'provider': imageProvider,
-            'size': size,
-          });
+          completer.complete({'provider': imageProvider, 'size': size});
         },
         onError: (error, stackTrace) {
           completer.completeError(error);

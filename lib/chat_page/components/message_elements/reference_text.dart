@@ -28,7 +28,7 @@ class ReferenceText extends GetView<PupauChatController> {
                   ref.data,
                   controller.assistant.value?.id ?? "",
                   controller.conversation.value?.id ?? "",
-                  controller.isMarketplace,
+                  controller.agentMode,
                 )
               : null,
           child: Padding(

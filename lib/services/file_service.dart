@@ -1,3 +1,4 @@
+import 'package:flutter_agent_pupau/config/pupau_agent_mode.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
@@ -45,25 +46,48 @@ class FileService {
     '.gif',
   };
 
+  /// One entry point over file_picker 13's split API.
+  ///
+  /// `pickFiles` always allows a multiple selection now; limiting the user to
+  /// one file means calling `pickFile` instead, which returns a single
+  /// nullable result rather than a list. `withData` is gone too — a
+  /// PlatformFile reads its own bytes on demand.
+  static Future<List<PlatformFile>> _pick({
+    required FileType type,
+    required bool allowMultiple,
+    List<String>? allowedExtensions,
+  }) async {
+    if (allowMultiple) {
+      return FilePicker.pickFiles(
+        type: type,
+        allowedExtensions: allowedExtensions,
+      );
+    }
+    final PlatformFile? single = await FilePicker.pickFile(
+      type: type,
+      allowedExtensions: allowedExtensions,
+    );
+    return <PlatformFile>[?single];
+  }
+
   static Future<List<Uint8ListWithName>> getImageFromGallery({
     bool allowMultiple = false,
   }) async {
-    FilePickerResult? result;
+    List<PlatformFile> picked;
     try {
-      result = await FilePicker.pickFiles(
-        type: FileType.media,
-        allowMultiple: allowMultiple,
-        withData: true,
-      );
+      picked = await _pick(type: FileType.media, allowMultiple: allowMultiple);
     } on PlatformException catch (e) {
       // file_picker cancels an in-flight pick when a second one starts.
       if (e.code == 'multiple_request') return [];
       rethrow;
     }
-    if (result == null) return [];
-    if (result.files.length == 1) {
-      PlatformFile pickedFile = result.files.single;
-      File imageFile = File(pickedFile.path!);
+    if (picked.isEmpty) return [];
+    if (picked.length == 1) {
+      PlatformFile pickedFile = picked.single;
+      // A picked file is not always on local disk.
+      final String? pickedPath = pickedFile.path;
+      if (pickedPath == null) return [];
+      File imageFile = File(pickedPath);
       if (!_editableImageExtensions.contains(
         extension(pickedFile.name).toLowerCase(),
       )) {
@@ -75,7 +99,7 @@ class FileService {
           : [];
     }
     return Future.wait(
-      result.files
+      picked
           .where((file) => file.path != null)
           .map((file) => _readNonEditableImage(File(file.path!), file.name)),
     );
@@ -295,13 +319,13 @@ class FileService {
     String fileName,
     String assistandId,
     String conversationId,
-    bool isMarketplace,
+    PupauAgentMode mode,
   ) async {
     String url = ApiUrls.fileDownloadUrl(
       assistandId,
       conversationId,
       fileId,
-      isMarketplace: isMarketplace,
+      mode: mode,
     );
     await ApiService.call(
       url,
@@ -327,14 +351,17 @@ class FileService {
     bool allowMultiple = false,
   }) async {
     try {
-      FilePickerResult? result = await FilePicker.pickFiles(
+      final List<PlatformFile> picked = await _pick(
         type: FileType.custom,
-        withData: true,
         allowMultiple: allowMultiple,
         allowedExtensions: ["png", "jpg", "jpeg", "pdf", "txt", "csv", "xlsx"],
       );
-      return (result?.files ?? [])
-          .map((PlatformFile file) => File(file.path.toString()))
+      // `file.path.toString()` used to turn a null path into the literal
+      // File("null"); a picked file is not always on local disk.
+      return picked
+          .map((PlatformFile file) => file.path)
+          .nonNulls
+          .map(File.new)
           .toList();
     } catch (e) {
       return [];

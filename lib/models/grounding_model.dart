@@ -5,7 +5,14 @@ import 'package:get/get.dart';
 /// single source of truth for both `CitationSyntax`'s markdown match and any
 /// plain-text existence check (e.g. "does this turn's text contain a
 /// citation?", used to decide whether to schedule a grounding refetch).
-const String citationMarkerPattern = r'\[(\d+)\]';
+///
+/// Matches both the ASCII `[n]` form and the CJK fullwidth `【n】` form some
+/// models emit instead (observed in the wild — without this alternation
+/// those turns never produce a citation chip, and `hasMatch` below never
+/// fires either, so the authoritative grounding refetch is skipped too).
+/// Two capture groups: group 1 for `[n]`, group 2 for `【n】` — callers must
+/// read whichever one matched (`match[1] ?? match[2]`).
+const String citationMarkerPattern = r'\[(\d+)\]|【(\d+)】';
 final RegExp citationMarkerRegex = RegExp(citationMarkerPattern);
 
 enum GroundingOrigin { implicit, kbTool, webSearch, attachment, unknown }
@@ -30,6 +37,63 @@ extension GroundingOriginParsing on GroundingOrigin {
   /// sense for chunk-backed origins (§2.2).
   bool get supportsSnippetFetch =>
       this == GroundingOrigin.implicit || this == GroundingOrigin.kbTool;
+
+  /// Inverse of [fromWireValue] — the wire's `UPPER_SNAKE_CASE` form.
+  ///
+  /// NOT the same as the enum's own `.name` (`kbTool`/`webSearch`, Dart's
+  /// camelCase member name): `.name.toUpperCase()` only happens to match the
+  /// wire value for the single-word members (`implicit`→`IMPLICIT`,
+  /// `attachment`→`ATTACHMENT`) — for `kbTool`/`webSearch` it drops the `_`
+  /// (`"KBTOOL"`/`"WEBSEARCH"`), so a `fromWireValue(name.toUpperCase())`
+  /// round-trip silently degrades those two to [GroundingOrigin.unknown].
+  /// This is exactly the shape [CitationElementData] round-trips through
+  /// its markdown element string attributes — always serialize through
+  /// this getter, never through `.name`.
+  String? get wireValue {
+    switch (this) {
+      case GroundingOrigin.implicit:
+        return 'IMPLICIT';
+      case GroundingOrigin.kbTool:
+        return 'KB_TOOL';
+      case GroundingOrigin.webSearch:
+        return 'WEB_SEARCH';
+      case GroundingOrigin.attachment:
+        return 'ATTACHMENT';
+      case GroundingOrigin.unknown:
+        return null;
+    }
+  }
+}
+
+/// Nature of [GroundingSource.quote] — the two don't promise
+/// the same thing:
+/// - `source` — the text IS the source, verbatim as it stood in the model's
+///   context (a web search snippet, an authored knowledge-graph evidence
+///   quote). Nothing was chosen for the reader.
+/// - `bestMatch` — a RECONSTRUCTION, not provenance. The source was larger
+///   than what's shown (e.g. a whole attachment went into the prompt) and
+///   nothing records which part the model actually read: the backend
+///   surfaces the passage that best supports the cited statement, found by
+///   lexical match. Must carry an explicit caption — presenting it like a
+///   `source` quote would claim "this is what the model used", which isn't
+///   true.
+enum GroundingQuoteKind { source, bestMatch }
+
+extension GroundingQuoteKindParsing on GroundingQuoteKind {
+  /// Absent/unrecognized ⇒ [GroundingQuoteKind.source] (§3): rows persisted
+  /// before this field existed, and any other quote-bearing source, were
+  /// always textual actual-source content.
+  static GroundingQuoteKind fromWireValue(String? value) =>
+      (value ?? '').trim().toUpperCase() == 'BEST_MATCH'
+      ? GroundingQuoteKind.bestMatch
+      : GroundingQuoteKind.source;
+
+  /// Inverse of [fromWireValue]. Only `bestMatch` needs writing back — see
+  /// [GroundingOriginParsing.wireValue] for why this indirection (never
+  /// `.name`) matters for a multi-word member serialized through markdown
+  /// element string attributes.
+  String get wireValue =>
+      this == GroundingQuoteKind.bestMatch ? 'BEST_MATCH' : 'SOURCE';
 }
 
 enum GroundingVerdictType { supported, partial, unsupported, unknown }
@@ -96,6 +160,18 @@ class GroundingSource {
   final double? similarity;
   final String? toolSessionId;
 
+  /// ≤500 char source text already on the wire — present only
+  /// on sources WITHOUT [embeddingId] (web search snippet, knowledge-graph
+  /// evidence, attachment passage). Mutually exclusive with [embeddingId] by
+  /// backend construction: a chunk-backed source is read on-demand instead,
+  /// never both. Resolving a citation's preview by [embeddingId] alone and
+  /// falling back to "unavailable" for everything else is exactly
+  /// the bug this field fixes — check it before giving up.
+  final String? quote;
+
+  /// Meaningless when [quote] is null. See [GroundingQuoteKind].
+  final GroundingQuoteKind quoteKind;
+
   GroundingSource({
     required this.id,
     required this.origin,
@@ -112,6 +188,8 @@ class GroundingSource {
     this.chunkOrder,
     this.similarity,
     this.toolSessionId,
+    this.quote,
+    this.quoteKind = GroundingQuoteKind.source,
   });
 
   factory GroundingSource.fromMap(Map<String, dynamic> json) {
@@ -134,6 +212,10 @@ class GroundingSource {
       chunkOrder: getIntOrNull(json['chunkOrder']),
       similarity: getDoubleOrNull(json['similarity']),
       toolSessionId: getStringOrNull(json['toolSessionId']),
+      quote: getStringOrNull(json['quote']),
+      quoteKind: GroundingQuoteKindParsing.fromWireValue(
+        getStringOrNull(json['quoteKind']),
+      ),
     );
   }
 }

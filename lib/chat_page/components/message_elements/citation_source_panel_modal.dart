@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/citation_element_data.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/custom_selectable_text.dart';
+import 'package:flutter_agent_pupau/chat_page/components/shared/kb_image_inline.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/modal_top_bar_title.dart';
 import 'package:flutter_agent_pupau/chat_page/controllers/attachments_controller.dart';
 import 'package:flutter_agent_pupau/chat_page/utils/modal_utils.dart';
@@ -53,16 +54,10 @@ class _CitationSourceBodyState extends State<_CitationSourceBody> {
 
   CitationElementData get _data => widget.data;
 
-  bool get _canFetchSnippet =>
-      (_data.origin == GroundingOrigin.implicit ||
-          _data.origin == GroundingOrigin.kbTool) &&
-      (_data.embeddingId ?? '').isNotEmpty &&
-      (_data.queryId ?? '').isNotEmpty;
-
   @override
   void initState() {
     super.initState();
-    if (_canFetchSnippet) _fetchSnippet();
+    if (_data.previewTier == CitationPreviewTier.fetchChunk) _fetchSnippet();
   }
 
   Future<void> _fetchSnippet() async {
@@ -79,13 +74,22 @@ class _CitationSourceBodyState extends State<_CitationSourceBody> {
     });
   }
 
+  /// Renders whichever tier [CitationElementData.previewTier] resolved to
+  /// (a client that only ever reaches [CitationPreviewTier.fetchChunk] shows
+  /// "Preview unavailable" on every web-search / knowledge-graph /
+  /// attachment citation).
   Widget _body(bool isDark) {
-    switch (_data.origin) {
-      case GroundingOrigin.implicit:
-      case GroundingOrigin.kbTool:
-        if (!_canFetchSnippet) {
-          return _unavailableText(isDark);
-        }
+    switch (_data.previewTier) {
+      case CitationPreviewTier.kbImage:
+        // §5.4: same byte endpoint/widget as an inline <kb-image>, not the
+        // text-snippet fetch — an IMAGE-media chunk has no text content.
+        return KbImageInline(
+          embeddingId: _data.embeddingId!,
+          queryId: _data.queryId!,
+          name: _data.name,
+        );
+
+      case CitationPreviewTier.fetchChunk:
         if (_loadingSnippet) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
@@ -97,23 +101,46 @@ class _CitationSourceBodyState extends State<_CitationSourceBody> {
           return _unavailableText(isDark);
         }
         return CustomSelectableText(text: content);
-      case GroundingOrigin.webSearch:
-        if ((_data.url ?? '').isEmpty) return _unavailableText(isDark);
+
+      case CitationPreviewTier.quote:
+        final String quote = (_data.quote ?? '').trim();
+        final bool isBestMatch = _data.quoteKind == GroundingQuoteKind.bestMatch;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isBestMatch) ...[
+              Tooltip(
+                message: Strings.citationQuoteKindBestMatchInfo.tr,
+                child: Text(
+                  Strings.citationQuoteKindBestMatch.tr,
+                  style: StyleService.toolNormalTextStyle(isDark).copyWith(
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+            ],
+            CustomSelectableText(text: quote),
+          ],
+        );
+
+      case CitationPreviewTier.url:
         return _ActionButton(
           label: _data.url!,
           icon: Symbols.open_in_new,
           onTap: () => DeviceService.openLink(_data.url!),
         );
-      case GroundingOrigin.attachment:
-        if ((_data.attachmentId ?? '').isEmpty) return _unavailableText(isDark);
+
+      case CitationPreviewTier.attachment:
         return _ActionButton(
           label: Strings.citationOpenAttachment.tr,
           icon: Symbols.attach_file,
           onTap: () => Get.find<PupauAttachmentsController>()
               .downloadAttachment(_data.attachmentId!),
         );
-      case GroundingOrigin.unknown:
-      case null:
+
+      case CitationPreviewTier.unavailable:
         return _unavailableText(isDark);
     }
   }

@@ -1,18 +1,21 @@
+import 'package:flutter_agent_pupau/config/pupau_agent_mode.dart';
 import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_agent_pupau/chat_page/controllers/chat_controller.dart';
 import 'package:flutter_agent_pupau/services/assistant_service.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 
 class AssistantAvatar extends StatelessWidget {
-  const AssistantAvatar(
-      {super.key,
-      required this.assistantId,
-      required this.imageUuid,
-      required this.radius,
-      required this.format,
-      this.uploadedImage,
-      this.isMarketplaceUrl = false});
+  const AssistantAvatar({
+    super.key,
+    required this.assistantId,
+    required this.imageUuid,
+    required this.radius,
+    required this.format,
+    this.uploadedImage,
+    this.isMarketplaceUrl = false,
+  });
 
   final String assistantId;
   final String imageUuid;
@@ -25,7 +28,13 @@ class AssistantAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     String imageUrl = imageUuid != ""
         ? AssistantService.getAssistantImageUrl(
-            assistantId, imageUuid, isMarketplaceUrl, format)
+            assistantId,
+            imageUuid,
+            isMarketplaceUrl
+                ? PupauAgentMode.marketplace
+                : PupauAgentMode.assistant,
+            format,
+          )
         : "";
     return CircleAvatar(
       radius: radius,
@@ -42,30 +51,36 @@ class AssistantAvatar extends StatelessWidget {
                   height: radius * 2,
                 )
               : imageUrl != ""
-                  ? CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      fadeInDuration: const Duration(milliseconds: 200),
-                      fadeOutDuration: const Duration(milliseconds: 200),
-                      fit: BoxFit.cover,
-                      width: radius * 2,
-                      height: radius * 2,
-                      memCacheWidth: DeviceService.memCachePixels(
-                          context, radius * 2),
-                      memCacheHeight: DeviceService.memCachePixels(
-                          context, radius * 2),
-                      errorWidget: (context, error, stackTrace) => Image.asset(
-                          AssistantService.getAssistantFallbackImage(
-                              assistantId),
-                          fit: BoxFit.cover,
-                          width: radius * 2,
-                          height: radius * 2),
-                      errorListener: (e) {})
-                  : Image.asset(
-                      AssistantService.getAssistantFallbackImage(assistantId),
-                      fit: BoxFit.cover,
-                      width: radius * 2,
-                      height: radius * 2,
-                    ),
+              ? CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  cacheManager: PupauChatController.currentImageCacheManager,
+                  fadeInDuration: const Duration(milliseconds: 200),
+                  fadeOutDuration: const Duration(milliseconds: 200),
+                  fit: BoxFit.cover,
+                  width: radius * 2,
+                  height: radius * 2,
+                  memCacheWidth: DeviceService.memCachePixels(
+                    context,
+                    radius * 2,
+                  ),
+                  memCacheHeight: DeviceService.memCachePixels(
+                    context,
+                    radius * 2,
+                  ),
+                  errorWidget: (context, error, stackTrace) => Image.asset(
+                    AssistantService.getAssistantFallbackImage(assistantId),
+                    fit: BoxFit.cover,
+                    width: radius * 2,
+                    height: radius * 2,
+                  ),
+                  errorListener: (_) => ()
+                )
+              : Image.asset(
+                  AssistantService.getAssistantFallbackImage(assistantId),
+                  fit: BoxFit.cover,
+                  width: radius * 2,
+                  height: radius * 2,
+                ),
         ),
       ),
     );

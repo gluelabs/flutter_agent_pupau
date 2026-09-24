@@ -113,7 +113,12 @@ class Assistant {
       replyMode: AssistantService.getReplyModeEnum(json["replyMode"] ?? "open"),
       model: json["aiModel"] != null ? AiModel.fromJson(json["aiModel"]) : null,
       costMessage: json["costMessage"] ?? json["cost"]?["message"] ?? "",
-      capabilities: json["capabilities"] != null
+      // Only a list is a capability list. A Living Agent payload carries
+      // `capabilities` as a jsonb OBJECT (LivingAgentEntity.capabilities), and
+      // the bare cast below used to throw a TypeError that AssistantService
+      // swallowed into a null assistant — surfacing as the chat's generic
+      // "something went wrong" screen.
+      capabilities: json["capabilities"] is List
           ? (json["capabilities"] as List<dynamic>)
                 .map((e) => e.toString())
                 .toList()
@@ -144,6 +149,33 @@ class Assistant {
           : const [],
     );
   }
+
+  /// Builds the chat's agent identity from a Living Agent payload
+  /// (`POST /living-agents/personal/ensure`, `GET /living-agents/:id`).
+  ///
+  /// A Living Agent is a separate aggregate, not an assistant: it has no
+  /// `assistantSettings`, no `welcomeMessage`, its image is `avatarUuid` and
+  /// its `capabilities`/`persona` are jsonb objects rather than the
+  /// assistant's capability list. Running it through [Assistant.fromMap]
+  /// therefore reads nothing useful at best, so it gets its own mapping and
+  /// only fills what the chat shell actually needs: id, name and avatar.
+  factory Assistant.fromLivingAgentMap(Map<String, dynamic> json) => Assistant(
+    id: getString(json["id"]),
+    name: getString(json["name"]),
+    description: getString(json["description"]),
+    // `avatarUuid` on the Living Agent aggregate; `imageUuid` is accepted so
+    // the mapping keeps working if the projection is ever aligned.
+    imageUuid: getString(json["avatarUuid"] ?? json["imageUuid"]),
+    welcomeMessage: "",
+    // Deliberately left null/empty: the Living Agent composer is text + send +
+    // stop, and inventing settings here would silently enable controls the
+    // backend never granted.
+    usageSettings: null,
+    kbSettings: null,
+    customActions: const <CustomAction>[],
+    type: AssistantType.assistant,
+    replyMode: AssistantService.getReplyModeEnum("open"),
+  );
 }
 
 class VoiceOption {

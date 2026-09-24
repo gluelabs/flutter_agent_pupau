@@ -49,8 +49,34 @@ class PupauAttachmentsController extends GetxController {
 
   List<Attachment> get getAttachments => attachments;
 
+  /// Looks up an attachment by [id] in [attachments], retrying once after a
+  /// short delay if it isn't there yet — covers the race where a tool (e.g.
+  /// ATTACH_ARTIFACT) just created the attachment and [loadAttachments]'s
+  /// refresh hasn't landed by the time the caller wants to act on it.
+  Future<Attachment?> getAttachmentById(String id) async {
+    Attachment? attachment = attachments.firstWhereOrNull(
+      (Attachment a) => a.id == id,
+    );
+    if (attachment == null) {
+      await Future.delayed(const Duration(seconds: 3));
+      attachment = attachments.firstWhereOrNull((Attachment a) => a.id == id);
+    }
+    return attachment;
+  }
+
   Future<void> loadAttachments() async {
-    attachments.value = await AttachmentService.getAttachments();
+    final List<Attachment> fresh = await AttachmentService.getAttachments();
+    for (final Attachment freshAttachment in fresh) {
+      final Attachment? existing = attachments.firstWhereOrNull(
+        (Attachment a) => a.id == freshAttachment.id,
+      );
+      if (existing != null) {
+        freshAttachment.selected = existing.selected;
+        freshAttachment.isShown = existing.isShown;
+        freshAttachment.isLoadingContent = existing.isLoadingContent;
+      }
+    }
+    attachments.value = fresh;
     attachments.refresh();
     update();
   }
@@ -62,43 +88,65 @@ class PupauAttachmentsController extends GetxController {
   }
 
   Future<void> getAttachmentFromDevice() async {
-    List<File>? files = await FileService.getFileFromDevice(
+    final List<File> files = await FileService.getFileFromDevice(
       allowMultiple: true,
     );
     if (files.isEmpty) return;
-    sendingAttachments.value = sendingAttachments.value + files.length;
+    await uploadAttachmentFiles(files);
+  }
+
+  /// Uploads files that have already been chosen.
+  ///
+  /// Split out of [getAttachmentFromDevice] so the same path can be driven
+  /// programmatically (see PupauChatUtils.attachFiles) without opening the
+  /// system picker. Returns how many were accepted by the backend.
+  Future<int> uploadAttachmentFiles(List<File> files) async {
+    if (files.isEmpty) return 0;
+
+    // Counts files still owed a decrement, so an early return or a throw can
+    // never leave the pending-attachments spinner stuck on screen.
+    int pending = files.length;
+    void releasePending(int amount) {
+      if (amount <= 0) return;
+      final int next = sendingAttachments.value - amount;
+      sendingAttachments.value = next < 0 ? 0 : next;
+    }
+
+    sendingAttachments.value = sendingAttachments.value + pending;
     update();
+    int uploaded = 0;
     try {
-      bool conversationExists = await checkConversationExists(files.length);
-      if (!conversationExists) return;
-      for (File file in files) {
-        Attachment? newAttachment = await AttachmentService.postAttachment(
+      final bool conversationExists = await checkConversationExists(
+        files.length,
+      );
+      if (!conversationExists) return 0;
+      for (final File file in files) {
+        final Attachment? newAttachment = await AttachmentService.postAttachment(
           file,
         );
-        if (newAttachment != null) attachments.add(newAttachment);
-        if (sendingAttachments.value <= 0) {
-          sendingAttachments.value = 0;
-        } else {
-          sendingAttachments.value--;
+        if (newAttachment != null) {
+          attachments.add(newAttachment);
+          uploaded++;
         }
+        releasePending(1);
+        pending--;
         attachments.refresh();
         update();
       }
-      if (files.length > 1) {
-        showFeedbackSnackbar(
-          Strings.attachmentUploadSuccessMultiple.tr,
-          Symbols.attachment,
-        );
-      } else {
-        showFeedbackSnackbar(
-          Strings.attachmentUploadSuccess.tr,
-          Symbols.attachment,
-        );
-      }
+      showFeedbackSnackbar(
+        files.length > 1
+            ? Strings.attachmentUploadSuccessMultiple.tr
+            : Strings.attachmentUploadSuccess.tr,
+        Symbols.attachment,
+      );
     } catch (e) {
-      sendingAttachments.value = 0;
+      // Swallowed as before - the caller sees the count instead.
+    } finally {
+      releasePending(pending);
+      pending = 0;
       update();
     }
+    return uploaded;
   }
 
   Future<void> getAttachmentFromGallery() async {
@@ -386,6 +434,38 @@ class PupauAttachmentsController extends GetxController {
     final int loadRequestId = _noteModalLoadRequestId;
 
     noteName.value = attachment?.fileName ?? "";
+
+    // Image attachments render as a picture, not text — load the raw bytes
+    // (into [canvasImageBytes], reused by the modal) instead of the file's
+    // decoded-as-text content, which is meaningless for a PNG/JPG.
+    final bool isImage =
+        attachment != null &&
+        AttachmentService.getAttachmentCategory(attachment) ==
+            AttachmentCategory.image;
+    if (isImage) {
+      canvasImageBytes.value = null;
+      if (attachmentId != null && attachmentId.trim().isNotEmpty) {
+        attachmentIdsLoadingNoteModal.add(attachmentId);
+        attachmentIdsLoadingNoteModal.refresh();
+      }
+      openAttachmentNote.value = attachment;
+      noteNameController.text = noteName.value;
+      update();
+      showAttachmentNoteModal(isEditable: false);
+
+      final Uint8List? bytes = await AttachmentService.readAttachmentImageBytes(
+        attachment.id,
+      );
+      if (loadRequestId != _noteModalLoadRequestId) return;
+      canvasImageBytes.value = bytes;
+      if (attachmentId != null && attachmentId.trim().isNotEmpty) {
+        attachmentIdsLoadingNoteModal.remove(attachmentId);
+        attachmentIdsLoadingNoteModal.refresh();
+      }
+      update();
+      return;
+    }
+
     if (attachment != null) {
       try {
         if (attachmentId != null && attachmentId.trim().isNotEmpty) {
@@ -482,6 +562,14 @@ class PupauAttachmentsController extends GetxController {
   Future<bool> checkConversationExists(int attachmentsLength) async {
     try {
       PupauChatController chatController = Get.find<PupauChatController>();
+      // Living Agent mode has no attachment endpoints in this scope. Refuse
+      // here, before createNewConversation/resetConversation below can wipe
+      // the open thread.
+      if (chatController.pupauConfig?.isLivingAgent ?? false) {
+        sendingAttachments.value = 0;
+        update();
+        return false;
+      }
       if (chatController.conversation.value == null) {
         await chatController.createNewConversation();
         if (chatController.conversation.value == null) {
@@ -515,15 +603,7 @@ class PupauAttachmentsController extends GetxController {
     update();
 
     try {
-      Attachment? attachment = attachments.firstWhereOrNull(
-        (attachment) => attachment.id == attachmentId,
-      );
-      if (attachment == null) {
-        await Future.delayed(const Duration(seconds: 3));
-        attachment = attachments.firstWhereOrNull(
-          (attachment) => attachment.id == attachmentId,
-        );
-      }
+      final Attachment? attachment = await getAttachmentById(attachmentId);
       if (attachment == null) return;
       await AttachmentService.downloadAttachment(attachment);
       downloadingAttachments.remove(attachmentId);

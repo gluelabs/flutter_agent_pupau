@@ -62,8 +62,11 @@ class GroundingVerificationBadge extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+      child: Tooltip(
+        // Honesty disclaimer: the score comes from a separate
+        // verifier model that can be wrong — long-press/hover to see it,
+        // same interaction the citation chip already uses for its tooltip.
+        message: Strings.citationScoreInfo.tr,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -74,7 +77,10 @@ class GroundingVerificationBadge extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Text(
-              '$scorePercent% ${Strings.citationVerificationGrounded.tr}',
+              Strings.citationGroundedScore.tr.replaceAll(
+                '@score',
+                scorePercent.toString(),
+              ),
               style: TextStyle(fontSize: fontSize),
             ),
           ],

@@ -37,6 +37,8 @@ class MessageService {
         createdAt: message.createdAt,
         kbReferences: message.kbReferences,
         grounding: message.grounding,
+        kbImages: message.kbImages,
+        kbImagesQueryId: message.kbImagesQueryId,
         reaction: message.reaction,
         webBased: message.webBased,
         contextInfo: message.contextInfo,

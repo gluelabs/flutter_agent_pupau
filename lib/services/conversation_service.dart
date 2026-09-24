@@ -1,5 +1,11 @@
+import 'package:flutter_agent_pupau/config/pupau_agent_mode.dart';
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/error_snackbar.dart';
+import 'package:flutter_agent_pupau/utils/constants.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_agent_pupau/services/pupau_event_service.dart';
 import 'package:flutter_agent_pupau/utils/pupau_shared_preferences.dart';
 import 'package:get/get.dart';
@@ -7,22 +13,147 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_agent_pupau/models/conversation_model.dart';
 import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
 import 'package:flutter_agent_pupau/services/api_service.dart';
+import 'package:flutter_agent_pupau/services/json_parse_service.dart';
 import 'package:flutter_agent_pupau/utils/api_urls.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
 import 'package:uuid/uuid.dart';
 
+/// The `GET /living-agents/:id/conversations/:conversationId` payload.
+///
+/// A Living Agent transcript is an envelope, not a conversation: the
+/// conversation sits under `conversation`, the history under `messages`, and
+/// there is no paginated `queries` listing to fall back on — the backend
+/// serves that route as SSE only. So this is the one and only source of a
+/// Living Agent's history.
+class LivingAgentTranscript {
+  final PupauConversation conversation;
+
+  /// Raw history rows, oldest first. Shaped like REST history rows except the
+  /// user turn is `question` rather than `query` (both are read by
+  /// [PupauMessage.fromLoadedChat]).
+  final List<dynamic> messages;
+
+  /// `idle | running | done | stopped | error` — state of the LAST run.
+  /// Empty when the backend omitted it: never render an invented state.
+  final String runState;
+
+  /// Exclusive cursor for the reattach stream; null when no run is live.
+  final String? resumeEventId;
+
+  const LivingAgentTranscript({
+    required this.conversation,
+    required this.messages,
+    required this.runState,
+    required this.resumeEventId,
+  });
+
+  bool get isRunning => runState == 'running';
+
+  factory LivingAgentTranscript.fromMap(Map<String, dynamic> json) {
+    final dynamic rawConversation = json['conversation'];
+    final dynamic rawMessages = json['messages'];
+    return LivingAgentTranscript(
+      conversation: PupauConversation.fromMap(
+        rawConversation is Map
+            ? Map<String, dynamic>.from(rawConversation)
+            : <String, dynamic>{},
+      ),
+      messages: rawMessages is List ? rawMessages : const <dynamic>[],
+      runState: getString(json['runState']),
+      resumeEventId: json['resumeEventId'] == null
+          ? null
+          : getString(json['resumeEventId']),
+    );
+  }
+}
+
 class ConversationService {
+  /// Loads a Living Agent conversation transcript.
+  ///
+  /// Kept apart from [getConversation]: that one maps the response body
+  /// straight into a [PupauConversation], which on this envelope yields a
+  /// conversation with an empty id and an empty chat.
+  static Future<LivingAgentTranscript?> getLivingAgentTranscript(
+    String idAgent,
+    String idConversation,
+  ) async {
+    try {
+      LivingAgentTranscript? transcript;
+      await ApiService.call(
+        ApiUrls.conversationUrl(
+          idAgent,
+          idConversation,
+          mode: PupauAgentMode.livingAgent,
+        ),
+        RequestType.get,
+        onSuccess: (response) => transcript = LivingAgentTranscript.fromMap(
+          Map<String, dynamic>.from(response.data as Map),
+        ),
+        onError: (error) {
+          showErrorSnackbar(
+            error.statusCode == 403
+                ? Strings.conversationForbidden.tr
+                : Strings.conversationLoadFailed.tr,
+          );
+          PupauEventService.instance.emitPupauEvent(
+            PupauEvent(
+              type: UpdateConversationType.error,
+              payload: {
+                "error": error.statusCode == 403
+                    ? "Conversation forbidden"
+                    : "Conversation load failed",
+                "assistantId": idAgent,
+                "agentMode": PupauAgentMode.livingAgent.name,
+                "conversationId": idConversation,
+              },
+            ),
+          );
+        },
+      );
+      return transcript;
+    } catch (e, stackTrace) {
+      debugPrint(
+        "[ConversationService] getLivingAgentTranscript failed "
+        "(agent=$idAgent, conversation=$idConversation): $e\n$stackTrace",
+      );
+      return null;
+    }
+  }
+
+  static String? _hostPackageName;
+
+  /// Client-asserted conversation source for the create-conversation endpoint.
+  ///
+  /// Web is always `WEB`. On Android/iOS the value is `ANDROID`/`IOS` when the
+  /// plugin runs inside the official Pupau app
+  /// ([Constants.officialAppPackageName]), and `ANDROID_PLUGIN`/`IOS_PLUGIN`
+  /// when it is embedded in any other host app.
+  static Future<String> _clientSource() async {
+    if (kIsWeb) return "WEB";
+    if (!Platform.isAndroid && !Platform.isIOS) return "WEB";
+
+    final String base = Platform.isAndroid ? "ANDROID" : "IOS";
+    try {
+      _hostPackageName ??= (await PackageInfo.fromPlatform()).packageName;
+    } catch (_) {
+      _hostPackageName = null;
+    }
+    final bool isOfficialApp =
+        _hostPackageName == Constants.officialAppPackageName;
+    return isOfficialApp ? base : "${base}_PLUGIN";
+  }
+
   /// Creates a new conversation for the given assistant
   static Future<PupauConversation?> createConversation(
     String assistantId,
-    bool isMarketplace, {
+    PupauAgentMode mode, {
     bool isAnonymous = false,
   }) async {
     try {
       PupauConversation? conversation;
       final String url = ApiUrls.conversationsUrl(
         assistantId,
-        isMarketplace: isMarketplace,
+        mode: mode,
       );
       if (isAnonymous) {
         PupauSharedPreferences.deleteAnonymousConversationKey();
@@ -31,12 +162,13 @@ class ConversationService {
           anonymousConversationKey,
         );
       }
+      final String source = await _clientSource();
       await ApiService.call(
         url,
         RequestType.post,
         data: {
           "title": "New Conversation",
-          "source": "INTEGRATION",
+          "source": source,
           "data": "",
           if (isAnonymous)
             "encryptionPass":
@@ -55,14 +187,14 @@ class ConversationService {
   static Future<PupauConversation?> getConversation(
     String idAssistant,
     String idConversation,
-    bool isMarketplace,
+    PupauAgentMode mode,
   ) async {
     try {
       PupauConversation? conversation;
       String url = ApiUrls.conversationUrl(
         idAssistant,
         idConversation,
-        isMarketplace: isMarketplace,
+        mode: mode,
       );
       await ApiService.call(
         url,
@@ -79,7 +211,7 @@ class ConversationService {
                 payload: {
                   "error": errorMessage,
                   "assistantId": idAssistant,
-                  "assistantType": isMarketplace ? "MARKETPLACE" : "ASSISTANT",
+                  "assistantType": mode == PupauAgentMode.marketplace ? "MARKETPLACE" : "ASSISTANT",
                   "conversationId": idConversation,
                 },
               ),
@@ -93,7 +225,7 @@ class ConversationService {
                 payload: {
                   "error": errorMessage,
                   "assistantId": idAssistant,
-                  "assistantType": isMarketplace ? "MARKETPLACE" : "ASSISTANT",
+                  "assistantType": mode == PupauAgentMode.marketplace ? "MARKETPLACE" : "ASSISTANT",
                   "conversationId": idConversation,
                 },
               ),
@@ -111,7 +243,7 @@ class ConversationService {
           payload: {
             "error": errorMessage,
             "assistantId": idAssistant,
-            "assistantType": isMarketplace ? "MARKETPLACE" : "ASSISTANT",
+            "assistantType": mode == PupauAgentMode.marketplace ? "MARKETPLACE" : "ASSISTANT",
             "conversationId": idConversation,
           },
         ),
@@ -125,14 +257,14 @@ class ConversationService {
     String idAssistant,
     String idConversation,
     Map<String, dynamic> data,
-    bool isMarketplace,
+    PupauAgentMode mode,
   ) async {
     try {
       PupauConversation? conversation;
       String url = ApiUrls.conversationUrl(
         idAssistant,
         idConversation,
-        isMarketplace: isMarketplace,
+        mode: mode,
       );
       await ApiService.call(
         url,
@@ -148,7 +280,7 @@ class ConversationService {
   }
 
   static Future<bool> deleteConversation(
-    bool isMarketplace,
+    PupauAgentMode mode,
     PupauConversation conversation,
   ) async {
     try {
@@ -156,7 +288,7 @@ class ConversationService {
       String url = ApiUrls.conversationUrl(
         conversation.assistantId,
         conversation.id,
-        isMarketplace: isMarketplace,
+        mode: mode,
       );
       await ApiService.call(
         url,
@@ -175,7 +307,7 @@ class ConversationService {
     String conversationId,
     String title,
     String queryId,
-    bool isMarketplace,
+    PupauAgentMode mode,
   ) async {
     try {
       PupauConversation? conversation;
@@ -184,7 +316,7 @@ class ConversationService {
         ApiUrls.forkConversationUrl(
           assistantId,
           conversationId,
-          isMarketplace: isMarketplace,
+          mode: mode,
         ),
         RequestType.post,
         data: body,

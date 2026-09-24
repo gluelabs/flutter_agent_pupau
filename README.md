@@ -77,6 +77,7 @@ final config = PupauConfig.createWithApiKey(
     actions: [],                               // Custom action buttons
     closeStyle: CloseStyle.arrow,            // arrow, cross, or none
     closeButtonPosition: CloseButtonPosition.left, // left or right
+    showDashboardButton: true,                 // false hides the dashboard button
   ),
   drawerConfig: DrawerConfig(                 // Drawer configuration
     drawer: MyDrawer(),                       // Left drawer widget
@@ -387,6 +388,21 @@ PupauConfig.createWithApiKey(
   apiKey: 'your-api-key',
   appBarConfig: AppBarConfig(
     showAppBar: false, // Hide the app bar completely
+  ),
+)
+```
+
+### Hide the Dashboard Button
+
+The dashboard button appears on its own once a conversation has tool messages
+or attachments. The app bar is its only entry point, so hiding it disables the
+dashboard for your app:
+
+```dart
+PupauConfig.createWithApiKey(
+  apiKey: 'your-api-key',
+  appBarConfig: AppBarConfig(
+    showDashboardButton: false,
   ),
 )
 ```

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_agent_pupau/chat_page/components/chat_elements/recording_bar.dart';
+import 'package:flutter_agent_pupau/chat_page/components/chat_elements/recording_console.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/stop_message_button.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/voice_mode_input.dart';
 import 'package:flutter_agent_pupau/chat_page/components/chat_elements/voice_recording_button.dart';
@@ -27,6 +27,9 @@ class ChatInputField extends GetView<PupauChatController> {
       if (controller.hideInputBox.value) return const SizedBox();
       // Voice mode replaces the entire input area — no border, no FABs.
       if (controller.isVoiceMode.value) return const VoiceModeInput();
+      // Standard (non-voice-mode) recording also replaces the entire input
+      // area, using the same console design as voice mode.
+      if (controller.isRecording.value) return const RecordingConsole();
       final bool isTablet = DeviceService.isTablet;
       final bool isAnonymous = controller.isAnonymous;
       final bool hideAudioRecordingButton = controller.hideAudioRecordingButton;
@@ -50,7 +53,6 @@ class ChatInputField extends GetView<PupauChatController> {
                     .isNotEmpty;
                 final bool isFocused =
                     controller.isMessageInputFieldFocused.value;
-                final bool isRecording = controller.isRecording.value;
                 final bool showVoiceModeToggle =
                     controller.isLiveVoiceAvailable;
                 final bool isAdvanced = controller.isAdvanced();
@@ -92,179 +94,167 @@ class ChatInputField extends GetView<PupauChatController> {
                                   ).grey.withValues(alpha: 0.5),
                           ),
                         ),
-                        child: isRecording
-                            ? RecordingBar(
-                                duration: controller.recordingDuration.value,
-                                onCancel: () => controller.cancelRecording(),
-                                onSend: () => controller.stopAndSendRecording(),
-                                isAnonymous: isAnonymous,
-                              )
-                            : FocusScope(
-                                child: Focus(
-                                  onFocusChange: (value) => controller
-                                      .setMessageInputFieldFocused(value),
-                                  child: Stack(
-                                    children: [
-                                      MyMentionTagTextFormField(
-                                        textCapitalization:
-                                            TextCapitalization.sentences,
-                                        cursorColor: isAnonymous
-                                            ? Colors.black
-                                            : null,
-                                        focusNode: controller.keyboardFocusNode,
-                                        controller:
-                                            controller.inputMessageController,
-                                        keyboardType: TextInputType.multiline,
-                                        textInputAction:
-                                            controller.inputFieldAction ==
-                                                ChatInputAction.send
-                                            ? TextInputAction.send
-                                            : TextInputAction.newline,
-                                        minLines: 1,
-                                        maxLines: 12,
-                                        style: TextStyle(
-                                          fontSize: isTablet ? 16 : 14,
-                                          color: isAnonymous
-                                              ? AnonymousThemeColors.userText
-                                              : null,
-                                        ),
-                                        decoration: InputDecoration(
-                                          contentPadding: EdgeInsets.only(
-                                            left: leftContentPadding,
-                                            right: 15,
-                                            top: 6,
-                                            bottom: 6,
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderSide: BorderSide.none,
-                                          ),
-                                          border: OutlineInputBorder(
-                                            borderSide: BorderSide.none,
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderSide: BorderSide.none,
-                                          ),
-                                          hintText: "${Strings.message.tr}...",
-                                          hintStyle: TextStyle(
-                                            fontSize: isTablet ? 16 : 14,
-                                            color: isAnonymous
-                                                ? AnonymousThemeColors.userText
-                                                : null,
-                                          ),
-                                          suffixIcon: SizedBox(
-                                            width: stopIsActive ? 82 : 0,
-                                          ),
-                                        ),
-                                        // With ChatInputAction.newline (the default), Enter/return
-                                        // inserts a line break and never invokes this callback;
-                                        // ChatInputAction.send submits on Enter/return instead.
-                                        onFieldSubmitted:
-                                            sendIsActive &&
-                                                controller.inputFieldAction ==
-                                                    ChatInputAction.send
-                                            ? (_) {
-                                                controller.sendMessage(
-                                                  controller
-                                                      .inputMessageController
-                                                      .getText,
-                                                  false,
-                                                );
-                                              }
-                                            : null,
-                                        onChanged: (value) {
-                                          controller.getMessageInputFieldHeight(
-                                            context,
+                        child: FocusScope(
+                          child: Focus(
+                            onFocusChange: (value) =>
+                                controller.setMessageInputFieldFocused(value),
+                            child: Stack(
+                              children: [
+                                MyMentionTagTextFormField(
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  cursorColor: isAnonymous
+                                      ? Colors.black
+                                      : null,
+                                  focusNode: controller.keyboardFocusNode,
+                                  controller: controller.inputMessageController,
+                                  keyboardType: TextInputType.multiline,
+                                  textInputAction:
+                                      controller.inputFieldAction ==
+                                          ChatInputAction.send
+                                      ? TextInputAction.send
+                                      : TextInputAction.newline,
+                                  minLines: 1,
+                                  maxLines: 12,
+                                  style: TextStyle(
+                                    fontSize: isTablet ? 16 : 14,
+                                    color: isAnonymous
+                                        ? AnonymousThemeColors.userText
+                                        : null,
+                                  ),
+                                  decoration: InputDecoration(
+                                    contentPadding: EdgeInsets.only(
+                                      left: leftContentPadding,
+                                      right: 15,
+                                      top: 6,
+                                      bottom: 6,
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    hintText: "${Strings.message.tr}...",
+                                    hintStyle: TextStyle(
+                                      fontSize: isTablet ? 16 : 14,
+                                      color: isAnonymous
+                                          ? AnonymousThemeColors.userText
+                                          : null,
+                                    ),
+                                    suffixIcon: SizedBox(
+                                      width: stopIsActive ? 82 : 0,
+                                    ),
+                                  ),
+                                  // With ChatInputAction.newline (the default), Enter/return
+                                  // inserts a line break and never invokes this callback;
+                                  // ChatInputAction.send submits on Enter/return instead.
+                                  onFieldSubmitted:
+                                      sendIsActive &&
+                                          controller.inputFieldAction ==
+                                              ChatInputAction.send
+                                      ? (_) {
+                                          controller.sendMessage(
+                                            controller
+                                                .inputMessageController
+                                                .getText,
+                                            false,
                                           );
-                                          controller.messages.refresh();
-                                          controller.inputMessage.value = value;
-                                          controller.update();
-                                        },
-                                        mentionTagDecoration:
-                                            MentionTagDecoration(
-                                              mentionStart: ["@"],
-                                              mentionTextStyle: TextStyle(
-                                                color: MyStyles.pupauTheme(
-                                                  !Get.isDarkMode,
-                                                ).primary,
-                                                fontSize: isTablet ? 16 : 14,
-                                                fontWeight: FontWeight.w600,
-                                              ),
+                                        }
+                                      : null,
+                                  onChanged: (value) {
+                                    controller.getMessageInputFieldHeight(
+                                      context,
+                                    );
+                                    controller.messages.refresh();
+                                    controller.inputMessage.value = value;
+                                    controller.update();
+                                  },
+                                  mentionTagDecoration: MentionTagDecoration(
+                                    mentionStart: ["@"],
+                                    mentionTextStyle: TextStyle(
+                                      color: MyStyles.pupauTheme(
+                                        !Get.isDarkMode,
+                                      ).primary,
+                                      fontSize: isTablet ? 16 : 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  onMention: controller.onMention,
+                                ),
+                                // Left-side icon buttons: tools toggle + voice mode toggle
+                                if (leftIconCount > 0)
+                                  Positioned(
+                                    left: 0,
+                                    bottom: isTablet ? 4 : 0,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (showToolsToggle)
+                                          IconButton(
+                                            onPressed: () =>
+                                                controller.toggleToolsFab(),
+                                            icon: Icon(
+                                              controller.toolsFabExpanded.value
+                                                  ? Symbols.remove
+                                                  : Symbols.add,
+                                              size: 22,
+                                              color: isAnonymous
+                                                  ? Colors.black
+                                                  : MyStyles.pupauTheme(
+                                                      !Get.isDarkMode,
+                                                    ).primary,
                                             ),
-                                        onMention: controller.onMention,
-                                      ),
-                                      // Left-side icon buttons: tools toggle + voice mode toggle
-                                      if (leftIconCount > 0)
-                                        Positioned(
-                                          left: 0,
-                                          bottom: isTablet ? 4 : 0,
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              if (showToolsToggle)
-                                                IconButton(
-                                                  onPressed: () => controller
-                                                      .toggleToolsFab(),
-                                                  icon: Icon(
-                                                    controller
-                                                            .toolsFabExpanded
-                                                            .value
-                                                        ? Symbols.remove
-                                                        : Symbols.add,
-                                                    size: 22,
-                                                    color: isAnonymous
-                                                        ? Colors.black
-                                                        : MyStyles.pupauTheme(
-                                                            !Get.isDarkMode,
-                                                          ).primary,
-                                                  ),
-                                                ),
-                                              if (showVoiceModeToggle)
-                                                Transform.translate(
-                                                  offset: Offset(
-                                                    showToolsToggle ? -12 : 0,
-                                                    0,
-                                                  ),
-                                                  child: IconButton(
-                                                    onPressed: () => controller
-                                                        .toggleVoiceMode(),
-                                                    icon: Icon(
-                                                      Symbols.voice_selection,
-                                                      size: 22,
-                                                      color: isAnonymous
-                                                          ? Colors.black
-                                                          : MyStyles.pupauTheme(
-                                                              !Get.isDarkMode,
-                                                            ).primary,
-                                                    ),
-                                                    tooltip: Strings
-                                                        .voiceModeTooltip
-                                                        .tr,
-                                                  ),
-                                                ),
-                                            ],
                                           ),
-                                        ),
-                                      Positioned(
-                                        right: 0,
-                                        bottom: isTablet ? 4 : 0,
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const StopMessageButton(),
-                                            if (!hasText)
-                                              if (!hideAudioRecordingButton)
-                                                VoiceRecordingButton()
-                                              else
-                                                const SizedBox()
-                                            else
-                                              SendMessageButton(),
-                                          ],
-                                        ),
-                                      ),
+                                        if (showVoiceModeToggle)
+                                          Transform.translate(
+                                            offset: Offset(
+                                              showToolsToggle ? -12 : 0,
+                                              0,
+                                            ),
+                                            child: IconButton(
+                                              onPressed: () =>
+                                                  controller.toggleVoiceMode(),
+                                              icon: Icon(
+                                                Symbols.voice_selection,
+                                                size: 22,
+                                                color: isAnonymous
+                                                    ? Colors.black
+                                                    : MyStyles.pupauTheme(
+                                                        !Get.isDarkMode,
+                                                      ).primary,
+                                              ),
+                                              tooltip:
+                                                  Strings.voiceModeTooltip.tr,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                Positioned(
+                                  right: 0,
+                                  bottom: isTablet ? 4 : 0,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const StopMessageButton(),
+                                      if (!hasText)
+                                        if (!hideAudioRecordingButton)
+                                          VoiceRecordingButton()
+                                        else
+                                          const SizedBox()
+                                      else
+                                        SendMessageButton(),
                                     ],
                                   ),
                                 ),
-                              ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),

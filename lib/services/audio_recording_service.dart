@@ -20,7 +20,21 @@ class AudioRecordingService {
 
     PermissionStatus status = await Permission.microphone.request();
 
-    if (status.isGranted) return true;
+    if (status.isGranted) {
+      // Freshly granted (as opposed to the already-granted early return
+      // above) - on Android, starting MediaRecorder/AudioRecord
+      // immediately after the runtime permission dialog resolves can
+      // silently fail (no exception, recording just never starts):
+      // permission_handler's Future resolves as soon as
+      // onRequestPermissionsResult fires, but the OS's own
+      // AppOpsManager/audio HAL grant propagation isn't necessarily done
+      // by then. Debug builds' extra overhead (JIT, slower isolate
+      // scheduling) normally masks this gap; release/AOT builds run fast
+      // enough to hit it - this reproduced as "asks for permission, user
+      // accepts, recording still doesn't start" only in release.
+      await Future.delayed(const Duration(milliseconds: 400));
+      return true;
+    }
 
     if (status.isDenied && !status.isPermanentlyDenied) {
       return false;
@@ -42,22 +56,31 @@ class AudioRecordingService {
   static Future<String?> startRecording() async {
     if (!await requestPermission()) return null;
     if (await recorder.isRecording()) return null;
-    try {
-      final Directory dir = await getTemporaryDirectory();
-      final String name = 'audio_${DateTime.now().millisecondsSinceEpoch}.wav';
-      currentPath = '${dir.path}/$name';
-      await recorder.start(
-        const RecordConfig(
-          encoder: AudioEncoder.wav,
-          sampleRate: 44100,
-          numChannels: 1,
-        ),
-        path: currentPath!,
-      );
-      return currentPath;
-    } catch (e) {
-      return null;
+    final Directory dir = await getTemporaryDirectory();
+    final String name = 'audio_${DateTime.now().millisecondsSinceEpoch}.wav';
+    currentPath = '${dir.path}/$name';
+    const RecordConfig config = RecordConfig(
+      encoder: AudioEncoder.wav,
+      sampleRate: 44100,
+      numChannels: 1,
+    );
+    // Retry once after a short delay - same "OS says ready before it
+    // actually is" gap requestPermission's delay guards against, kept
+    // here too as defense in depth in case that delay wasn't enough on a
+    // particular device.
+    for (int attempt = 1; attempt <= 2; attempt++) {
+      try {
+        await recorder.start(config, path: currentPath!);
+        return currentPath;
+      } catch (e) {
+        if (attempt == 2) {
+          currentPath = null;
+          return null;
+        }
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
     }
+    return null;
   }
 
   /// Stop recording and return the audio file, or null if failed/not recording.
@@ -110,18 +133,22 @@ class AudioRecordingService {
   static Future<Stream<Uint8List>?> startPcmStream() async {
     if (!await requestPermission()) return null;
     if (await recorder.isRecording()) return null;
-    try {
-      final stream = await recorder.startStream(
-        const RecordConfig(
-          encoder: AudioEncoder.pcm16bits,
-          sampleRate: 16000,
-          numChannels: 1,
-        ),
-      );
-      return stream;
-    } catch (_) {
-      return null;
+    const RecordConfig config = RecordConfig(
+      encoder: AudioEncoder.pcm16bits,
+      sampleRate: 16000,
+      numChannels: 1,
+    );
+    // Same first-grant retry as startRecording() - see requestPermission's
+    // comment.
+    for (int attempt = 1; attempt <= 2; attempt++) {
+      try {
+        return await recorder.startStream(config);
+      } catch (_) {
+        if (attempt == 2) return null;
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
     }
+    return null;
   }
 
   /// Stops any active recording / stream without saving a file.

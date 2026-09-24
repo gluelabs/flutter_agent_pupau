@@ -10,12 +10,16 @@ import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_eleme
 import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/emoji_syntax.dart';
 import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/google_map_builder.dart';
 import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/google_map_syntax.dart';
+import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/kb_image_builder.dart';
+import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/kb_image_syntax.dart';
 import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/link_builder.dart';
+import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/markdown_attachment_image.dart';
 import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/mermaid_builder.dart';
 import 'package:flutter_agent_pupau/chat_page/components/markdown_builders_elements/mermaid_syntax.dart';
 import 'package:flutter_agent_pupau/chat_page/components/message_elements/message_markdown_scope.dart';
 import 'package:flutter_agent_pupau/chat_page/components/shared/selection_transformer.dart';
 import 'package:flutter_agent_pupau/models/grounding_model.dart';
+import 'package:flutter_agent_pupau/models/kb_image_model.dart';
 import 'package:flutter_agent_pupau/services/device_service.dart';
 import 'package:flutter_agent_pupau/services/string_service.dart';
 import 'package:flutter_agent_pupau/services/tag_service.dart';
@@ -30,6 +34,8 @@ class MessageBody extends StatelessWidget {
     required this.isFromAssistant,
     required this.isAnonymous,
     this.grounding,
+    this.kbImages = const [],
+    this.kbImagesQueryId,
     this.wrapInFlexible = true,
     this.wrapWithSelectionArea = true,
   });
@@ -39,6 +45,14 @@ class MessageBody extends StatelessWidget {
   final bool isFromAssistant;
   final bool isAnonymous;
   final GroundingInfo? grounding;
+
+  /// `<kb-image>` allowlist for this message, and the
+  /// `queryId` to fetch them with (see [PupauMessage.kbImages]/
+  /// [PupauMessage.kbImagesQueryId] for why they're separate from
+  /// [grounding]: a turn can have `<kb-image>` tags with no `[n]` citations
+  /// at all).
+  final List<KbImageRef> kbImages;
+  final String? kbImagesQueryId;
 
   /// When false, returns the markdown subtree only (for embedding inside another
   /// [Flexible] / expand wrapper, e.g. user collapsible column in [MessageContent]).
@@ -90,12 +104,17 @@ class MessageBody extends StatelessWidget {
               href: href,
               title: title ?? '',
             ),
+        imageBuilder: isFromAssistant
+            ? (Uri uri, String? title, String? alt) =>
+                  MarkdownAttachmentImage(uri: uri, alt: alt)
+            : null,
         inlineSyntaxes: isFromAssistant
             ? [
                 GoogleMapSyntax(),
                 MermaidSyntax(),
                 DownloadSyntax(),
                 CitationSyntax(grounding),
+                KbImageSyntax(kbImages, kbImagesQueryId),
                 EmojiSyntax(),
               ]
             : [EmojiSyntax()],
@@ -105,6 +124,7 @@ class MessageBody extends StatelessWidget {
                 'mermaid-container': MermaidBuilder(),
                 'download-container': DownloadBuilder(),
                 'citation-chip': CitationBuilder(),
+                'kb-image': KbImageBuilder(),
                 'code': CodeBuilder(),
                 'pre': CodeBuilder(),
                 'a': LinkBuilder(

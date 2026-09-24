@@ -1,6 +1,8 @@
+import 'package:flutter_agent_pupau/config/pupau_agent_mode.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_agent_pupau/models/assistant_model.dart';
+import 'package:flutter_agent_pupau/services/assistant_cache_service.dart';
 import 'package:flutter_agent_pupau/utils/api_urls.dart';
 import 'package:flutter_agent_pupau/utils/constants.dart';
 import 'package:flutter_agent_pupau/utils/translations/strings_enum.dart';
@@ -10,26 +12,59 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'api_service.dart';
 
 class AssistantService {
+  /// Number of agents from a freshly-loaded quick list to eagerly fetch full
+  /// data for (one API call each), so their full data is cached before the
+  /// user opens them.
+  static const int _prefetchFullDataCount = 5;
+
+  /// Whether the one-time [_prefetchFullDataCount]-agent prefetch has already
+  /// run this session. Without this, every call to [getAssistantsQuick]
+  /// (there is no de-dup on how often callers may invoke it — e.g.
+  /// PupauAgentAvatar retries it on every rebuild until its assistants list
+  /// is non-empty) would fire its own fresh batch of single-assistant calls,
+  /// so the "5 agents" prefetch budget must be spent at most once per session
+  /// rather than once per call.
+  static bool _hasPrefetchedFirstFive = false;
+
   // Gets an assistant by its ID
   static Future<Assistant?> getAssistant(
     String assistantId,
-    bool isMarketplace,
+    PupauAgentMode mode,
   ) async {
     try {
       Assistant? assistant;
       String url = ApiUrls.assistantUrl(
         assistantId,
-        isMarketplace: isMarketplace,
+        mode: mode,
       );
       await ApiService.call(
         url,
         RequestType.get,
-        onSuccess: (response) {
-          assistant = Assistant.fromMap(response.data);
+        onSuccess: (response) async {
+          // A Living Agent payload is a different aggregate and must not go
+          // through the assistant mapping.
+          final Assistant parsed = mode == PupauAgentMode.livingAgent
+              ? Assistant.fromLivingAgentMap(response.data)
+              : Assistant.fromMap(response.data);
+          assistant = parsed;
+          // Living Agents stay out of the cache. The key is derived from the
+          // assistant type, so storing one would file it under the plain
+          // assistant prefix and it could later be served to an assistant
+          // chat with the same id.
+          if (mode != PupauAgentMode.livingAgent) {
+            await AssistantCacheService.put(parsed);
+          }
         },
       );
       return assistant;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      // A null return here lands in the chat as the generic ApiErrorWidget,
+      // with nothing saying why. Log before collapsing it: a mapping TypeError
+      // and an unreachable backend produce the very same blank error screen.
+      debugPrint(
+        "[AssistantService] getAssistant failed "
+        "(id=$assistantId, mode=${mode.name}): $e\n$stackTrace",
+      );
       return null;
     }
   }
@@ -40,13 +75,39 @@ class AssistantService {
       await ApiService.call(
         ApiUrls.getAssistantsQuickUrl,
         RequestType.get,
-        onSuccess: (response) => quickAssistants = assistantsFromMap(
-          jsonEncode(response.data["items"]),
-        ),
+        onSuccess: (response) async {
+          quickAssistants = assistantsFromMap(
+            jsonEncode(response.data["items"]),
+          );
+        },
       );
+      // The quick list only carries basic info, so it is never written to
+      // AssistantCacheService directly — only the first _prefetchFullDataCount
+      // agents get cached, and only via a full single-assistant call each,
+      // and only the first time this session (see _hasPrefetchedFirstFive).
+      if (!_hasPrefetchedFirstFive) {
+        _hasPrefetchedFirstFive = true;
+        _prefetchFullAssistantData(quickAssistants);
+      }
       return quickAssistants;
     } catch (e) {
       return [];
+    }
+  }
+
+  /// Eagerly (fire-and-forget) fetches full data for the first
+  /// [_prefetchFullDataCount] agents of a freshly-loaded quick list, one API
+  /// call per agent. Does not block the quick list response; each fetch
+  /// caches itself via [getAssistant]. Only ever runs once per session — see
+  /// [_hasPrefetchedFirstFive].
+  static void _prefetchFullAssistantData(List<Assistant> assistantsList) {
+    for (final Assistant quick in assistantsList.take(_prefetchFullDataCount)) {
+      getAssistant(
+        quick.id,
+        quick.type == AssistantType.marketplace
+            ? PupauAgentMode.marketplace
+            : PupauAgentMode.assistant,
+      );
     }
   }
 
@@ -54,24 +115,31 @@ class AssistantService {
   static String getAssistantImageUrl(
     String assistantId,
     String imageUuid,
-    bool isMarketplace,
+    PupauAgentMode mode,
     ImageFormat format,
   ) {
     try {
       if (imageUuid.isEmpty) return getAssistantFallbackImage(assistantId);
       final String stagingUrl = "https://api-staging.pupau.ai";
       final String formatString = getImageFormatString(format);
-      final String target = isMarketplace ? "/marketplace" : "";
-      final String env = ApiUrls.apiUrl == ApiUrls.defaultApiUrl
-          ? "prod"
-          : "dev";
-         final bool isOfficialOrStaging = ApiUrls.apiUrl == ApiUrls.defaultApiUrl ||
-        ApiUrls.apiUrl == stagingUrl;
-    if (isOfficialOrStaging) {
-      return "https://cdn.pupau.ai$target/assistants/$env/$assistantId/$imageUuid-$formatString.jpg";
-    }
-    String baseUrl = "${ApiUrls.apiUrl}/local/files/public";
-      return "$baseUrl$target/assistants/$env/$assistantId/$imageUuid-$formatString.jpg";
+      final String target = mode == PupauAgentMode.marketplace ? "/marketplace" : "";
+      // /dev/ is only correct for the staging host - every other apiUrl
+      // (the official host, or any custom/tenant apiUrl e.g. a VPN tunnel)
+      // is a production tenant and must use /prod/.
+      final String env = ApiUrls.apiUrl == stagingUrl ? "dev" : "prod";
+      final bool isOfficialOrStaging =
+          ApiUrls.apiUrl == ApiUrls.defaultApiUrl ||
+          ApiUrls.apiUrl == stagingUrl;
+      final String resolvedUrl;
+      if (isOfficialOrStaging) {
+        resolvedUrl =
+            "https://cdn.pupau.ai$target/assistants/$env/$assistantId/$imageUuid-$formatString.jpg";
+      } else {
+        String baseUrl = "${ApiUrls.apiUrl}/local/files/public";
+        resolvedUrl =
+            "$baseUrl$target/assistants/$env/$assistantId/$imageUuid-$formatString.jpg";
+      }
+      return resolvedUrl;
     } catch (e) {
       return getAssistantFallbackImage(assistantId);
     }

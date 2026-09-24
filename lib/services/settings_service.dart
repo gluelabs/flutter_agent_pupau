@@ -1,3 +1,4 @@
+import 'package:flutter_agent_pupau/config/pupau_agent_mode.dart';
 import 'dart:convert';
 import 'package:flutter_agent_pupau/models/setting_model.dart';
 import 'package:flutter_agent_pupau/services/api_service.dart';
@@ -7,19 +8,19 @@ import 'package:flutter_agent_pupau/utils/settings.dart';
 class SettingsService {
 
   static String getCompanySettingById(String settingId,
-          {String? assistantId, bool isMarketplace = false}) =>
-      "${ApiUrls.settingsUrl(isMarketplace)}?availableSettingId=$settingId${assistantId != null ? "&assistantId=$assistantId" : ""}";
+          {String? assistantId, PupauAgentMode mode = PupauAgentMode.assistant}) =>
+      "${ApiUrls.settingsUrl(mode)}?availableSettingId=$settingId${assistantId != null ? "&assistantId=$assistantId" : ""}";
 
   static String getCompanySettingGroupById(String groupSettingId,
-          {String? assistantId, bool isMarketplace = false}) =>
-      "${ApiUrls.settingsUrl(isMarketplace)}?settingGroupId=$groupSettingId${assistantId != null ? "&assistantId=$assistantId" : ""}";
+          {String? assistantId, PupauAgentMode mode = PupauAgentMode.assistant}) =>
+      "${ApiUrls.settingsUrl(mode)}?settingGroupId=$groupSettingId${assistantId != null ? "&assistantId=$assistantId" : ""}";
 
   static String getUserSettingById({
     required String settingId,
     required String assistantId,
-    bool isMarketplace = false,
+    PupauAgentMode mode = PupauAgentMode.assistant,
   }) =>
-      "${ApiUrls.settingsUserUrl(isMarketplace: isMarketplace)}?availableSettingId=$settingId&assistantId=$assistantId";
+      "${ApiUrls.settingsUserUrl(mode: mode)}?availableSettingId=$settingId&assistantId=$assistantId";
 
   static String generateSettingData(Setting setting) {
     String valueContent = "";
@@ -72,10 +73,10 @@ class SettingsService {
   }
 
   static Future<dynamic> readSetting(String settingUrl,
-      {bool isMarketplace = false}) async {
+      {PupauAgentMode mode = PupauAgentMode.assistant}) async {
     dynamic settingData;
     await ApiService.call(
-      settingUrl + (isMarketplace ? "&isMarketplace=true" : ""),
+      settingUrl + (mode == PupauAgentMode.marketplace ? "&isMarketplace=true" : ""),
       RequestType.get,
       onSuccess: (response) => settingData = response.data,
       onError: (error) {},
@@ -104,14 +105,14 @@ class SettingsService {
   static Future<Map<String, dynamic>?> readUserSettingById({
     required String settingId,
     required String assistantId,
-    bool isMarketplace = false,
+    PupauAgentMode mode = PupauAgentMode.assistant,
   }) async {
     Map<String, dynamic>? settingData;
     await ApiService.call(
       getUserSettingById(
         settingId: settingId,
         assistantId: assistantId,
-        isMarketplace: isMarketplace,
+        mode: mode,
       ),
       RequestType.get,
       onSuccess: (response) {
@@ -126,7 +127,7 @@ class SettingsService {
 
   static Future<void> setUserSettings({
     required List<Setting> settings,
-    bool isMarketplace = false,
+    PupauAgentMode mode = PupauAgentMode.assistant,
   }) async {
     final List<Map<String, dynamic>> payload = settings
         .map(
@@ -142,7 +143,7 @@ class SettingsService {
         .toList();
 
     await ApiService.call(
-      "${ApiUrls.settingsUserUrl(isMarketplace: false)}${isMarketplace ? "?isMarketplace=true" : ""}",
+      ApiUrls.settingsUserUrl(mode: mode),
       RequestType.put,
       data: payload,
       onSuccess: (_) {},

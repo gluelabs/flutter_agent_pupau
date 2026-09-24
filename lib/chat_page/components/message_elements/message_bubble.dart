@@ -104,6 +104,8 @@ class _MessageBubbleState extends State<MessageBubble> {
                     assistant: widget.assistant,
                     contextInfo: widget.message.contextInfo,
                     grounding: widget.message.grounding,
+                    kbImages: widget.message.kbImages,
+                    kbImagesQueryId: widget.message.kbImagesQueryId,
                     isAudioInput: widget.message.isAudioInput,
                     onRegisterUserBubbleToggle: isAssistant
                         ? null
@@ -117,9 +119,10 @@ class _MessageBubbleState extends State<MessageBubble> {
 
       return AbsorbPointer(
         absorbing:
-            controller.stopIsActive() ||
             widget.isReadOnly ||
-            (isAssistant && widget.message.status == MessageStatus.loading),
+            (isAssistant &&
+                (controller.stopIsActive() ||
+                    widget.message.status == MessageStatus.loading)),
         child: MyContextMenuRegion(
           contextMenu: getContextMenu(
             isAssistant,

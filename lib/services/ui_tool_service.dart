@@ -1,3 +1,4 @@
+import 'package:flutter_agent_pupau/config/pupau_agent_mode.dart';
 import 'package:flutter_client_sse/constants/sse_request_type_enum.dart';
 import 'package:flutter_client_sse/flutter_client_sse.dart';
 import 'package:get/get.dart';
@@ -17,7 +18,7 @@ class UiToolService {
     PupauMessage message = chatController.messages.firstWhere(
       (element) => element.id == messageId,
     );
-    bool isMarketplace = chatController.isMarketplace;
+    final PupauAgentMode mode = chatController.agentMode;
 
     final Map<String, String>? authParams = chatController.pupauConfig?.authHeaders;
     if (authParams == null) return null;
@@ -28,7 +29,7 @@ class UiToolService {
       queryParams = "&${params.join('&')}";
     }
     String url =
-        "${ApiUrls.toolApprovalUrl(assistantId, conversation.id, message.id, isMarketplace: isMarketplace)}$queryParams";
+        "${ApiUrls.toolApprovalUrl(assistantId, conversation.id, message.id, mode: mode)}$queryParams";
     Stream<SSEModel> messageSendStream = SSEClient.subscribeToSSE(
       method: SSERequestType.POST,
       url: url,
@@ -54,7 +55,7 @@ class UiToolService {
     PupauMessage message = chatController.messages.firstWhere(
       (element) => element.id == messageId,
     );
-    bool isMarketplace = chatController.isMarketplace;
+    final PupauAgentMode mode = chatController.agentMode;
 
     final Map<String, String>? authParams = chatController.pupauConfig?.authHeaders;
     if (authParams == null) return null;
@@ -67,7 +68,7 @@ class UiToolService {
     String? authCode = await GoogleDriveService.requestGoogleDriveAuth();
     if (authCode == null) return null;
     String url =
-        "${ApiUrls.toolAuthUrl(assistantId, conversation.id, message.id, toolId, authCode, isMarketplace: isMarketplace)}$queryParams";
+        "${ApiUrls.toolAuthUrl(assistantId, conversation.id, message.id, toolId, authCode, mode: mode)}$queryParams";
     Stream<SSEModel> messageSendStream = SSEClient.subscribeToSSE(
       method: SSERequestType.POST,
       url: url,

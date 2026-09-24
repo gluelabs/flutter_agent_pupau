@@ -1,4 +1,5 @@
 import 'package:flutter_agent_pupau/models/assistant_model.dart';
+import 'package:flutter_agent_pupau/models/kb_image_model.dart';
 import 'package:flutter_agent_pupau/models/prompt_option_model.dart';
 import 'package:flutter_agent_pupau/models/prompt_reflection_model.dart';
 import 'package:flutter_agent_pupau/models/tool_use_models/tool_use_thinking_data.dart';
@@ -43,13 +44,31 @@ class TagService {
     multiLine: true,
   );
 
-  static String convertTags(String message) => formatMermaidCode(
-    convertAssistantTag(
-      thinkingTagNewLinesRemover(
-        message,
-      ).replaceAll(optionsRegex, '').replaceAll(reflectionRegex, ''),
+  static String convertTags(String message) => escapeKbImageTags(
+    formatMermaidCode(
+      convertAssistantTag(
+        thinkingTagNewLinesRemover(
+          message,
+        ).replaceAll(optionsRegex, '').replaceAll(reflectionRegex, ''),
+      ),
     ),
   );
+
+  /// Swaps every complete `<kb-image id="X"/>` for a non-`<`-starting
+  /// placeholder before the text reaches `MarkdownBody` — see
+  /// [kbImagePlaceholderStart]'s doc for why a self-closing void tag alone on
+  /// its own line needs this (CommonMark HTML-block rule 7 swallows it whole
+  /// before any inline syntax runs). A still-incomplete tag mid-stream (no
+  /// closing `>` yet) doesn't match [kbImageTagRegex] and is left as literal
+  /// text for that frame, same as every other custom tag in this app while
+  /// it's still being typed.
+  static String escapeKbImageTags(String message) {
+    if (!message.contains('<kb-image')) return message;
+    return message.replaceAllMapped(kbImageTagRegex, (Match match) {
+      final String id = match.group(1) ?? '';
+      return '$kbImagePlaceholderStart$id$kbImagePlaceholderEnd';
+    });
+  }
 
   // Options Tag
 

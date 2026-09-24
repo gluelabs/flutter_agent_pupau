@@ -39,6 +39,8 @@ class MessageStreamBuilder extends GetView<PupauChatController> {
                 assistant: assistant,
                 contextInfo: message.contextInfo,
                 grounding: message.grounding,
+                kbImages: message.kbImages,
+                kbImagesQueryId: message.kbImagesQueryId,
                 isAudioInput: message.isAudioInput,
               );
       },
