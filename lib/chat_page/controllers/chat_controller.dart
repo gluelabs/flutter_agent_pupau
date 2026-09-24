@@ -2844,9 +2844,15 @@ class PupauChatController extends GetxController {
         ) ==
         null;
     if (isFirstLlmMessage) {
-      kbReferencesBackup = message.kbReferences;
-      groundingSourcesBackup = message.liveGroundingSources;
-      kbImagesBackup = message.kbImages;
+      // Copy, never alias: these fields default to `const []` on the
+      // model, and the backups are buffers this controller clears and
+      // refills. Holding the message's own list would both crash on clear
+      // and let a later edit write back into the message.
+      kbReferencesBackup = List<KbReference>.from(message.kbReferences);
+      groundingSourcesBackup = List<GroundingSource>.from(
+        message.liveGroundingSources,
+      );
+      kbImagesBackup = List<KbImageRef>.from(message.kbImages);
     } else {
       if (kbReferencesBackup.isNotEmpty) addKbBackupToMessage(message);
       if (groundingSourcesBackup.isNotEmpty) {
@@ -2871,8 +2877,10 @@ class PupauChatController extends GetxController {
         ) ==
         null;
     if (isFirstLlmMessage) {
-      memoryReferencesBackup = message.memoryReferences;
-      alwaysMemoriesBackup = message.alwaysMemories;
+      memoryReferencesBackup = List<MemoryReference>.from(
+        message.memoryReferences,
+      );
+      alwaysMemoriesBackup = List<MemoryAlways>.from(message.alwaysMemories);
     } else {
       if (memoryReferencesBackup.isNotEmpty ||
           alwaysMemoriesBackup.isNotEmpty) {
