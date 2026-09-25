@@ -125,23 +125,49 @@ class ConversationService {
 
   static const String _pluginSourceSuffix = "_PLUGIN";
 
-  /// Set once a deployment has rejected the `_PLUGIN` source variants, so the
-  /// rest of the session stops paying for a request that is known to 400.
-  static bool _pluginSourceRejected = false;
+  /// Sources this deployment has already rejected, so later creates skip
+  /// straight to the fallback instead of re-sending a value known to 400.
+  static final Set<String> _rejectedSources = <String>{};
+
+  /// The source to send when [source] is not in this deployment's enum, or
+  /// null when there is nothing less specific left to try.
+  ///
+  /// Environments do not all carry the same source values, so everything
+  /// above `INTEGRATION` is an enrichment rather than a requirement: the
+  /// `_PLUGIN` variants degrade to the bare platform, and `WEB` degrades to
+  /// `INTEGRATION`, which every deployment has.
+  static String? fallbackSource(String source) {
+    if (source.endsWith(_pluginSourceSuffix)) {
+      return source.substring(
+        0,
+        source.length - _pluginSourceSuffix.length,
+      );
+    }
+    if (source == "WEB") return "INTEGRATION";
+    return null;
+  }
+
+  /// Walks [source] past whatever this deployment has already rejected.
+  static String _resolveSource(String source) {
+    String current = source;
+    while (_rejectedSources.contains(current)) {
+      final String? next = fallbackSource(current);
+      if (next == null) break;
+      current = next;
+    }
+    return current;
+  }
 
   /// Client-asserted conversation source for the create-conversation endpoint.
   ///
-  /// Web is always `WEB`. On Android/iOS the value is `ANDROID`/`IOS` when the
+  /// Web is `WEB`. On Android/iOS the value is `ANDROID`/`IOS` when the
   /// plugin runs inside the official Pupau app
   /// ([Constants.officialAppPackageName]), and `ANDROID_PLUGIN`/`IOS_PLUGIN`
-  /// when it is embedded in any other host app.
-  ///
-  /// The `_PLUGIN` variants are dropped once [_pluginSourceRejected] is set:
-  /// environments do not all carry the same source enum, so the suffix is an
-  /// enrichment the backend may not accept, never a requirement.
+  /// when it is embedded in any other host app. Each is downgraded through
+  /// [fallbackSource] if this deployment has already turned it away.
   static Future<String> _clientSource() async {
-    if (kIsWeb) return "WEB";
-    if (!Platform.isAndroid && !Platform.isIOS) return "WEB";
+    if (kIsWeb) return _resolveSource("WEB");
+    if (!Platform.isAndroid && !Platform.isIOS) return _resolveSource("WEB");
 
     final String base = Platform.isAndroid ? "ANDROID" : "IOS";
     try {
@@ -151,8 +177,9 @@ class ConversationService {
     }
     final bool isOfficialApp =
         _hostPackageName == Constants.officialAppPackageName;
-    if (isOfficialApp || _pluginSourceRejected) return base;
-    return "$base$_pluginSourceSuffix";
+    return _resolveSource(
+      isOfficialApp ? base : "$base$_pluginSourceSuffix",
+    );
   }
 
   /// True when a 400 names `source` as the offending field, i.e. this
@@ -212,7 +239,10 @@ class ConversationService {
           anonymousConversationKey,
         );
       }
-      final String source = await _clientSource();
+      // Failsafe: the source enum differs between deployments, so a value
+      // this one does not carry 400s the whole create. Walk down to a less
+      // specific source rather than lose the conversation.
+      String source = await _clientSource();
       bool rejectedSource = false;
       conversation = await _postConversation(
         url,
@@ -222,15 +252,20 @@ class ConversationService {
             rejectedSource = isSourceRejection,
       );
 
-      // Failsafe: the `_PLUGIN` sources are not present in every environment,
-      // so a deployment without them 400s the whole create. Retry once with
-      // the plain platform source rather than lose the conversation.
-      if (conversation == null && source.endsWith(_pluginSourceSuffix)) {
-        if (rejectedSource) _pluginSourceRejected = true;
+      while (conversation == null) {
+        final String? fallback = fallbackSource(source);
+        if (fallback == null) break;
+        // Only remember a source the backend actually named: an unrelated
+        // 400 must not permanently downgrade later conversations.
+        if (rejectedSource) _rejectedSources.add(source);
+        source = fallback;
+        rejectedSource = false;
         conversation = await _postConversation(
           url,
-          source.substring(0, source.length - _pluginSourceSuffix.length),
+          source,
           isAnonymous: isAnonymous,
+          onBadRequest: (bool isSourceRejection) =>
+              rejectedSource = isSourceRejection,
         );
       }
       return conversation;
