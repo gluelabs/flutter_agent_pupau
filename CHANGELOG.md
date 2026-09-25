@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.2] - 25/09/2026
+- Fixed new conversation creation
+
+### Changes
+- Minor fixes in chat
+
+## [1.1.1] - 24/09/2026
+
+### Changes
+- Minor fixes in chat
+
 ## [1.1.0] - 24/09/2026
 
 ### Changes

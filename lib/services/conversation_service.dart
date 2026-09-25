@@ -12,6 +12,7 @@ import 'package:get/get.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_agent_pupau/models/conversation_model.dart';
 import 'package:flutter_agent_pupau/models/pupau_message_model.dart';
+import 'package:flutter_agent_pupau/services/api_exceptions.dart';
 import 'package:flutter_agent_pupau/services/api_service.dart';
 import 'package:flutter_agent_pupau/services/json_parse_service.dart';
 import 'package:flutter_agent_pupau/utils/api_urls.dart';
@@ -122,12 +123,22 @@ class ConversationService {
 
   static String? _hostPackageName;
 
+  static const String _pluginSourceSuffix = "_PLUGIN";
+
+  /// Set once a deployment has rejected the `_PLUGIN` source variants, so the
+  /// rest of the session stops paying for a request that is known to 400.
+  static bool _pluginSourceRejected = false;
+
   /// Client-asserted conversation source for the create-conversation endpoint.
   ///
   /// Web is always `WEB`. On Android/iOS the value is `ANDROID`/`IOS` when the
   /// plugin runs inside the official Pupau app
   /// ([Constants.officialAppPackageName]), and `ANDROID_PLUGIN`/`IOS_PLUGIN`
   /// when it is embedded in any other host app.
+  ///
+  /// The `_PLUGIN` variants are dropped once [_pluginSourceRejected] is set:
+  /// environments do not all carry the same source enum, so the suffix is an
+  /// enrichment the backend may not accept, never a requirement.
   static Future<String> _clientSource() async {
     if (kIsWeb) return "WEB";
     if (!Platform.isAndroid && !Platform.isIOS) return "WEB";
@@ -140,7 +151,49 @@ class ConversationService {
     }
     final bool isOfficialApp =
         _hostPackageName == Constants.officialAppPackageName;
-    return isOfficialApp ? base : "${base}_PLUGIN";
+    if (isOfficialApp || _pluginSourceRejected) return base;
+    return "$base$_pluginSourceSuffix";
+  }
+
+  /// True when a 400 names `source` as the offending field, i.e. this
+  /// deployment's enum has no such value. Distinguished from any other 400 so
+  /// an unrelated validation error never permanently downgrades the source.
+  static bool isSourceRejection(ApiException error) {
+    if (error.statusCode != 400) return false;
+    final dynamic data = error.response?.data;
+    final dynamic message = data is Map ? data["message"] : null;
+    final String text = (message is List ? message.join(" ") : "$message")
+        .toLowerCase();
+    return text.contains("source");
+  }
+
+  static Future<PupauConversation?> _postConversation(
+    String url,
+    String source, {
+    required bool isAnonymous,
+    void Function(bool isSourceRejection)? onBadRequest,
+  }) async {
+    PupauConversation? conversation;
+    await ApiService.call(
+      url,
+      RequestType.post,
+      data: {
+        "title": "New Conversation",
+        "source": source,
+        "data": "",
+        if (isAnonymous)
+          "encryptionPass":
+              PupauSharedPreferences.getAnonymousConversationKey(),
+      },
+      onSuccess: (response) =>
+          conversation = PupauConversation.fromMap(response.data),
+      onError: (error) {
+        if (error.statusCode == 400) {
+          onBadRequest?.call(isSourceRejection(error));
+        }
+      },
+    );
+    return conversation;
   }
 
   /// Creates a new conversation for the given assistant
@@ -151,10 +204,7 @@ class ConversationService {
   }) async {
     try {
       PupauConversation? conversation;
-      final String url = ApiUrls.conversationsUrl(
-        assistantId,
-        mode: mode,
-      );
+      final String url = ApiUrls.conversationsUrl(assistantId, mode: mode);
       if (isAnonymous) {
         PupauSharedPreferences.deleteAnonymousConversationKey();
         final String anonymousConversationKey = Uuid().v4();
@@ -163,20 +213,26 @@ class ConversationService {
         );
       }
       final String source = await _clientSource();
-      await ApiService.call(
+      bool rejectedSource = false;
+      conversation = await _postConversation(
         url,
-        RequestType.post,
-        data: {
-          "title": "New Conversation",
-          "source": source,
-          "data": "",
-          if (isAnonymous)
-            "encryptionPass":
-                PupauSharedPreferences.getAnonymousConversationKey(),
-        },
-        onSuccess: (response) =>
-            conversation = PupauConversation.fromMap(response.data),
+        source,
+        isAnonymous: isAnonymous,
+        onBadRequest: (bool isSourceRejection) =>
+            rejectedSource = isSourceRejection,
       );
+
+      // Failsafe: the `_PLUGIN` sources are not present in every environment,
+      // so a deployment without them 400s the whole create. Retry once with
+      // the plain platform source rather than lose the conversation.
+      if (conversation == null && source.endsWith(_pluginSourceSuffix)) {
+        if (rejectedSource) _pluginSourceRejected = true;
+        conversation = await _postConversation(
+          url,
+          source.substring(0, source.length - _pluginSourceSuffix.length),
+          isAnonymous: isAnonymous,
+        );
+      }
       return conversation;
     } catch (e) {
       return null;
@@ -211,7 +267,9 @@ class ConversationService {
                 payload: {
                   "error": errorMessage,
                   "assistantId": idAssistant,
-                  "assistantType": mode == PupauAgentMode.marketplace ? "MARKETPLACE" : "ASSISTANT",
+                  "assistantType": mode == PupauAgentMode.marketplace
+                      ? "MARKETPLACE"
+                      : "ASSISTANT",
                   "conversationId": idConversation,
                 },
               ),
@@ -225,7 +283,9 @@ class ConversationService {
                 payload: {
                   "error": errorMessage,
                   "assistantId": idAssistant,
-                  "assistantType": mode == PupauAgentMode.marketplace ? "MARKETPLACE" : "ASSISTANT",
+                  "assistantType": mode == PupauAgentMode.marketplace
+                      ? "MARKETPLACE"
+                      : "ASSISTANT",
                   "conversationId": idConversation,
                 },
               ),
@@ -243,7 +303,9 @@ class ConversationService {
           payload: {
             "error": errorMessage,
             "assistantId": idAssistant,
-            "assistantType": mode == PupauAgentMode.marketplace ? "MARKETPLACE" : "ASSISTANT",
+            "assistantType": mode == PupauAgentMode.marketplace
+                ? "MARKETPLACE"
+                : "ASSISTANT",
             "conversationId": idConversation,
           },
         ),
@@ -313,11 +375,7 @@ class ConversationService {
       PupauConversation? conversation;
       Map<String, dynamic> body = {"title": title, "lastQueryId": queryId};
       await ApiService.call(
-        ApiUrls.forkConversationUrl(
-          assistantId,
-          conversationId,
-          mode: mode,
-        ),
+        ApiUrls.forkConversationUrl(assistantId, conversationId, mode: mode),
         RequestType.post,
         data: body,
         onSuccess: (response) =>
@@ -447,7 +505,6 @@ class ConversationService {
         return Symbols.quick_reference_all;
     }
   }
-
 
   static String getNoVisionCapabilityMessage() {
     String pixtralTag =
